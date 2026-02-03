@@ -450,7 +450,7 @@ contains
     character(len=*), intent(in) :: filepath
     integer :: unit_num, io_stat
 
-    open(newunit=unit_num, file=filepath, status='old', iostat=io_stat)
+    open(newunit=unit_num, file=filepath, status='old', action='read', iostat=io_stat)
     if (io_stat == 0) close(unit_num, status='delete')
 
   end subroutine delete_file

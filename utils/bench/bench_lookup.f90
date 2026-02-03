@@ -20,7 +20,8 @@ program bench_lookup
   implicit none (type, external)
 
   integer, parameter :: N_TRIALS = 100000
-  integer :: n_children_list(12) = [2, 4, 8, 12, 16, 20, 32, 64, 128, 256, 512, 1024]
+  integer, parameter :: N_SIZES = 12
+  integer :: n_children_list(N_SIZES) = [2, 4, 8, 12, 16, 20, 32, 64, 128, 256, 512, 1024]
   integer :: i, j, n
   type(hsd_table) :: root
   type(hsd_value) :: val

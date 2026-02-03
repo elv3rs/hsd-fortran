@@ -29,7 +29,7 @@ module hsd_hash_table
   !> Hash table for name-to-index mapping
   !>
   !> Uses a hybrid collision resolution strategy:
-  !> 1. Primary storage is a fixed-size array of buckets accessed via hash (similar to open addressing).
+  !> 1. Primary storage is a fixed-size bucket array accessed via hash (open addressing).
   !> 2. Collisions are handled via explicit chaining, but unlike traditional chaining where
   !>    nodes are individually allocated on the heap, here they are stored in a pre-allocated
   !>    contiguous `overflow` array.

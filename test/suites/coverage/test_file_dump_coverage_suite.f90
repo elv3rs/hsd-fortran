@@ -42,7 +42,7 @@ contains
             test("file_dump_single_value_child", test_file_dump_single_value_child), &
             test("file_dump_anonymous_multiline", test_file_dump_anonymous_multiline), &
             test("file_dump_anonymous_singleline", test_file_dump_anonymous_singleline), &
-            test("file_dump_val_with_attrib_multiline", test_file_dump_val_with_attrib_multiline), &
+            test("file_dump_val_attrib_multiline", test_file_dump_val_attrib_multiline), &
             test("file_dump_real_needs_decimal", test_file_dump_real_needs_decimal), &
             test("file_dump_value_raw_text", test_file_dump_value_raw_text), &
             test("file_dump_value_empty_fallback", test_file_dump_value_empty_fallback), &
@@ -78,7 +78,7 @@ contains
     call check(.not. allocated(error), msg="Dump named single table to file")
     call root%destroy()
 
-    open(newunit=unit_num, file=trim(filename), status='old', iostat=io_stat)
+    open(newunit=unit_num, file=trim(filename), status='old', action='read', iostat=io_stat)
     if (io_stat == 0) close(unit_num, status='delete')
   end subroutine test_file_dump_named_single_table
 
@@ -110,7 +110,7 @@ contains
     call check(.not. allocated(error), msg="Dump unnamed single table to file")
     call root%destroy()
 
-    open(newunit=unit_num, file=trim(filename), status='old', iostat=io_stat)
+    open(newunit=unit_num, file=trim(filename), status='old', action='read', iostat=io_stat)
     if (io_stat == 0) close(unit_num, status='delete')
   end subroutine test_file_dump_unnamed_single_table
 
@@ -139,7 +139,7 @@ contains
     call check(.not. allocated(error), msg="Dump single value child to file")
     call root%destroy()
 
-    open(newunit=unit_num, file=trim(filename), status='old', iostat=io_stat)
+    open(newunit=unit_num, file=trim(filename), status='old', action='read', iostat=io_stat)
     if (io_stat == 0) close(unit_num, status='delete')
   end subroutine test_file_dump_single_value_child
 
@@ -169,7 +169,7 @@ contains
     call check(.not. allocated(error), msg="Dump anonymous multiline to file")
     call root%destroy()
 
-    open(newunit=unit_num, file=trim(filename), status='old', iostat=io_stat)
+    open(newunit=unit_num, file=trim(filename), status='old', action='read', iostat=io_stat)
     if (io_stat == 0) close(unit_num, status='delete')
   end subroutine test_file_dump_anonymous_multiline
 
@@ -198,13 +198,13 @@ contains
     call check(.not. allocated(error), msg="Dump anonymous single line to file")
     call root%destroy()
 
-    open(newunit=unit_num, file=trim(filename), status='old', iostat=io_stat)
+    open(newunit=unit_num, file=trim(filename), status='old', action='read', iostat=io_stat)
     if (io_stat == 0) close(unit_num, status='delete')
   end subroutine test_file_dump_anonymous_singleline
 
 
   !> Test value with attribute and multiline (lines 204, 211-213)
-  subroutine test_file_dump_val_with_attrib_multiline()
+  subroutine test_file_dump_val_attrib_multiline()
     type(hsd_table) :: root
     type(hsd_value), allocatable :: val
     type(hsd_error_t), allocatable :: error
@@ -224,9 +224,9 @@ contains
     call check(.not. allocated(error), msg="Dump value with attrib multiline to file")
     call root%destroy()
 
-    open(newunit=unit_num, file=trim(filename), status='old', iostat=io_stat)
+    open(newunit=unit_num, file=trim(filename), status='old', action='read', iostat=io_stat)
     if (io_stat == 0) close(unit_num, status='delete')
-  end subroutine test_file_dump_val_with_attrib_multiline
+  end subroutine test_file_dump_val_attrib_multiline
 
 
   !> Test real number formatting with .0 suffix (line 275)
@@ -249,7 +249,7 @@ contains
     call check(.not. allocated(error), msg="Dump real with decimal to file")
     call root%destroy()
 
-    open(newunit=unit_num, file=trim(filename), status='old', iostat=io_stat)
+    open(newunit=unit_num, file=trim(filename), status='old', action='read', iostat=io_stat)
     if (io_stat == 0) close(unit_num, status='delete')
   end subroutine test_file_dump_real_needs_decimal
 
@@ -283,7 +283,7 @@ contains
     call check(.not. allocated(error), msg="Dump values with raw_text to file")
     call root%destroy()
 
-    open(newunit=unit_num, file=trim(filename), status='old', iostat=io_stat)
+    open(newunit=unit_num, file=trim(filename), status='old', action='read', iostat=io_stat)
     if (io_stat == 0) close(unit_num, status='delete')
   end subroutine test_file_dump_value_raw_text
 
@@ -308,7 +308,7 @@ contains
     call check(.not. allocated(error), msg="Dump value with empty fallback to file")
     call root%destroy()
 
-    open(newunit=unit_num, file=trim(filename), status='old', iostat=io_stat)
+    open(newunit=unit_num, file=trim(filename), status='old', action='read', iostat=io_stat)
     if (io_stat == 0) close(unit_num, status='delete')
   end subroutine test_file_dump_value_empty_fallback
 
@@ -333,7 +333,7 @@ contains
     call check(.not. allocated(error), msg="Dump multiline with empty line to file")
     call root%destroy()
 
-    open(newunit=unit_num, file=trim(filename), status='old', iostat=io_stat)
+    open(newunit=unit_num, file=trim(filename), status='old', action='read', iostat=io_stat)
     if (io_stat == 0) close(unit_num, status='delete')
   end subroutine test_file_dump_multiline_empty_line
 

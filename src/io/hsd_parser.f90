@@ -726,12 +726,20 @@ contains
 
     character(len=4096) :: cwd
     integer :: cwd_len, io_stat
+    logical :: file_exists
 
     if (len(path) > 0) then
       if (path(1:1) == "/") then
         abs_path = path
         return
       end if
+    end if
+
+    ! Check if file already exists at the given relative path
+    inquire(file=path, exist=file_exists)
+    if (file_exists) then
+      abs_path = path
+      return
     end if
 
     ! Get current working directory using portable method
@@ -771,10 +779,10 @@ contains
       return
     end if
 
-    ! Fallback failed
-    cwd = ""
-    cwd_len = 0
-    io_stat = 1
+    ! Fallback to "."
+    cwd = "."
+    cwd_len = 1
+    io_stat = 0
 
   end subroutine get_cwd_portable
 

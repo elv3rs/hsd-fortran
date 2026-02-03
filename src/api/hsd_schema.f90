@@ -379,8 +379,8 @@ contains
           return
         end if
 
-        ! For type checking, we verify that the value can be converted to the expected type
-        ! This matches HSD's behavior where all values are stored as strings and converted on access
+        ! For type checking, we verify that the value can be converted to the expected type.
+        ! This matches HSD's behavior: values are strings, converted on access.
         select case (field_def%field_type)
         case (FIELD_TYPE_INTEGER)
           call child%get_integer(int_val, stat)
@@ -456,6 +456,10 @@ contains
               "Field '" // field_def%path // "' is not a complex value")
             return
           end if
+
+        case default
+          ! Unknown field type - no validation needed
+          continue
 
         end select
       end select

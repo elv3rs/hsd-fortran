@@ -488,6 +488,9 @@ contains
         return
       end if
 
+    case default
+      ! Fall through to read as text
+
     end select
 
     ! Default: read as text

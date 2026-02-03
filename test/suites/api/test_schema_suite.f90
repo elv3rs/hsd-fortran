@@ -41,7 +41,9 @@ contains
             test("multiple_errors", test_multiple_errors), &
             test("schema_lifecycle", test_schema_lifecycle), &
             test("nested_paths", test_nested_paths), &
-            test("case_insensitive_enum", test_case_insensitive_enum) &
+            test("case_insensitive_enum", test_case_insensitive_enum), &
+            test("table_vs_value_error", test_table_vs_value_error), &
+            test("schema_strict_and_methods", test_schema_strict_and_methods) &
         ]))&
     ])
   end function tests
@@ -353,5 +355,65 @@ contains
     call schema_destroy(schema)
 
   end subroutine test_case_insensitive_enum
+
+
+  !> Test table vs value mismatch errors
+  subroutine test_table_vs_value_error()
+    type(hsd_schema_t) :: schema
+    type(hsd_table) :: root
+    type(hsd_error_t), allocatable :: errors(:)
+    type(hsd_error_t), allocatable :: parse_error
+    type(hsd_table) :: subtable
+
+    call schema_init(schema)
+    call schema_add_field(schema, "Scalar", FIELD_REQUIRED, FIELD_TYPE_INTEGER)
+    call schema_add_field(schema, "Group", FIELD_REQUIRED, FIELD_TYPE_TABLE)
+
+    ! 1. Providing a table where a scalar is expected
+    call hsd_load_string("Scalar { Value = 42 }" // char(10) // "Group = 42", root, parse_error)
+    call check(.not. allocated(parse_error), msg="Parse should succeed in table_vs_value")
+
+    if (.not. allocated(parse_error)) then
+      call schema_validate(schema, root, errors)
+      ! Should have 2 errors:
+      ! - Scalar is a table, expected integer
+      ! - Group is a value, expected table
+      call check(size(errors) == 2, msg="Should report both table-vs-value mismatches")
+    end if
+
+    call schema_destroy(schema)
+    call root%destroy()
+
+  end subroutine test_table_vs_value_error
+
+
+  !> Test strict validation and OO methods
+  subroutine test_schema_strict_and_methods()
+    type(hsd_schema_t) :: schema
+    type(hsd_table) :: root
+    type(hsd_error_t), allocatable :: errors(:)
+    type(hsd_error_t), allocatable :: parse_error
+
+    ! Use OO method for initialization
+    call schema%init(name="OO_Schema", allow_unknown=.false.)
+
+    ! Use OO method for adding fields
+    call schema%add_field("Name", FIELD_REQUIRED, FIELD_TYPE_STRING)
+
+    call hsd_load_string('Name = "Test"', root, parse_error)
+
+    ! Use OO method for validation
+    call schema%validate(root, errors)
+    call check(size(errors) == 0, msg="OO validation should work")
+
+    ! Call strict validation
+    call schema_validate_strict(schema, root, errors)
+    call check(size(errors) == 0, msg="Strict validation should work")
+
+    call schema%destroy()
+    call root%destroy()
+
+  end subroutine test_schema_strict_and_methods
+
 
 end module test_schema_suite

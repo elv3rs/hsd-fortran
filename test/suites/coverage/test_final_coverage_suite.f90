@@ -132,7 +132,7 @@ contains
     call root2%destroy()
 
     ! Cleanup
-    open(newunit=unit_num, file=trim(filename), status='old', iostat=io_stat)
+    open(newunit=unit_num, file=trim(filename), status='old', action='read', iostat=io_stat)
     if (io_stat == 0) close(unit_num, status='delete')
   end subroutine test_dump_file_roundtrip
 
@@ -377,13 +377,13 @@ contains
     filename1 = trim(build_dir) // "/include_a.hsd"
     filename2 = trim(build_dir) // "/include_b.hsd"
 
-    open(newunit=unit_num, file=trim(filename1), status='replace', iostat=io_stat)
+    open(newunit=unit_num, file=trim(filename1), status='replace', action='write', iostat=io_stat)
     if (io_stat == 0) then
       write(unit_num, '(A)') "+<<+ " // trim(filename2)
       close(unit_num)
     end if
 
-    open(newunit=unit_num, file=trim(filename2), status='replace', iostat=io_stat)
+    open(newunit=unit_num, file=trim(filename2), status='replace', action='write', iostat=io_stat)
     if (io_stat == 0) then
       write(unit_num, '(A)') "+<<+ " // trim(filename1)
       close(unit_num)
@@ -396,9 +396,9 @@ contains
     call root%destroy()
 
     ! Cleanup
-    open(newunit=unit_num, file=trim(filename1), status='old', iostat=io_stat)
+    open(newunit=unit_num, file=trim(filename1), status='old', action='read', iostat=io_stat)
     if (io_stat == 0) close(unit_num, status='delete')
-    open(newunit=unit_num, file=trim(filename2), status='old', iostat=io_stat)
+    open(newunit=unit_num, file=trim(filename2), status='old', action='read', iostat=io_stat)
     if (io_stat == 0) close(unit_num, status='delete')
   end subroutine test_include_depth_limit
 

@@ -9,17 +9,22 @@
 !>
 !> ## Cache-on-Read Mutation Behavior
 !>
-!> **IMPORTANT:** Some "read" operations on `hsd_value` (such as `value_get_int_array`, `value_get_real_array`, etc.) use `intent(inout)` and mutate the internal state by caching parsed array results.
+!> **IMPORTANT:** Some "read" operations on `hsd_value` (such as `value_get_int_array`,
+!> `value_get_real_array`, etc.) use `intent(inout)` and mutate the internal state by
+!> caching parsed array results.
 !>
-!> - The first call to these accessors parses the raw text and stores the result in a cache (e.g., `self%int_array`).
+!> - The first call parses the raw text and stores it in a cache (e.g., `self%int_array`).
 !> - Subsequent calls return the cached array without reparsing.
-!> - This means that even though these are logically read-only operations, they have side effects and require `intent(inout)`.
+!> - This means these logically read-only operations have side effects, requiring
+!>   `intent(inout)`.
 !>
 !> ### Thread Safety Implications
 !>
-!> - **Not thread-safe for concurrent reads:** If multiple threads access the same `hsd_value` concurrently, a race condition may occur on first access (when the cache is populated).
-!> - **Safe after first access:** Once the cache is populated, concurrent reads are safe (the cached array is immutable).
-!> - **Workaround:** If thread safety is required, ensure that all caches are populated in a single-threaded context before concurrent access, or use external synchronization.
+!> - **Not thread-safe for concurrent reads:** If multiple threads access the same
+!>   `hsd_value` concurrently, a race may occur on first access (cache population).
+!> - **Safe after first access:** Once populated, concurrent reads are safe (immutable).
+!> - **Workaround:** If thread safety is required, populate caches in a single-threaded
+!>   context before concurrent access, or use external synchronization.
 !>
 !> ### Rationale
 !>

@@ -48,7 +48,8 @@ contains
             test("large_output", test_large_output), &
             test("error_messages", test_error_messages), &
             test("token_names", test_token_names), &
-            test("error_print", test_error_print) &
+            test("error_print", test_error_print), &
+            test("error_helpers", test_error_helpers) &
         ])) &
     ])
 
@@ -390,5 +391,31 @@ contains
     call error%print()
 
   end subroutine test_error_print
+
+
+  !> Test specialized error construction helpers
+  subroutine test_error_helpers()
+    use hsd_error, only : make_syntax_error, make_type_error, &
+        & HSD_STAT_SYNTAX_ERROR, HSD_STAT_TYPE_ERROR
+    type(hsd_error_t), allocatable :: error
+
+    ! Test make_syntax_error
+    call make_syntax_error(error, "Custom syntax error", filename="input.hsd", &
+                           line=10, column=5, expected=";", actual=",", hint="Check syntax")
+    call check(allocated(error), msg="Syntax error allocated")
+    call check(error%code == HSD_STAT_SYNTAX_ERROR, msg="Correct code for syntax error")
+    call check(error%line_start == 10, msg="Correct line for syntax error")
+    deallocate(error)
+
+    ! Test make_type_error
+    call make_type_error(error, "Custom type error", filename="config.hsd", &
+                         line=20, expected="integer", actual="string", hint="Change type")
+    call check(allocated(error), msg="Type error allocated")
+    call check(error%code == HSD_STAT_TYPE_ERROR, msg="Correct code for type error")
+    call check(error%line_start == 20, msg="Correct line for type error")
+    deallocate(error)
+
+  end subroutine test_error_helpers
+
 
 end module test_error_suite

@@ -95,7 +95,8 @@ contains
     type(hsd_value) :: val
     type(hsd_error_t), allocatable :: error
     character(len=512) :: output_file
-    character(len=*), parameter :: multiline_text = "line1" // char(10) // "line2" // char(10) // "line3"
+    character(len=*), parameter :: multiline_text = &
+        "line1" // char(10) // "line2" // char(10) // "line3"
 
     call new_table(root)
     call new_value(val, name="multiline")

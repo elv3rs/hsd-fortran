@@ -210,7 +210,7 @@ contains
     call check(.not. allocated(error), msg="Anonymous single value formatted")
     call root%destroy()
 
-    open(newunit=unit_num, file=trim(filename), status='old', iostat=io_stat)
+    open(newunit=unit_num, file=trim(filename), status='old', action='read', iostat=io_stat)
     if (io_stat == 0) close(unit_num, status='delete')
   end subroutine test_formatter_anonymous_single_value
 
@@ -445,7 +445,7 @@ contains
     call check(.not. allocated(error), msg="Blank lines formatted")
     call root%destroy()
 
-    open(newunit=unit_num, file=trim(filename), status='old', iostat=io_stat)
+    open(newunit=unit_num, file=trim(filename), status='old', action='read', iostat=io_stat)
     if (io_stat == 0) close(unit_num, status='delete')
   end subroutine test_multiline_with_blank_lines
 
@@ -459,7 +459,7 @@ contains
 
     ! Create a temporary include file
     temp_file = trim(build_dir) // "/include_test.hsd"
-    open(newunit=unit_num, file=trim(temp_file), status='replace')
+    open(newunit=unit_num, file=trim(temp_file), status='replace', action='write')
     write(unit_num, '(A)') "included_val = 999"
     close(unit_num)
 
@@ -470,7 +470,7 @@ contains
     call root%destroy()
 
     ! Cleanup
-    open(newunit=unit_num, file=trim(temp_file), status='old')
+    open(newunit=unit_num, file=trim(temp_file), status='old', action='read')
     close(unit_num, status='delete')
   end subroutine test_include_from_file_parse
 

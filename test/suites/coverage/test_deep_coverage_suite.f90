@@ -97,7 +97,7 @@ contains
     call root%destroy()
 
     ! Cleanup
-    open(newunit=unit_num, file=trim(filename), status='old', iostat=io_stat)
+    open(newunit=unit_num, file=trim(filename), status='old', action='read', iostat=io_stat)
     if (io_stat == 0) close(unit_num, status='delete')
   end subroutine test_table_single_child_table
 
@@ -132,7 +132,7 @@ contains
     call root%destroy()
 
     ! Cleanup
-    open(newunit=unit_num, file=trim(filename), status='old', iostat=io_stat)
+    open(newunit=unit_num, file=trim(filename), status='old', action='read', iostat=io_stat)
     if (io_stat == 0) close(unit_num, status='delete')
   end subroutine test_anonymous_value_multiline
 
@@ -165,7 +165,7 @@ contains
 
     call root%destroy()
 
-    open(newunit=unit_num, file=trim(filename), status='old', iostat=io_stat)
+    open(newunit=unit_num, file=trim(filename), status='old', action='read', iostat=io_stat)
     if (io_stat == 0) close(unit_num, status='delete')
   end subroutine test_tag_value_with_val_attrib
 
@@ -261,7 +261,7 @@ contains
 
     call root%destroy()
 
-    open(newunit=unit_num, file=trim(filename), status='old', iostat=io_stat)
+    open(newunit=unit_num, file=trim(filename), status='old', action='read', iostat=io_stat)
     if (io_stat == 0) close(unit_num, status='delete')
   end subroutine test_multiline_empty_lines
 
@@ -574,7 +574,7 @@ contains
 
     call root%destroy()
 
-    open(newunit=unit_num, file=trim(filename), status='old', iostat=io_stat)
+    open(newunit=unit_num, file=trim(filename), status='old', action='read', iostat=io_stat)
     if (io_stat == 0) close(unit_num, status='delete')
   end subroutine test_table_child_table_shorthand
 
@@ -626,7 +626,7 @@ contains
 
     call root%destroy()
 
-    open(newunit=unit_num, file=trim(filename), status='old', iostat=io_stat)
+    open(newunit=unit_num, file=trim(filename), status='old', action='read', iostat=io_stat)
     if (io_stat == 0) close(unit_num, status='delete')
   end subroutine test_write_multiline_value
 
@@ -653,7 +653,7 @@ contains
 
     call root%destroy()
 
-    open(newunit=unit_num, file=trim(filename), status='old', iostat=io_stat)
+    open(newunit=unit_num, file=trim(filename), status='old', action='read', iostat=io_stat)
     if (io_stat == 0) close(unit_num, status='delete')
   end subroutine test_named_value_multiline
 

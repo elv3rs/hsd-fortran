@@ -63,7 +63,8 @@ contains
             test("clone_complex_tree", test_clone_complex_tree), &
             test("merge_deeply_nested", test_merge_deeply_nested), &
             test("get_logical_array", test_get_logical_array), &
-            test("get_string_array", test_get_string_array) &
+            test("get_string_array", test_get_string_array), &
+            test("parse_with_relative_path", test_parse_with_relative_path) &
         ])) &
     ])
 
@@ -760,9 +761,51 @@ contains
     character(len=*), intent(in) :: filepath
     integer :: unit_num, io_stat
 
-    open(newunit=unit_num, file=filepath, status='old', iostat=io_stat)
+    open(newunit=unit_num, file=filepath, status='old', action='read', iostat=io_stat)
     if (io_stat == 0) close(unit_num, status='delete')
 
   end subroutine delete_file
+
+
+  !> Test parsing with a relative path (triggers get_cwd_portable)
+  subroutine test_parse_with_relative_path()
+    type(hsd_table) :: root
+    type(hsd_error_t), allocatable :: error
+    character(len=:), allocatable :: filename
+    integer :: unit_num, iostat
+
+    filename = "test_relative_path_alt.hsd"
+
+    ! Create a temporary file in the CWD
+    open(newunit=unit_num, file=filename, status='replace', action='write', iostat=iostat)
+    if (iostat /= 0) then
+      call check(.false., msg="Could not create temp file for relative test")
+      return
+    end if
+    write(unit_num, *) "key = 'value'"
+    close(unit_num)
+
+    ! Load using relative path
+    call hsd_load(filename, root, error)
+
+    if (allocated(error)) then
+      ! This will help diagnose why it fails
+      write(*,*) "Error in relative path test: ", error%message
+      write(*,*) "Filename used: ", filename
+    end if
+
+    call check(.not. allocated(error), msg="Should load with relative path")
+
+    if (.not. allocated(error)) then
+      call check(hsd_has_child(root, "key"), msg="Should have 'key'")
+      call root%destroy()
+    end if
+
+    ! Cleanup
+    open(newunit=unit_num, file=filename, status='old', action='read', iostat=iostat)
+    if (iostat == 0) close(unit_num, status='delete')
+
+  end subroutine test_parse_with_relative_path
+
 
 end module test_file_ops_suite
