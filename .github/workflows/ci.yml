@@ -30,7 +30,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        gcc-version: [11, 12, 13]
+        gcc-version: [12, 13, 14]
     
     steps:
       - name: Checkout repository
