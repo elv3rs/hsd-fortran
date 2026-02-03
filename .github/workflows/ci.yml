@@ -108,6 +108,7 @@ jobs:
             '/usr/*' \
             '*/external/*' \
             '*/_deps/*' \
+            --ignore-errors unused \
             --output-file build/coverage.info
             
           # Generate HTML report
