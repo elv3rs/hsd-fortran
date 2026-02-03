@@ -30,7 +30,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        gcc-version: [12, 15]
+        gcc-version: [12, 14]
     
     steps:
       - name: Checkout repository
@@ -94,7 +94,6 @@ jobs:
             --output-file build/coverage.info \
             --ignore-errors inconsistent
           lcov --remove build/coverage.info \
-            '*/external/*' \
             --output-file build/coverage.info
       
       - name: Upload coverage to Codecov
