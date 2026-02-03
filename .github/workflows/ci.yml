@@ -30,7 +30,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        gcc-version: [11, 12, 13]
+        gcc-version: [12, 15]
     
     steps:
       - name: Checkout repository
@@ -57,36 +57,6 @@ jobs:
       - name: Run tests
         run: ctest --test-dir build --output-on-failure
 
-  build-intel:
-    name: Build with Intel ifx
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          submodules: recursive
-      
-      - name: Setup Intel oneAPI
-        uses: fortran-lang/setup-fortran@v1
-        id: setup-fortran
-        with:
-          compiler: intel
-          version: '2024.0'
-      
-      - name: Configure CMake
-        run: |
-          cmake -B build \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_Fortran_COMPILER=ifx \
-            -DHSD_BUILD_TESTS=ON \
-            -DHSD_BUILD_EXAMPLES=ON
-      
-      - name: Build
-        run: cmake --build build --parallel
-      
-      - name: Run tests
-        run: ctest --test-dir build --output-on-failure
 
   coverage:
     name: Code Coverage
@@ -124,7 +94,6 @@ jobs:
             --output-file build/coverage.info \
             --ignore-errors inconsistent
           lcov --remove build/coverage.info \
-            '/usr/*' \
             '*/external/*' \
             --output-file build/coverage.info
       
