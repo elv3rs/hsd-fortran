@@ -1,0 +1,79 @@
+# Example DFTB+ Configuration
+# This demonstrates HSD syntax features
+
+Geometry = GenFormat {
+  # Coordinate count and type
+  TypeNames = { "C" "H" "O" }
+  # Actual coordinates would go here
+  # (Using inline data instead of file include)
+}
+
+Driver = ConjugateGradient {
+  MaxSteps = 200
+  MaxForceComponent [eV/Angstrom] = 0.001
+  Convergence {
+    GradElem = 1.0e-4
+    GradNorm = 1.0e-3
+  }
+  OutputPrefix = "geom.out"
+}
+
+Hamiltonian = DFTB {
+  SCC = Yes
+  SCCTolerance = 1.0e-5
+  
+  MaxAngularMomentum {
+    C = "p"
+    H = "s"
+    O = "p"
+  }
+  
+  SlaterKosterFiles = Type2FileNames {
+    Prefix = "./slako/"
+    Separator = "-"
+    Suffix = ".skf"
+  }
+  
+  Filling = Fermi {
+    Temperature [Kelvin] = 300.0
+  }
+  
+  KPointsAndWeights = SupercellFolding {
+    4 0 0
+    0 4 0
+    0 0 4
+    0.5 0.5 0.5
+  }
+  
+  # Array examples
+  ElectricField {
+    PointCharges {
+      CoordsAndCharges [Angstrom] {
+        0.0 0.0 5.0  -0.5
+        0.0 0.0 -5.0  0.5
+      }
+    }
+  }
+}
+
+Analysis {
+  PrintForces = Yes
+  MullikenAnalysis = Yes
+  ProjectStates {
+    Region {
+      Atoms = 1:10
+      Label = "active_site"
+    }
+  }
+}
+
+Options {
+  WriteDetailedXML = Yes
+  RandomSeed = 42
+  ConvergenceOptions = {1.0e-6 100 "tight"}
+}
+
+ParserOptions {
+  ParserVersion = 12
+  WriteHSDInput = Yes
+}

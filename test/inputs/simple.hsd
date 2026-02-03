@@ -1,0 +1,25 @@
+# Simple test input
+driver {
+  max_steps = 100
+  convergence_tolerance = 1e-8
+}
+
+hamiltonian = dftb {
+  scc = yes
+  scc_tolerance = 1e-10
+  
+  filling = fermi {
+    temperature [Kelvin] = 300.0
+  }
+  
+  mixer {
+    broyden {
+      mixing_parameter = 0.2
+    }
+  }
+}
+
+geometry {
+  type_names = "C" "H"
+  periodic = no
+}

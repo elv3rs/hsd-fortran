@@ -1,0 +1,55 @@
+name = "hsd"
+version = "1.0.0"
+license = "BSD-2-Clause-Patent"
+maintainer = ["DFTB+ developers group"]
+author = ["DFTB+ developers group"]
+copyright = "2026 DFTB+ developers group"
+homepage = "https://github.com/dftbplus/hsd-fortran"
+keywords = ["hsd", "parser", "dftb+", "structured-data"]
+description = "HSD (Human-friendly Structured Data) parser for Fortran"
+
+[library]
+source-dir = "src"
+
+[build]
+auto-tests = true
+
+[fortran]
+
+[extra.fortitude.check]
+select = ["C", "E", "S"]
+ignore = []
+line-length = 100
+
+[dev-dependencies]
+fortuno = { git = "https://github.com/fortuno-repos/fortuno-fpm-serial.git" }
+
+[[example]]
+name = "simple_read"
+source-dir = "example"
+main = "simple_read.f90"
+
+[[example]]
+name = "bench_lookup"
+source-dir = "utils/bench"
+main = "bench_lookup.f90"
+
+[[example]]
+name = "bench_copy"
+source-dir = "utils/bench"
+main = "bench_copy.f90"
+
+[[example]]
+name = "bench_parser"
+source-dir = "utils/bench"
+main = "bench_parser.f90"
+
+[[example]]
+name = "bench_access"
+source-dir = "utils/bench"
+main = "bench_access.f90"
+
+[[example]]
+name = "bench_array"
+source-dir = "utils/bench"
+main = "bench_array.f90"

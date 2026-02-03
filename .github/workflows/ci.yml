@@ -1,0 +1,136 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  lint:
+    name: Lint with Fortitude
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      
+      - name: Install Fortitude
+        run: pip install fortitude-lint
+      
+      - name: Run Fortitude
+        run: fortitude check
+
+  build-gcc:
+    name: Build with GCC
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        gcc-version: [11, 12, 13]
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      
+      - name: Install GCC Fortran
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gfortran-${{ matrix.gcc-version }}
+      
+      - name: Configure CMake
+        run: |
+          cmake -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_Fortran_COMPILER=gfortran-${{ matrix.gcc-version }} \
+            -DHSD_BUILD_TESTS=ON \
+            -DHSD_BUILD_EXAMPLES=ON
+      
+      - name: Build
+        run: cmake --build build --parallel
+      
+      - name: Run tests
+        run: ctest --test-dir build --output-on-failure
+
+  build-intel:
+    name: Build with Intel ifx
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      
+      - name: Setup Intel oneAPI
+        uses: fortran-lang/setup-fortran@v1
+        id: setup-fortran
+        with:
+          compiler: intel
+          version: '2024.0'
+      
+      - name: Configure CMake
+        run: |
+          cmake -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_Fortran_COMPILER=ifx \
+            -DHSD_BUILD_TESTS=ON \
+            -DHSD_BUILD_EXAMPLES=ON
+      
+      - name: Build
+        run: cmake --build build --parallel
+      
+      - name: Run tests
+        run: ctest --test-dir build --output-on-failure
+
+  coverage:
+    name: Code Coverage
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gfortran lcov
+      
+      - name: Configure CMake with coverage
+        run: |
+          cmake -B build \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_Fortran_COMPILER=gfortran \
+            -DHSD_BUILD_TESTS=ON \
+            -DHSD_COVERAGE=ON
+      
+      - name: Build
+        run: cmake --build build --parallel
+      
+      - name: Run tests
+        run: ctest --test-dir build --output-on-failure
+      
+      - name: Generate coverage report
+        run: |
+          lcov --capture \
+            --directory build/src \
+            --output-file build/coverage.info \
+            --ignore-errors inconsistent
+          lcov --remove build/coverage.info \
+            '/usr/*' \
+            '*/external/*' \
+            --output-file build/coverage.info
+      
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          file: build/coverage.info
+          fail_ci_if_error: false
+          verbose: true

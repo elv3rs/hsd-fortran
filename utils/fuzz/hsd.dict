@@ -1,0 +1,84 @@
+# HSD Dictionary for LibFuzzer
+#
+# This dictionary helps LibFuzzer generate valid-ish HSD inputs by providing
+# common tokens and syntax elements. LibFuzzer will combine and mutate these
+# along with random byte mutations to explore the parser's input space.
+#
+# Format: keyword="value" or just "value"
+# Use \xNN for hex bytes, \\ for backslash, \" for quotes
+
+# Structural tokens
+brace_open="{"
+brace_close="}"
+bracket_open="["
+bracket_close="]"
+equals="="
+semicolon=";"
+comma=","
+colon=":"
+
+# Include directives
+include_text="<<<"
+include_parsed="<<+"
+
+# Boolean values (HSD supports multiple formats)
+bool_yes="Yes"
+bool_no="No"
+bool_on="On"
+bool_off="Off"
+bool_true="True"
+bool_false="False"
+bool_1="1"
+bool_0="0"
+
+# Common keywords
+kw_geometry="Geometry"
+kw_driver="Driver"
+kw_hamiltonian="Hamiltonian"
+kw_options="Options"
+kw_analysis="Analysis"
+kw_parserOptions="ParserOptions"
+
+# Numeric patterns
+num_int="42"
+num_neg="-123"
+num_float="3.14159"
+num_sci="1.0e-6"
+num_sci_cap="1.0E+10"
+
+# String delimiters
+quote_double="\""
+quote_single="'"
+
+# Whitespace
+ws_space=" "
+ws_tab="\x09"
+ws_newline="\x0a"
+ws_crlf="\x0d\x0a"
+
+# Comments
+comment="#"
+comment_line="# comment"
+
+# Attribute patterns
+attr_unit="[unit=eV]"
+attr_empty="[]"
+attr_simple="[angstrom]"
+
+# Common value patterns
+val_star="*"
+val_path="/path/to/file"
+
+# Edge cases
+null="\x00"
+backslash="\\"
+escaped_quote="\\\""
+
+# Array patterns
+array_simple="{ 1 2 3 }"
+array_nested="{ { 1 } { 2 } }"
+
+# Name patterns
+name_simple="Tag"
+name_underscore="_private"
+name_camel="SomeValue"
