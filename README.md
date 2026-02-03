@@ -2,6 +2,10 @@
 
 [![License](https://img.shields.io/badge/license-BSD--2--Clause--Patent-blue.svg)](LICENSE)
 [![Fortitude](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/PlasmaFAIR/fortitude/main/docs/assets/badge/v0.json)](https://github.com/PlasmaFAIR/fortitude)
+[![Tests](https://github.com/elv3rs/hsd-fortran/actions/workflows/tests.yml/badge.svg)](https://github.com/elv3rs/hsd-fortran/actions/workflows/tests.yml)
+[![Linting](https://github.com/elv3rs/hsd-fortran/actions/workflows/lint.yml/badge.svg)](https://github.com/elv3rs/hsd-fortran/actions/workflows/lint.yml)
+[![Docs & Coverage](https://github.com/elv3rs/hsd-fortran/actions/workflows/docs.yml/badge.svg)](https://github.com/elv3rs/hsd-fortran/actions/workflows/docs.yml)
+[![Coverage](https://elv3rs.github.io/hsd-fortran/coverage/coverage.svg)](https://elv3rs.github.io/hsd-fortran/coverage/index.html)
 
 A lightweight, dependency-free HSD (Human-friendly Structured Data) parser for Fortran.
 
