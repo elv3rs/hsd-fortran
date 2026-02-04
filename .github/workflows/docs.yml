@@ -22,14 +22,20 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.12'
       
-      - name: Install dependencies
+      - name: Install Python dependencies
+        run: |
+          pip install --upgrade pip
+          pip install anybadge
+          # Install FORD 7.x (search issues fixed in 7.0.10)
+          pip install 'ford>=7.0.10'
+          pip install -r docs/requirements.txt
+      
+      - name: Install system dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y gfortran lcov
-          pip install anybadge
-          pip install -r docs/requirements.txt
       
       - name: Configure CMake
         run: |
@@ -75,13 +81,19 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
-      - name: Build documentation
+      - name: Build FORD documentation
+        run: ford ford.md
+      
+      - name: Build Sphinx documentation
         run: sphinx-build -b html docs public
       
       - name: Merge documentation and coverage
         run: |
-          mkdir -p public/coverage
+          mkdir -p public/coverage public/ford
           cp -r coverage_html/* public/coverage/
+          if [ -d "ford_docs" ]; then
+            cp -r ford_docs/* public/ford/
+          fi
       
       - name: Upload pages artifact
         uses: actions/upload-pages-artifact@v3

@@ -15,6 +15,7 @@ option(HSD_ACCEPT_TRUE_FALSE "Accept True/False as boolean values" ON)
 option(HSD_BUILD_TESTS "Build test suite" ON)
 option(HSD_BUILD_EXAMPLES "Build examples" ON)
 option(HSD_BUILD_BENCHMARKS "Build benchmarks" ON)
+option(HSD_BUILD_DOCS "Build documentation with FORD" OFF)
 option(HSD_COVERAGE "Enable code coverage instrumentation (requires GCC)" OFF)
 option(HSD_SANITIZERS "Enable sanitizers for leak/memory detection in Debug builds (requires GCC/Clang)" OFF)
 
@@ -77,6 +78,22 @@ endif()
 # Benchmarks
 if(HSD_BUILD_BENCHMARKS)
   add_subdirectory(utils/bench)
+endif()
+
+# Documentation with FORD
+if(HSD_BUILD_DOCS)
+  find_program(FORD_EXECUTABLE ford)
+  if(NOT FORD_EXECUTABLE)
+    message(WARNING "ford not found. Install with: pip install ford")
+  else()
+    add_custom_target(docs
+      COMMAND ${FORD_EXECUTABLE} ${CMAKE_SOURCE_DIR}/ford.md
+      WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+      COMMENT "Generating API documentation with FORD"
+      VERBATIM
+    )
+    message(STATUS "FORD documentation target enabled. Run 'cmake --build build --target docs'")
+  endif()
 endif()
 
 # Installation

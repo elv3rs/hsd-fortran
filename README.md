@@ -99,6 +99,7 @@ cmake --install build --prefix /path/to/install
 | `HSD_ACCEPT_TRUE_FALSE` | `ON` | Accept `True`/`False` as boolean values |
 | `HSD_BUILD_TESTS` | `ON` | Build test suite |
 | `HSD_BUILD_EXAMPLES` | `ON` | Build examples |
+| `HSD_BUILD_DOCS` | `OFF` | Build API documentation with FORD |
 | `HSD_COVERAGE` | `OFF` | Enable code coverage (GCC only) |
 
 ### Build with fpm
@@ -226,12 +227,25 @@ Error codes include: `HSD_STAT_OK`, `HSD_STAT_SYNTAX_ERROR`, `HSD_STAT_TYPE_ERRO
 
 ## Documentation
 
-- [API Reference](docs/api.rst) — Complete API documentation
+Full documentation is available at [https://elv3rs.github.io/hsd-fortran](https://elv3rs.github.io/hsd-fortran):
+
+- [API Reference](https://elv3rs.github.io/hsd-fortran/api/) — Auto-generated API docs (FORD)
 - [User Guide](docs/user_guide.rst) — Tutorials and examples
 - [HSD Format](docs/hsd_format.rst) — Format specification
 - [Error Handling](docs/error_handling.rst) — Error types and handling
 - [Thread Safety](docs/thread_safety.rst) — Concurrency guidelines
 - [Fuzz Testing](utils/fuzz/README.rst) — AFL++ fuzzing guide
+
+### Building Documentation Locally
+
+Install FORD and build the API documentation:
+
+```bash
+pip install ford
+cmake -B build -DHSD_BUILD_DOCS=ON
+cmake --build build --target docs
+# Documentation will be in ford_docs/
+```
 
 ## License
 

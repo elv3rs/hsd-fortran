@@ -2,6 +2,7 @@
 build/
 _build/
 build-fuzz/
+ford_docs/
 
 # CMake cache files
 CMakeCache.txt
@@ -46,6 +47,10 @@ coverage_html/
 
 # fpm build directory
 fpm/
+
+# Python virtual environments
+.venv/
+venv/
 
 # Test artifacts
 Testing/

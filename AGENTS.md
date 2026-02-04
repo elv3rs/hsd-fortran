@@ -21,6 +21,19 @@ ctest --test-dir build --verbose
 # Run specific test
 ./build/test/hsd_testapp "lexer/simple_tokens"
 
+# Documentation (requires ford and sphinx)
+# Using uv for faster installation:
+uv venv .venv && source .venv/bin/activate
+uv pip install -r docs/requirements.txt
+
+# Build FORD API docs
+ford ford.md  # FORD 7.x respects output_dir setting
+
+# Build Sphinx user docs and merge
+sphinx-build -b html docs public
+mkdir -p public/ford && cp -r ford_docs/* public/ford/
+# Result: public/index.html (Sphinx) with public/ford/index.html (FORD)
+
 # Coverage (requires GCC)
 cmake -B build -DCMAKE_BUILD_TYPE=Debug -DHSD_COVERAGE=ON
 cmake --build build && ctest --test-dir build
@@ -194,7 +207,26 @@ This ensures tests work regardless of where CTest runs from.
 | `HSD_ACCEPT_TRUE_FALSE` | `ON` | Accept `True`/`False` as boolean values |
 | `HSD_BUILD_TESTS` | `ON` | Build test suite |
 | `HSD_BUILD_EXAMPLES` | `ON` | Build examples |
+| `HSD_BUILD_DOCS` | `OFF` | Build API documentation with FORD |
 | `HSD_COVERAGE` | `OFF` | Enable code coverage (GCC only) |
+
+## Documentation
+
+The project uses two documentation systems:
+
+1. **FORD** (Fortran Documenter): Generates API documentation from source code comments
+   - Configuration: `ford.md`
+   - Output: `ford_docs/`
+   - Version: FORD 7.0.10+ (search issues fixed)
+   - See `docs/ford_guide.md` for documentation syntax
+
+2. **Sphinx**: User-facing documentation and guides
+   - Configuration: `docs/conf.py`
+   - Output: `public/` 
+   - Includes link to FORD docs at `public/ford/`
+   
+Both are automatically built and deployed to GitHub Pages in CI. The Sphinx documentation's 
+`api.rst` provides a bridge to the FORD-generated API documentation.
 
 ## Fuzz Testing
 

@@ -52,6 +52,25 @@ html_theme_options = {
     'titles_only': False,
 }
 
+# Add link to FORD documentation in sidebar
+html_context = {
+    'display_github': True,
+    'github_user': 'elv3rs',
+    'github_repo': 'hsd-fortran',
+    'github_version': 'main',
+    'conf_py_path': '/docs/',
+}
+
+# Additional links in the navigation bar
+html_sidebars = {
+    '**': [
+        'globaltoc.html',
+        'relations.html',
+        'sourcelink.html',
+        'searchbox.html',
+    ]
+}
+
 # -- Options for intersphinx extension ---------------------------------------
 
 intersphinx_mapping = {
