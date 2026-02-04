@@ -6,6 +6,7 @@ program testapp
   use test_formatter_suite, only : formatter_tests => tests
   use test_array_suite, only : array_tests => tests
   use test_error_suite, only : error_tests => tests
+  use test_hash_table_suite, only : hash_table_tests => tests
   use test_api_suite, only : api_tests => tests
   use test_coverage_suite, only : coverage_tests => tests
   use test_formatter_extended_suite, only : formatter_ext_tests => tests
@@ -20,6 +21,10 @@ program testapp
   use test_validation_mutator_coverage_suite, only : validation_mutator_coverage_tests
   use test_stat_coverage_suite, only : stat_coverage_tests
   use test_remaining_coverage_suite, only : remaining_coverage_tests
+  use test_extended_coverage_suite, only : extended_coverage_tests => tests
+  use test_final_95_coverage_suite, only : final_95_coverage_tests => tests
+  use test_ultra_targeted_coverage_suite, only : ultra_targeted_coverage_tests => tests
+  use test_laser_coverage_suite, only : laser_coverage_tests => tests
   use test_schema_suite, only : schema_tests => tests
   use test_fuzz_suite, only : fuzz_tests => tests
   implicit none (type, external)
@@ -32,6 +37,7 @@ program testapp
       formatter_tests(), &
       array_tests(), &
       error_tests(), &
+      hash_table_tests(), &
       api_tests(), &
       coverage_tests(), &
       formatter_ext_tests(), &
@@ -46,6 +52,10 @@ program testapp
       validation_mutator_coverage_tests(), &
       stat_coverage_tests(), &
       remaining_coverage_tests(), &
+      extended_coverage_tests(), &
+      final_95_coverage_tests(), &
+      ultra_targeted_coverage_tests(), &
+      laser_coverage_tests(), &
       schema_tests(), &
       fuzz_tests() &
   ]))

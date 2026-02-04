@@ -15,6 +15,7 @@ set(TEST_CORE_SUITES
   suites/core/test_error_paths_suite.f90
   suites/core/test_array_suite.f90
   suites/core/test_edge_cases_suite.f90
+  suites/core/test_hash_table_suite.f90
 )
 
 set(TEST_IO_SUITES
@@ -40,6 +41,10 @@ set(TEST_COVERAGE_SUITES
   suites/coverage/test_remaining_coverage_suite.f90
   suites/coverage/test_file_dump_coverage_suite.f90
   suites/coverage/test_types_edge_coverage_suite.f90
+  suites/coverage/test_extended_coverage_suite.f90
+  suites/coverage/test_final_95_coverage_suite.f90
+  suites/coverage/test_ultra_targeted_coverage_suite.f90
+  suites/coverage/test_laser_coverage_suite.f90
   suites/coverage/test_fuzz_suite.f90
 )
 
