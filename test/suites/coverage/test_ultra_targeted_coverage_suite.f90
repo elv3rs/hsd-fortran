@@ -1,4 +1,3 @@
-!> Ultra-targeted coverage tests for reaching 95%
 module test_ultra_targeted_coverage_suite
   use hsd, only : hsd_table, hsd_error_t, new_table, hsd_set, hsd_get, &
       HSD_STAT_OK, hsd_load_string, hsd_load, hsd_iterator, hsd_node

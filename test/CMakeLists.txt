@@ -46,6 +46,9 @@ set(TEST_COVERAGE_SUITES
   suites/coverage/test_ultra_targeted_coverage_suite.f90
   suites/coverage/test_laser_coverage_suite.f90
   suites/coverage/test_fuzz_suite.f90
+  suites/coverage/test_final_100_coverage_suite.f90
+  suites/coverage/test_remaining_paths_suite.f90
+  suites/coverage/test_final_push_suite.f90
 )
 
 # Fortuno-based unit tests

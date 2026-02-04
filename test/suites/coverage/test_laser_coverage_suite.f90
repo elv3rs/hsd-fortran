@@ -1,4 +1,3 @@
-!> Laser-focused tests targeting specific uncovered lines
 module test_laser_coverage_suite
   use hsd, only : hsd_table, hsd_error_t, hsd_load_string, hsd_get, &
       HSD_STAT_OK

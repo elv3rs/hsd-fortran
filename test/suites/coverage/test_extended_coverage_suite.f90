@@ -1,4 +1,3 @@
-!> Comprehensive coverage tests targeting specific uncovered code paths
 module test_extended_coverage_suite
   use hsd, only : hsd_table, hsd_error_t, hsd_load_string, hsd_set, &
       new_table, hsd_get, HSD_STAT_OK, hsd_remove_child

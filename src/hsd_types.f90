@@ -538,11 +538,6 @@ contains
     ignore_case = .false.
     if (present(case_insensitive)) ignore_case = case_insensitive
 
-    ! Ensure index is active
-    if (.not. self%index_active .and. self%num_children > 0) then
-      call self%build_index()
-    end if
-
     if (self%index_active) then
       if (ignore_case) then
         idx = self%name_index%lookup_case_insensitive(name, found)

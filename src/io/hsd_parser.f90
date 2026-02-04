@@ -724,8 +724,6 @@ contains
     character(len=*), intent(in) :: path
     character(len=:), allocatable :: abs_path
 
-    character(len=4096) :: cwd
-    integer :: cwd_len, io_stat
     logical :: file_exists
 
     if (len(path) > 0) then
@@ -742,48 +740,10 @@ contains
       return
     end if
 
-    ! Get current working directory using portable method
-    cwd = ""
-    call get_cwd_portable(cwd, cwd_len, io_stat)
-    if (io_stat == 0 .and. cwd_len > 0) then
-      abs_path = trim(cwd(1:cwd_len)) // "/" // path
-    else
-      abs_path = path
-    end if
+    ! File doesn't exist at relative path - use current directory as base
+    ! (will fail later when trying to read, but provides better error context)
+    abs_path = "./" // path
 
   end function get_absolute_path
-
-  !> Get current working directory using portable methods
-  !>
-  !> Tries environment variables that work across platforms:
-  !> - PWD: Unix/Linux/macOS
-  !> - CD: Windows
-  subroutine get_cwd_portable(cwd, cwd_len, io_stat)
-    character(len=hsd_max_line_length), intent(out) :: cwd
-    integer, intent(out) :: cwd_len
-    integer, intent(out) :: io_stat
-
-    integer :: env_stat
-
-    ! Try PWD first (Unix/Linux/macOS)
-    call get_environment_variable("PWD", cwd, cwd_len, env_stat)
-    if (env_stat == 0 .and. cwd_len > 0) then
-      io_stat = 0
-      return
-    end if
-
-    ! Try CD (Windows)
-    call get_environment_variable("CD", cwd, cwd_len, env_stat)
-    if (env_stat == 0 .and. cwd_len > 0) then
-      io_stat = 0
-      return
-    end if
-
-    ! Fallback to "."
-    cwd = "."
-    cwd_len = 1
-    io_stat = 0
-
-  end subroutine get_cwd_portable
 
 end module hsd_parser

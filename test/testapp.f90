@@ -14,7 +14,7 @@ program testapp
   use test_edge_cases_suite, only : edge_cases_tests => tests
   use test_error_paths_suite, only : error_paths_tests
   use test_final_coverage_suite, only : final_coverage_tests
-  use test_deep_coverage_suite, only : deep_coverage_tests
+  use test_deep_coverage_suite, only : deep_coverage_tests => tests
   use test_ultra_coverage_suite, only : ultra_coverage_tests
   use test_file_dump_coverage_suite, only : file_dump_coverage_tests
   use test_types_edge_coverage_suite, only : types_edge_coverage_tests
@@ -27,6 +27,9 @@ program testapp
   use test_laser_coverage_suite, only : laser_coverage_tests => tests
   use test_schema_suite, only : schema_tests => tests
   use test_fuzz_suite, only : fuzz_tests => tests
+  use test_final_100_coverage_suite, only : final_100_coverage_tests => tests
+  use test_remaining_paths_suite, only : remaining_paths_tests => tests
+  use test_final_push_suite, only : final_push_tests => tests
   implicit none (type, external)
 
   ! Execute all test suites
@@ -57,7 +60,10 @@ program testapp
       ultra_targeted_coverage_tests(), &
       laser_coverage_tests(), &
       schema_tests(), &
-      fuzz_tests() &
+      fuzz_tests(), &
+      final_100_coverage_tests(), &
+      remaining_paths_tests(), &
+      final_push_tests() &
   ]))
 
 end program testapp

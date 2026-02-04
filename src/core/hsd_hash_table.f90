@@ -170,20 +170,16 @@ contains
     ! Follow chain to check for existing key and find end
     chain_idx = self%buckets(idx)%next
     do while (chain_idx /= 0)
-      if (chain_idx < 0) then
-        ! In overflow area
-        overflow_idx = -chain_idx
-        if (allocated(self%overflow(overflow_idx)%key)) then
-          if (self%overflow(overflow_idx)%key == key) then
-            self%overflow(overflow_idx)%value = value
-            return
-          end if
+      ! In overflow area (chain_idx is always negative for overflow entries)
+      overflow_idx = -chain_idx
+      if (allocated(self%overflow(overflow_idx)%key)) then
+        if (self%overflow(overflow_idx)%key == key) then
+          self%overflow(overflow_idx)%value = value
+          return
         end if
-        if (self%overflow(overflow_idx)%next == 0) exit
-        chain_idx = self%overflow(overflow_idx)%next
-      else
-        exit  ! Should not happen with this design
       end if
+      if (self%overflow(overflow_idx)%next == 0) exit
+      chain_idx = self%overflow(overflow_idx)%next
     end do
 
     ! Add new entry to overflow and link it
@@ -193,18 +189,14 @@ contains
     if (self%buckets(idx)%next == 0) then
       self%buckets(idx)%next = overflow_idx
     else
-      ! Find last in chain
+      ! Find last in chain (chain entries are always negative for overflow)
       chain_idx = self%buckets(idx)%next
       do while (chain_idx /= 0)
-        if (chain_idx < 0) then
-          if (self%overflow(-chain_idx)%next == 0) then
-            self%overflow(-chain_idx)%next = overflow_idx
-            exit
-          end if
-          chain_idx = self%overflow(-chain_idx)%next
-        else
+        if (self%overflow(-chain_idx)%next == 0) then
+          self%overflow(-chain_idx)%next = overflow_idx
           exit
         end if
+        chain_idx = self%overflow(-chain_idx)%next
       end do
     end if
 
@@ -239,22 +231,18 @@ contains
       end if
     end if
 
-    ! Check chain
+    ! Check chain (overflow entries use negative indices)
     chain_idx = self%buckets(idx)%next
     do while (chain_idx /= 0)
-      if (chain_idx < 0) then
-        overflow_idx = -chain_idx
-        if (allocated(self%overflow(overflow_idx)%key)) then
-          if (self%overflow(overflow_idx)%key == key) then
-            value = self%overflow(overflow_idx)%value
-            if (present(found)) found = .true.
-            return
-          end if
+      overflow_idx = -chain_idx
+      if (allocated(self%overflow(overflow_idx)%key)) then
+        if (self%overflow(overflow_idx)%key == key) then
+          value = self%overflow(overflow_idx)%value
+          if (present(found)) found = .true.
+          return
         end if
-        chain_idx = self%overflow(overflow_idx)%next
-      else
-        exit
       end if
+      chain_idx = self%overflow(overflow_idx)%next
     end do
 
   end function name_index_lookup
@@ -289,22 +277,18 @@ contains
           end if
         end if
 
-        ! Check chain
+        ! Check chain (overflow entries use negative indices)
         chain_idx = self%buckets(i)%next
         do while (chain_idx /= 0)
-          if (chain_idx < 0) then
-            overflow_idx = -chain_idx
-            if (allocated(self%overflow(overflow_idx)%key_lower)) then
-              if (self%overflow(overflow_idx)%key_lower == key_lower) then
-                value = self%overflow(overflow_idx)%value
-                if (present(found)) found = .true.
-                return
-              end if
+          overflow_idx = -chain_idx
+          if (allocated(self%overflow(overflow_idx)%key_lower)) then
+            if (self%overflow(overflow_idx)%key_lower == key_lower) then
+              value = self%overflow(overflow_idx)%value
+              if (present(found)) found = .true.
+              return
             end if
-            chain_idx = self%overflow(overflow_idx)%next
-          else
-            exit
           end if
+          chain_idx = self%overflow(overflow_idx)%next
         end do
       end if
     end do
@@ -332,17 +316,14 @@ contains
         if (allocated(self%buckets(idx)%key_lower)) deallocate(self%buckets(idx)%key_lower)
         self%buckets(idx)%value = 0
 
-        ! If there's a chain, promote first chain entry
+        ! If there's a chain, promote first chain entry (overflow uses negative indices)
         if (self%buckets(idx)%next /= 0) then
-          chain_idx = self%buckets(idx)%next
-          if (chain_idx < 0) then
-            overflow_idx = -chain_idx
-            self%buckets(idx)%key = self%overflow(overflow_idx)%key
-            self%buckets(idx)%key_lower = self%overflow(overflow_idx)%key_lower
-            self%buckets(idx)%value = self%overflow(overflow_idx)%value
-            self%buckets(idx)%next = self%overflow(overflow_idx)%next
-            self%overflow(overflow_idx)%occupied = .false.
-          end if
+          overflow_idx = -self%buckets(idx)%next
+          self%buckets(idx)%key = self%overflow(overflow_idx)%key
+          self%buckets(idx)%key_lower = self%overflow(overflow_idx)%key_lower
+          self%buckets(idx)%value = self%overflow(overflow_idx)%value
+          self%buckets(idx)%next = self%overflow(overflow_idx)%next
+          self%overflow(overflow_idx)%occupied = .false.
         else
           self%buckets(idx)%occupied = .false.
         end if
@@ -352,26 +333,22 @@ contains
       end if
     end if
 
-    ! Check chain (simplified: just mark as deleted)
+    ! Check chain (overflow entries use negative indices)
     chain_idx = self%buckets(idx)%next
     do while (chain_idx /= 0)
-      if (chain_idx < 0) then
-        overflow_idx = -chain_idx
-        if (allocated(self%overflow(overflow_idx)%key)) then
-          if (self%overflow(overflow_idx)%key == key) then
-            if (allocated(self%overflow(overflow_idx)%key)) &
-              deallocate(self%overflow(overflow_idx)%key)
-            if (allocated(self%overflow(overflow_idx)%key_lower)) &
-              deallocate(self%overflow(overflow_idx)%key_lower)
-            self%overflow(overflow_idx)%occupied = .false.
-            self%num_entries = self%num_entries - 1
-            return
-          end if
+      overflow_idx = -chain_idx
+      if (allocated(self%overflow(overflow_idx)%key)) then
+        if (self%overflow(overflow_idx)%key == key) then
+          if (allocated(self%overflow(overflow_idx)%key)) &
+            deallocate(self%overflow(overflow_idx)%key)
+          if (allocated(self%overflow(overflow_idx)%key_lower)) &
+            deallocate(self%overflow(overflow_idx)%key_lower)
+          self%overflow(overflow_idx)%occupied = .false.
+          self%num_entries = self%num_entries - 1
+          return
         end if
-        chain_idx = self%overflow(overflow_idx)%next
-      else
-        exit
       end if
+      chain_idx = self%overflow(overflow_idx)%next
     end do
 
   end subroutine name_index_remove
@@ -445,21 +422,17 @@ contains
           call self%insert(old_buckets(i)%key, old_buckets(i)%value)
         end if
 
-        ! Process chain
+        ! Process chain (overflow entries use negative indices)
         chain_idx = old_buckets(i)%next
         do while (chain_idx /= 0)
-          if (chain_idx < 0) then
-            overflow_idx = -chain_idx
-            if (old_overflow(overflow_idx)%occupied) then
-              if (allocated(old_overflow(overflow_idx)%key)) then
-                call self%insert(old_overflow(overflow_idx)%key, &
-                                 old_overflow(overflow_idx)%value)
-              end if
+          overflow_idx = -chain_idx
+          if (old_overflow(overflow_idx)%occupied) then
+            if (allocated(old_overflow(overflow_idx)%key)) then
+              call self%insert(old_overflow(overflow_idx)%key, &
+                               old_overflow(overflow_idx)%value)
             end if
-            chain_idx = old_overflow(overflow_idx)%next
-          else
-            exit
           end if
+          chain_idx = old_overflow(overflow_idx)%next
         end do
       end if
     end do

@@ -1,4 +1,3 @@
-!> Final coverage push - targeting remaining uncovered lines
 module test_final_95_coverage_suite
   use hsd, only : hsd_table, hsd_error_t, hsd_load_string, hsd_get_type, &
       hsd_get, HSD_STAT_OK
