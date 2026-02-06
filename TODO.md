@@ -1,10 +1,11 @@
 # HSD-Fortran TODO
 - [ ] Review code structure
 - [ ] move stray type declarations to hsd types
-- [ ] Add reference to required 'fortitude check' code quality to AGENTS.md 
+- [ ] Add reference to required 'fortitude check' code quality to AGENTS.md
+- [ ] Overhaul commands with long ot 
 - [ ] overhaul / remove benchmark suites
 - [ ] document common operation durations
-- [ ] Expand example programs
+- [x] Expand example programs
   - Add examples showcasing common use cases:
     - Configuration file parsing
     - Data validation and schema enforcement

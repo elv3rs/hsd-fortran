@@ -1,0 +1,21 @@
+# Example application configuration
+
+Server {
+  Port = 8080
+  Host = "localhost"
+  MaxConnections = 100
+  EnableLogging = Yes
+  Timeout = 30.5 s
+}
+
+Database {
+  Driver = "postgresql"
+  ConnectionString = "user=admin dbname=webapp"
+  PoolSize = 10
+}
+
+# Optional Feature Flags
+FeatureFlags {
+  BetaUI = No
+  NewSearch = Yes
+}

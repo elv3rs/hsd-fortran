@@ -98,6 +98,23 @@ cmake --install build --prefix /path/to/install
 |--------|---------|-------------|
 | `HSD_ACCEPT_TRUE_FALSE` | `ON` | Accept `True`/`False` as boolean values |
 | `HSD_BUILD_TESTS` | `ON` | Build test suite |
+| `HSD_BUILD_EXAMPLES` | `ON` | Build example programs |
+
+## Examples
+
+The `example/` directory contains demonstration programs showcasing various features:
+
+- **`config_demo.f90`**: Complete configuration file parsing with schema validation, type checking, and default values.
+- **`matrix_demo.f90`**: Handling arrays and matrices, including reading from various HSD array formats.
+- **`simple_read.f90`**: Basic feature showcase including file loading, value access, and output.
+
+Build and run examples:
+```bash
+cmake -B build -S .
+cmake --build build
+# Run config demo
+(cd example && ../build/example/config_demo)
+```
 | `HSD_BUILD_EXAMPLES` | `ON` | Build examples |
 | `HSD_COVERAGE` | `OFF` | Enable code coverage (GCC only) |
 

@@ -1,0 +1,18 @@
+# Matrix and Array example input
+
+# Simple arrays
+Integers = 1 2 3 4 5
+Reals = 1.1 2.2 3.3 4.4
+
+# Matrix (2x2)
+TransformationMatrix = {
+  1.0  0.0
+  0.0  1.0
+}
+
+# 3D Vector
+Position = 10.5 20.0 5.0
+
+# Complex numbers (if supported, assuming implicit or explicit format)
+# HSD usually parses complex as two reals per number if strict, or just array
+ComplexArray = 1.0 2.0  3.0 4.0 # 1+2i, 3+4i

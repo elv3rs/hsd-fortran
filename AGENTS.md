@@ -76,6 +76,8 @@ hsd-fortran/
 │   └── inputs/                 # Test data files
 ├── example/                    # Usage examples
 │   ├── simple_read.f90         # Feature showcase
+│   ├── config_demo.f90         # Configuration & Schema validation
+│   ├── matrix_demo.f90         # Array and Matrix operations
 │   └── sample_input.hsd        # Example HSD file
 ├── docs/                       # Documentation
 │   ├── conf.py                 # Sphinx configuration
