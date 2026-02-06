@@ -748,45 +748,16 @@ contains
     integer, allocatable, intent(out) :: mat(:,:)
     integer, intent(out) :: nrows, ncols, stat
 
-    character(len=:), allocatable :: rows(:), tokens(:)
+    character(len=:), allocatable :: rows(:)
     integer, allocatable :: row_vals(:)
-    integer :: i, j, row_count, col_count, first_cols
+    integer :: i, j
 
-    ! Split into rows by newlines
-    call split_by_newlines(text, rows)
-    row_count = size(rows)
+    call count_matrix_dims(text, rows, nrows, ncols, stat)
 
-    ! Count non-empty rows and determine column count
-    nrows = 0
-    ncols = 0
-    first_cols = -1
-
-    do i = 1, row_count
-      if (len_trim(rows(i)) > 0) then
-        call tokenize_string(rows(i), tokens)
-        col_count = size(tokens)
-        if (col_count > 0) then
-          nrows = nrows + 1
-          if (first_cols < 0) then
-            first_cols = col_count
-            ncols = col_count
-          else if (col_count /= first_cols) then
-            ! Inconsistent column count - report error
-            stat = HSD_STAT_TYPE_ERROR
-            allocate(mat(0,0))
-            nrows = 0
-            ncols = 0
-            return
-          end if
-        end if
-      end if
-    end do
-
-    if (nrows == 0 .or. ncols == 0) then
+    if (stat /= 0 .or. nrows == 0 .or. ncols == 0) then
       allocate(mat(0,0))
       nrows = 0
       ncols = 0
-      stat = 0
       return
     end if
 
@@ -794,7 +765,7 @@ contains
     mat = 0
 
     j = 0
-    do i = 1, row_count
+    do i = 1, size(rows)
       if (len_trim(rows(i)) > 0) then
         call parse_int_array(rows(i), row_vals, stat)
         if (stat /= 0) then
@@ -821,43 +792,16 @@ contains
     real(dp), allocatable, intent(out) :: mat(:,:)
     integer, intent(out) :: nrows, ncols, stat
 
-    character(len=:), allocatable :: rows(:), tokens(:)
+    character(len=:), allocatable :: rows(:)
     real(dp), allocatable :: row_vals(:)
-    integer :: i, j, row_count, col_count, first_cols
+    integer :: i, j
 
-    call split_by_newlines(text, rows)
-    row_count = size(rows)
+    call count_matrix_dims(text, rows, nrows, ncols, stat)
 
-    nrows = 0
-    ncols = 0
-    first_cols = -1
-
-    do i = 1, row_count
-      if (len_trim(rows(i)) > 0) then
-        call tokenize_string(rows(i), tokens)
-        col_count = size(tokens)
-        if (col_count > 0) then
-          nrows = nrows + 1
-          if (first_cols < 0) then
-            first_cols = col_count
-            ncols = col_count
-          else if (col_count /= first_cols) then
-            ! Inconsistent column count - report error
-            stat = HSD_STAT_TYPE_ERROR
-            allocate(mat(0,0))
-            nrows = 0
-            ncols = 0
-            return
-          end if
-        end if
-      end if
-    end do
-
-    if (nrows == 0 .or. ncols == 0) then
+    if (stat /= 0 .or. nrows == 0 .or. ncols == 0) then
       allocate(mat(0,0))
       nrows = 0
       ncols = 0
-      stat = 0
       return
     end if
 
@@ -865,7 +809,7 @@ contains
     mat = 0.0_dp
 
     j = 0
-    do i = 1, row_count
+    do i = 1, size(rows)
       if (len_trim(rows(i)) > 0) then
         call parse_real_array(rows(i), row_vals, stat)
         if (stat /= 0) then
@@ -885,6 +829,54 @@ contains
     stat = 0
 
   end subroutine parse_real_matrix
+
+  !> Count matrix dimensions from text (rows by newlines/semicolons)
+  !>
+  !> Shared helper for parse_int_matrix and parse_real_matrix.
+  !> Splits text into rows, counts non-empty rows, and validates
+  !> that all rows have the same number of columns.
+  !>
+  !> @param[in]  text   Raw text to parse
+  !> @param[out] rows   Rows split by newlines (for caller to parse)
+  !> @param[out] nrows  Number of non-empty rows
+  !> @param[out] ncols  Number of columns (from first row)
+  !> @param[out] stat   0 on success, HSD_STAT_TYPE_ERROR on ragged
+  subroutine count_matrix_dims(text, rows, nrows, ncols, stat)
+    character(len=*), intent(in) :: text
+    character(len=:), allocatable, intent(out) :: rows(:)
+    integer, intent(out) :: nrows, ncols, stat
+
+    character(len=:), allocatable :: tokens(:)
+    integer :: i, row_count, col_count, first_cols
+
+    call split_by_newlines(text, rows)
+    row_count = size(rows)
+
+    nrows = 0
+    ncols = 0
+    first_cols = -1
+    stat = 0
+
+    do i = 1, row_count
+      if (len_trim(rows(i)) > 0) then
+        call tokenize_string(rows(i), tokens)
+        col_count = size(tokens)
+        if (col_count > 0) then
+          nrows = nrows + 1
+          if (first_cols < 0) then
+            first_cols = col_count
+            ncols = col_count
+          else if (col_count /= first_cols) then
+            stat = HSD_STAT_TYPE_ERROR
+            nrows = 0
+            ncols = 0
+            return
+          end if
+        end if
+      end if
+    end do
+
+  end subroutine count_matrix_dims
 
   !> Split text by newlines
   !>

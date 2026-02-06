@@ -45,11 +45,6 @@ copy directly in `test/` (e.g. `test/test_api_suite.f90` ≡
 `test/suites/api/test_api_suite.f90`). CMake only compiles the `suites/`
 versions. Delete all flat copies and `test/count_visitor_mod.f90`.
 
-### 7. Deduplicate array/matrix parse routines
-`parse_int_array` / `parse_real_array` and `parse_int_matrix` /
-`parse_real_matrix` in `hsd_types.f90` are near-identical, differing only
-in the `read` format specifier. Consolidate with an internal helper.
-
 ### 8. Massive duplicate `use` blocks in every test file
 Almost every test module imports the same ~30-line `use hsd, only: …` block
 verbatim. Consider creating a `test_common` module that re-exports the test
