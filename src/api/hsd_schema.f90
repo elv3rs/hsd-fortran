@@ -46,7 +46,7 @@ module hsd_schema
   use hsd_constants, only: dp
   use hsd_utils, only: to_lower
   use hsd_error, only: hsd_error_t, make_error, HSD_STAT_OK, HSD_STAT_NOT_FOUND, &
-    HSD_STAT_TYPE_ERROR
+    HSD_STAT_TYPE_ERROR, HSD_STAT_SCHEMA_ERROR
   use hsd_types, only: hsd_node, hsd_table, hsd_value, &
     VALUE_TYPE_NONE, VALUE_TYPE_STRING, VALUE_TYPE_INTEGER, &
     VALUE_TYPE_REAL, VALUE_TYPE_LOGICAL, VALUE_TYPE_ARRAY, VALUE_TYPE_COMPLEX
@@ -84,9 +84,6 @@ module hsd_schema
 
   !> Maximum number of allowed values for enum validation
   integer, parameter :: MAX_ENUM_VALUES = 32
-
-  !> Schema validation error code
-  integer, parameter, public :: HSD_STAT_SCHEMA_ERROR = 20
 
   !> Field definition
   type :: hsd_field_def_t
