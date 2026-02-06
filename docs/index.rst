@@ -86,10 +86,6 @@ Contents
 
    api
 
-.. note::
-   Complete API documentation with detailed procedure signatures, type definitions, 
-   and module dependency graphs is available in the `FORD API Documentation <../ford/index.html>`_.
-
 
 Indices and tables
 ==================

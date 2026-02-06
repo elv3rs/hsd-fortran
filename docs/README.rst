@@ -6,10 +6,7 @@ This directory contains the Sphinx documentation for HSD-Fortran.
 Building the Documentation
 ---------------------------
 
-The documentation consists of two parts:
-
-1. **Sphinx documentation** (user guides, tutorials) - built from this directory
-2. **FORD API documentation** (generated from source code) - built from ``ford.md`` in the project root
+The documentation consists of the Sphinx documentation (user guides, tutorials) built from this directory.
 
 Requirements
 ~~~~~~~~~~~~
@@ -26,28 +23,18 @@ Install documentation dependencies:
     source .venv/bin/activate  # On Windows: .venv\Scripts\activate
     uv pip install -r requirements.txt
 
-**Note:** FORD 6.x is used for compatibility with Python 3.12. FORD 7.x has known issues with search index generation.
+Build Documentation
+~~~~~~~~~~~~~~~~~~~
 
-Build Complete Documentation
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-To build both Sphinx and FORD documentation:
+To build the Sphinx documentation:
 
 .. code-block:: bash
 
-    # 1. Build FORD API documentation
-    ford ford.md
-    # Note: FORD 6.x outputs to 'doc' directory, rename it:
-    mv doc ford_docs
-    
-    # 2. Build Sphinx documentation
+    # 1. Build Sphinx documentation
     sphinx-build -b html docs public
     
-    # 3. Merge FORD docs into Sphinx output
-    mkdir -p public/ford
-    cp -r ford_docs/* public/ford/
-    
-    # 4. Open in browser
+    # 2. Open in browser
+    open public/index.html
     open public/index.html  # macOS
     # or: xdg-open public/index.html  # Linux
     # or: start public/index.html  # Windows

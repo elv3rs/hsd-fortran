@@ -2,7 +2,6 @@
 build/
 _build/
 build-fuzz/
-ford_docs/
 
 # CMake cache files
 CMakeCache.txt

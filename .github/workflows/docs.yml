@@ -28,8 +28,6 @@ jobs:
         run: |
           pip install --upgrade pip
           pip install anybadge
-          # Install FORD 7.x (search issues fixed in 7.0.10)
-          pip install 'ford>=7.0.10'
           pip install -r docs/requirements.txt
       
       - name: Install system dependencies
@@ -81,19 +79,13 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
-      - name: Build FORD documentation
-        run: ford ford.md
-      
       - name: Build Sphinx documentation
         run: sphinx-build -b html docs public
       
       - name: Merge documentation and coverage
         run: |
-          mkdir -p public/coverage public/ford
+          mkdir -p public/coverage
           cp -r coverage_html/* public/coverage/
-          if [ -d "ford_docs" ]; then
-            cp -r ford_docs/* public/ford/
-          fi
       
       - name: Upload pages artifact
         uses: actions/upload-pages-artifact@v3

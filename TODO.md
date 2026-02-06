@@ -1,5 +1,6 @@
 # HSD-Fortran TODO
-- [ ] Update Docs, Readme and Agents.md 
+- [x] Remove ford integration
+- [x] Update Docs, Readme and Agents.md 
 - [ ] Review code structure
 - [ ] move stray type declarations to hsd types
 - [ ] overhaul / remove benchmark suites
@@ -12,9 +13,7 @@
     - Array/matrix operations
     - Error handling patterns
     - Tree traversal with visitors
-  - Add inline comments explaining best practices
-- [x] Add FORD ([Fortran Documentation](https://github.com/Fortran-FOSS-Programmers/ford)) integration
-- [x] Add ford to CI and integrate with sphinx, removing manual api documentation
+
 - [ ] Move documentation to code / expand code documentation
 - [ ] Expand code coverage to 100%
 - [ ] Clean up horrible test organisation

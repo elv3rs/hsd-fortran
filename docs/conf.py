@@ -52,7 +52,6 @@ html_theme_options = {
     'titles_only': False,
 }
 
-# Add link to FORD documentation in sidebar
 html_context = {
     'display_github': True,
     'github_user': 'elv3rs',
