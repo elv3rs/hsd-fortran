@@ -727,14 +727,28 @@ contains
 
   !> Get absolute path by prepending the current working directory
   !>
-  !> Uses Fortran 2003 `getcwd()` to resolve relative paths to absolute.
+  !> Uses C interop to call POSIX `getcwd()` for portable directory resolution.
   !> If the path is already absolute (starts with '/'), it is returned unchanged.
   function get_absolute_path(path) result(abs_path)
+    use, intrinsic :: iso_c_binding, only: c_char, c_ptr, c_null_char, &
+      & c_null_ptr, c_int, c_associated
     character(len=*), intent(in) :: path
     character(len=:), allocatable :: abs_path
+    integer, parameter :: MAX_PATH = 4096
 
-    character(len=4096) :: cwd
-    integer :: cwd_stat
+    interface
+      function c_getcwd(buf, bufsize) bind(c, name="getcwd") result(ptr)
+        import :: c_char, c_ptr, c_int
+        implicit none
+        character(kind=c_char), intent(out) :: buf(*)
+        integer(c_int), value :: bufsize
+        type(c_ptr) :: ptr
+      end function c_getcwd
+    end interface
+
+    character(kind=c_char) :: cwd(MAX_PATH)
+    type(c_ptr) :: res
+    integer :: ii
 
     ! Already absolute — return as-is
     if (len(path) > 0) then
@@ -744,16 +758,20 @@ contains
       end if
     end if
 
-    ! Obtain the current working directory
-    call getcwd(cwd, cwd_stat)   ! Fortran 2003 intrinsic (GNU/Intel)
-    if (cwd_stat /= 0) then
+    ! Obtain the current working directory via POSIX getcwd
+    res = c_getcwd(cwd, int(size(cwd), c_int))
+    if (.not. c_associated(res)) then
       ! Fallback: return relative path unchanged (file-open will fail
       ! with a meaningful OS error if the path is invalid).
       abs_path = path
       return
     end if
 
-    abs_path = trim(cwd) // "/" // path
+    ! Convert C string to Fortran string (find null terminator)
+    do ii = 1, size(cwd)
+      if (cwd(ii) == c_null_char) exit
+    end do
+    abs_path = transfer(cwd(1:ii-1), repeat(' ', ii-1)) // "/" // path
 
   end function get_absolute_path
 
