@@ -17,32 +17,49 @@ HSD-Fortran is a Human-friendly Structured Data parser for Fortran, designed as 
 ```bash
 # Build
 cmake -B build -DCMAKE_BUILD_TYPE=Debug
-cmake --build build
+cmake --build build 2>&1 | tail -5
 
-# Lint
-pip install fortitude-lint
+# Lint (required before committing — must pass with zero warnings)
+pip install fortitude-lint   # one-time setup
 fortitude check
 
 # Test
-ctest --test-dir build --verbose
+ctest --test-dir build 2>&1 | tail -5
 
 # Run specific test
 ./build/test/hsd_testapp "lexer/simple_tokens"
 
 # Documentation
-# Using uv for faster installation:
 uv venv .venv && source .venv/bin/activate
 uv pip install -r docs/requirements.txt
-
-# Build Sphinx user docs
-sphinx-build -b html docs public
+sphinx-build -b html docs public 2>&1 | tail -5
 
 # Coverage (requires GCC)
 cmake -B build -DCMAKE_BUILD_TYPE=Debug -DHSD_COVERAGE=ON
-cmake --build build && ctest --test-dir build
-lcov --capture --directory build/src --output-file build/coverage.info --ignore-errors inconsistent
-genhtml build/coverage.info --output-directory build/coverage_html
+cmake --build build && ctest --test-dir build 2>&1 | tail -5
+lcov --capture --directory build/src --output-file build/coverage.info --ignore-errors inconsistent 2>&1 | tail -3
+genhtml build/coverage.info --output-directory build/coverage_html 2>&1 | tail -3
 ```
+
+> **Token-saving tip:** Commands above pipe through `tail` to show only the summary.
+> Drop the `| tail` suffix when you need full output for debugging.
+
+## Code Quality
+
+All source code **must** pass `fortitude check` with zero warnings before being committed.
+[Fortitude](https://github.com/PlasmaFAIR/fortitude) is a Fortran linter that enforces
+consistent style and catches common mistakes.
+
+```bash
+# Check all source files
+fortitude check
+
+# Check a specific file
+fortitude check src/hsd_types.f90
+```
+
+Fortitude is configured via `fortitude.toml` (if present) or uses sensible defaults.
+The CI pipeline enforces this check — PRs with lint warnings will not be merged.
 
 ## Project Layout
 
