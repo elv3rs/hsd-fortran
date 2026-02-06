@@ -18,6 +18,16 @@ module test_api_suite
     procedure :: visit_value => counting_visit_value
   end type counting_visitor
 
+  ! Helper for leave_table test
+  type, extends(hsd_visitor_t) :: nesting_visitor
+    integer :: depth_check = 0
+    integer :: tables_visited = 0
+  contains
+    procedure :: visit_table => nesting_visit_table
+    procedure :: visit_value => nesting_visit_value
+    procedure :: leave_table => nesting_leave_table
+  end type nesting_visitor
+
 contains
 
   !> Returns all API tests
@@ -35,6 +45,7 @@ contains
             test("default_string", test_default_string), &
             test("default_logical", test_default_logical), &
             test("visitor_pattern", test_visitor_pattern), &
+            test("visitor_leave_table", test_visitor_leave_table), &
             test("get_attrib", test_get_attrib), &
             test("has_attrib", test_has_attrib), &
             test("hsd_require", test_hsd_require), &
@@ -897,5 +908,63 @@ contains
     call root%destroy()
 
   end subroutine test_default_complex
+
+  !> Test leave_table callback in visitor
+  subroutine test_visitor_leave_table()
+    type(hsd_table) :: root
+    type(hsd_error_t), allocatable :: error
+    class(nesting_visitor), allocatable :: vis
+    integer :: stat
+
+    ! Build a nested structure
+    ! root
+    !   - t1 (table)
+    !     - v1 (value)
+    !   - t2 (table)
+    !     - t3 (table)
+    call hsd_load_string("t1 { v1 = 1} t2 { t3 {} }", root, error)
+    call check(.not. allocated(error), msg="Parse OK")
+
+    allocate(vis)
+    call hsd_accept(root, vis, stat)
+    
+    call check(vis%depth_check == 0, msg="Depth returned to 0")
+    ! Root, t1, t2, t3 = 4 tables
+    call check(vis%tables_visited == 4, msg="Visited 4 tables")
+    
+    call root%destroy()
+  end subroutine test_visitor_leave_table
+
+  subroutine nesting_visit_table(self, table, path, depth, stat)
+    class(nesting_visitor), intent(inout) :: self
+    type(hsd_table), intent(in), target :: table
+    character(len=*), intent(in) :: path
+    integer, intent(in) :: depth
+    integer, intent(out), optional :: stat
+    
+    self%depth_check = self%depth_check + 1
+    self%tables_visited = self%tables_visited + 1
+    if (present(stat)) stat = 0
+  end subroutine
+
+  subroutine nesting_visit_value(self, val, path, depth, stat)
+    class(nesting_visitor), intent(inout) :: self
+    type(hsd_value), intent(in) :: val
+    character(len=*), intent(in) :: path
+    integer, intent(in) :: depth
+    integer, intent(out), optional :: stat
+    if (present(stat)) stat = 0
+  end subroutine
+
+  subroutine nesting_leave_table(self, table, path, depth, stat)
+    class(nesting_visitor), intent(inout) :: self
+    type(hsd_table), intent(in), target :: table
+    character(len=*), intent(in) :: path
+    integer, intent(in) :: depth
+    integer, intent(out), optional :: stat
+    
+    self%depth_check = self%depth_check - 1
+    if (present(stat)) stat = 0
+  end subroutine
 
 end module test_api_suite

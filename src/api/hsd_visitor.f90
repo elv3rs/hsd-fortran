@@ -39,6 +39,8 @@ module hsd_visitor
     procedure(visit_table_if), deferred :: visit_table
     !> Called when visiting a value node
     procedure(visit_value_if), deferred :: visit_value
+    !> Called when leaving a table node (after children are visited)
+    procedure :: leave_table => default_leave_table
   end type hsd_visitor_t
 
   abstract interface
@@ -78,6 +80,16 @@ module hsd_visitor
   end interface
 
 contains
+
+  !> Default implementation of leave_table (does nothing)
+  subroutine default_leave_table(self, table, path, depth, stat)
+    class(hsd_visitor_t), intent(inout) :: self
+    type(hsd_table), intent(in), target :: table
+    character(len=*), intent(in) :: path
+    integer, intent(in) :: depth
+    integer, intent(out), optional :: stat
+    if (present(stat)) stat = 0
+  end subroutine default_leave_table
 
   !> Accept a visitor and traverse the tree
   !>
@@ -153,6 +165,13 @@ contains
         end if
       end select
     end do
+
+    ! Call leave_table after processing children
+    call visitor%leave_table(table, path, depth, local_stat)
+    if (local_stat /= 0) then
+      if (present(stat)) stat = local_stat
+      return
+    end if
 
     if (present(stat)) stat = 0
 
