@@ -60,6 +60,9 @@ contains
     type(hsd_error_t), allocatable :: local_error
     character(len=:), allocatable :: abs_path
 
+    ! Always initialize root so callers get a valid (empty) table even on error
+    call new_table(root)
+
     ! Get absolute path
     abs_path = get_absolute_path(filename)
 
@@ -81,9 +84,6 @@ contains
       if (present(error)) call move_alloc(local_error, error)
       return
     end if
-
-    ! Initialize root table
-    call new_table(root)
 
     ! Get first token
     call state%next_token()
