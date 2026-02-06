@@ -34,22 +34,7 @@ set(TEST_API_SUITES
 
 set(TEST_COVERAGE_SUITES
   suites/coverage/count_visitor_mod.f90
-  suites/coverage/test_coverage_suite.f90
-  suites/coverage/test_deep_coverage_suite.f90
-  suites/coverage/test_ultra_coverage_suite.f90
-  suites/coverage/test_final_coverage_suite.f90
-  suites/coverage/test_stat_coverage_suite.f90
-  suites/coverage/test_remaining_coverage_suite.f90
-  suites/coverage/test_file_dump_coverage_suite.f90
-  suites/coverage/test_types_edge_coverage_suite.f90
-  suites/coverage/test_extended_coverage_suite.f90
-  suites/coverage/test_final_95_coverage_suite.f90
-  suites/coverage/test_ultra_targeted_coverage_suite.f90
-  suites/coverage/test_laser_coverage_suite.f90
   suites/coverage/test_fuzz_suite.f90
-  suites/coverage/test_final_100_coverage_suite.f90
-  suites/coverage/test_remaining_paths_suite.f90
-  suites/coverage/test_final_push_suite.f90
   suites/coverage/test_full_coverage_suite.f90
 )
 

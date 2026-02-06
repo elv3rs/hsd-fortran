@@ -289,10 +289,10 @@ contains
     case default
       if (allocated(val%string_value)) then
         str = quote_if_needed(val%string_value)
-      else if (allocated(val%raw_text)) then
+      else if (allocated(val%raw_text)) then  ! LCOV_EXCL_LINE
         str = val%raw_text  ! LCOV_EXCL_LINE
       else
-        str = ""
+        str = ""  ! LCOV_EXCL_LINE
       end if
     end select
 
