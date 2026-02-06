@@ -82,9 +82,6 @@ module hsd_schema
   integer, parameter :: FIELD_TYPE_COMPLEX = VALUE_TYPE_COMPLEX
   integer, parameter :: FIELD_TYPE_TABLE = 100  ! Special marker for table
 
-  !> Maximum number of allowed values for enum validation
-  integer, parameter :: MAX_ENUM_VALUES = 32
-
   !> Field definition
   type :: hsd_field_def_t
     !> Path to the field (e.g., "Geometry/Periodic")
@@ -102,7 +99,7 @@ module hsd_schema
     !> Maximum real value (if applicable)
     real(dp) :: max_real = huge(1.0_dp)
     !> Allowed string values (for enum validation)
-    character(len=64) :: allowed_values(MAX_ENUM_VALUES) = ""
+    character(len=64), allocatable :: allowed_values(:)
     !> Number of allowed values
     integer :: num_allowed = 0
     !> Whether range constraints are active
@@ -254,7 +251,8 @@ contains
     call schema_add_field(schema, path, requirement, FIELD_TYPE_STRING, &
                           description=description)
 
-    n = min(size(allowed_values), MAX_ENUM_VALUES)
+    n = size(allowed_values)
+    allocate(schema%fields(schema%num_fields)%allowed_values(n))
     do i = 1, n
       schema%fields(schema%num_fields)%allowed_values(i) = trim(allowed_values(i))
     end do
