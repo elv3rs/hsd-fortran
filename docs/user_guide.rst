@@ -324,7 +324,7 @@ Additional validation utilities:
 Visitor Pattern
 ---------------
 
-Traverse the entire tree with custom logic:
+Traverse the entire tree with custom logic by extending ``hsd_visitor_t``:
 
 .. code-block:: fortran
 
@@ -342,7 +342,7 @@ Traverse the entire tree with custom logic:
 
    subroutine print_table(self, table, path, depth, stat)
      class(tree_printer), intent(inout) :: self
-     type(hsd_table), intent(in) :: table
+     type(hsd_table), intent(in), target :: table
      character(len=*), intent(in) :: path
      integer, intent(in) :: depth
      integer, intent(out), optional :: stat
@@ -362,6 +362,10 @@ Traverse the entire tree with custom logic:
      if (present(stat)) stat = 0
    end subroutine
 
+See ``example/visitor_demo.f90`` for a complete compilable example that
+includes both a tree-printing visitor and a node-counting visitor.
+   end subroutine
+
 Best Practices
 --------------
 
@@ -371,6 +375,16 @@ Best Practices
 4. **Use path notation** for cleaner code instead of manual tree traversal
 5. **Validate ranges** for numeric inputs
 6. **Provide defaults** for optional configuration values
+
+.. note::
+
+   All code snippets above are excerpts. Compilable programs demonstrating
+   these features can be found under ``example/``:
+
+   - ``simple_read.f90`` — loading, accessing, modifying, merging, validation
+   - ``config_demo.f90`` — schema-based validation
+   - ``matrix_demo.f90`` — arrays and matrices
+   - ``visitor_demo.f90`` — visitor pattern for tree traversal
 
 Example: Complete Configuration Parser
 --------------------------------------
