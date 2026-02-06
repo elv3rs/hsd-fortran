@@ -26,8 +26,12 @@ set(HSD_API_SOURCES
 )
 
 # Type modules (data structures)
+# hsd_types.f90 is the parent module with type definitions and interfaces.
+# hsd_table_ops.f90 and hsd_value_ops.f90 are submodules with implementations.
 set(HSD_TYPE_SOURCES
   hsd_types.f90
+  hsd_table_ops.f90
+  hsd_value_ops.f90
 )
 
 # Main facade module

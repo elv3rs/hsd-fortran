@@ -71,6 +71,8 @@ hsd-fortran/
 ├── src/                        # Library source
 │   ├── hsd.f90                 # Public API (re-exports all modules)
 │   ├── hsd_types.f90           # Data structures (node, table, value, iterator)
+│   ├── hsd_table_ops.f90      # Submodule: table & iterator operations
+│   ├── hsd_value_ops.f90      # Submodule: value ops & parse helpers
 │   ├── api/                    # High-level API modules
 │   │   ├── hsd_accessors.f90   # hsd_get, hsd_get_or, hsd_get_matrix
 │   │   ├── hsd_mutators.f90    # hsd_set

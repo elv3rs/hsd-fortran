@@ -45,14 +45,6 @@ copy directly in `test/` (e.g. `test/test_api_suite.f90` ≡
 `test/suites/api/test_api_suite.f90`). CMake only compiles the `suites/`
 versions. Delete all flat copies and `test/count_visitor_mod.f90`.
 
-### 6. Split `hsd_types.f90` (~1745 lines → 3 modules)
-
-| New module | Contents | Est. lines |
-|------------|----------|-----------|
-| `hsd_types.f90` | Type definitions, constructors, destructors | ~300 |
-| `hsd_table_ops.f90` | `add_child`, `get_child*`, `remove_child*`, iterator | ~350 |
-| `hsd_value_ops.f90` | `set_*`, `get_*`, `parse_*_array`, `parse_*_matrix`, tokenizers | ~1000 |
-
 ### 7. Deduplicate array/matrix parse routines
 `parse_int_array` / `parse_real_array` and `parse_int_matrix` /
 `parse_real_matrix` in `hsd_types.f90` are near-identical, differing only

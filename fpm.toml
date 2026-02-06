@@ -12,7 +12,7 @@ description = "HSD (Human-friendly Structured Data) parser for Fortran"
 source-dir = "src"
 
 [build]
-auto-tests = false
+auto-tests = true
 auto-examples = false
 
 [[test]]
