@@ -42,3 +42,7 @@ access (fast for typical HSD file sizes) and remove the cache fields entirely.
 Extract code blocks from `docs/user_guide.rst` into standalone `.f90` files
 under `example/` and use Sphinx `literalinclude` directives. This prevents
 doc/code drift.
+
+## Update TODO.md
+Perform a thorough review of the codebase and replace the completed TODO.md with an actionable list of new tasks ordered by priority.
+
