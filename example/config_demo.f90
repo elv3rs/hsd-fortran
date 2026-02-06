@@ -9,13 +9,18 @@
 ! - Reading values with attributes (units)
 !
 program config_demo
-  use hsd
+  use hsd, only: hsd_table, hsd_error_t, hsd_schema_t, dp, &
+    & hsd_load, hsd_get, hsd_get_or, hsd_get_attrib, &
+    & schema_init, schema_destroy, schema_add_field, schema_add_field_enum, &
+    & schema_validate_strict, &
+    & FIELD_REQUIRED, FIELD_OPTIONAL, FIELD_TYPE_TABLE, FIELD_TYPE_INTEGER, &
+    & FIELD_TYPE_STRING, FIELD_TYPE_REAL, FIELD_TYPE_LOGICAL
   implicit none (type, external)
 
   type(hsd_table) :: config
   type(hsd_schema_t) :: schema
   type(hsd_error_t), allocatable :: errors(:), io_error
-  
+
   ! Configuration variables
   integer :: port, max_conn, pool_size
   logical :: logging, beta_ui
@@ -88,16 +93,16 @@ program config_demo
 
   ! Basic gets
   call hsd_get(config, "Server/Port", port)
-  call hsd_get(config, "Server/Host", host) ! Uses deep copy for string
-  
+  call hsd_get(config, "Server/Host", host)  ! Uses deep copy for string
+
   ! Get with default
   call hsd_get_or(config, "Server/MaxConnections", max_conn, 50)
-  
+
   ! Get with unit handling (manual way)
   call hsd_get(config, "Server/Timeout", timeout)
   call hsd_get_attrib(config, "Server/Timeout", unit_str)
   if (.not. allocated(unit_str)) unit_str = "s (default)"
-  
+
   print '(A,I0)', "   Port: ", port
   print '(A,A)',  "   Host: ", host
   print '(A,I0)', "   Max Connections: ", max_conn
