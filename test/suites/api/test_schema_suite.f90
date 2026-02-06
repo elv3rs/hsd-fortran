@@ -43,7 +43,8 @@ contains
             test("nested_paths", test_nested_paths), &
             test("case_insensitive_enum", test_case_insensitive_enum), &
             test("table_vs_value_error", test_table_vs_value_error), &
-            test("schema_strict_and_methods", test_schema_strict_and_methods) &
+            test("schema_strict_and_methods", test_schema_strict_and_methods), &
+            test("strict_catches_unknown", test_strict_catches_unknown) &
         ]))&
     ])
   end function tests
@@ -414,6 +415,35 @@ contains
     call root%destroy()
 
   end subroutine test_schema_strict_and_methods
+
+  !> Test that strict validation catches unknown fields
+  subroutine test_strict_catches_unknown()
+    type(hsd_schema_t) :: schema
+    type(hsd_table) :: root
+    type(hsd_error_t), allocatable :: errors(:), parse_error
+
+    call schema_init(schema, name="strict_test")
+    call schema_add_field(schema, "Name", FIELD_REQUIRED, FIELD_TYPE_STRING)
+    call schema_add_field(schema, "Section/Value", FIELD_OPTIONAL, FIELD_TYPE_INTEGER)
+
+    ! Parse input with an extra unknown field "Typo"
+    call hsd_load_string('Name = "test"' // char(10) // &
+      'Typo = "oops"' // char(10) // &
+      'Section { Value = 42 }', root, parse_error)
+    call check(.not. allocated(parse_error), msg="Parse should succeed")
+
+    ! Regular validation should NOT flag the typo
+    call schema_validate(schema, root, errors)
+    call check(size(errors) == 0, msg="Regular validation ignores unknown fields")
+
+    ! Strict validation SHOULD flag the typo
+    call schema_validate_strict(schema, root, errors)
+    call check(size(errors) > 0, msg="Strict validation catches unknown fields")
+
+    call schema_destroy(schema)
+    call root%destroy()
+
+  end subroutine test_strict_catches_unknown
 
 
 end module test_schema_suite

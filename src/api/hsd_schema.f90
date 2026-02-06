@@ -314,19 +314,125 @@ contains
 
   !> Validate an HSD tree strictly (also checks for unknown fields)
   !>
-  !> NOTE: Unknown-field checking is not yet implemented. Currently this
-  !> delegates to schema_validate(). A future implementation should walk
-  !> the tree and report any children not declared in the schema.
+  !> Performs all checks from schema_validate, then walks every node in the
+  !> tree and reports any children whose path is **not** declared in the
+  !> schema.  Only the first level of children under `root` (and their
+  !> sub-paths) is checked; nested children are checked recursively.
   subroutine schema_validate_strict(schema, root, errors)
     type(hsd_schema_t), intent(in) :: schema
     type(hsd_table), intent(in), target :: root
     type(hsd_error_t), allocatable, intent(out) :: errors(:)
 
-    ! For now, same as regular validation
-    ! Full implementation would walk tree and check for unschema'd fields
-    call schema_validate(schema, root, errors)
+    type(hsd_error_t), allocatable :: base_errors(:)
+    type(hsd_error_t), allocatable :: unknown_errors(:)
+    type(hsd_error_t), allocatable :: combined(:)
+    integer :: num_unknown
+
+    ! Run standard validation first
+    call schema_validate(schema, root, base_errors)
+
+    ! Walk the tree to find unknown fields
+    allocate(unknown_errors(256))   ! generous pre-allocation
+    num_unknown = 0
+    call collect_unknown_fields(schema, root, "", unknown_errors, num_unknown)
+
+    ! Combine both error lists
+    if (num_unknown > 0) then
+      allocate(combined(size(base_errors) + num_unknown))
+      if (size(base_errors) > 0) combined(1:size(base_errors)) = base_errors
+      combined(size(base_errors)+1:) = unknown_errors(1:num_unknown)
+      call move_alloc(combined, errors)
+    else
+      call move_alloc(base_errors, errors)
+    end if
 
   end subroutine schema_validate_strict
+
+  !> Recursively collect children not declared in the schema
+  recursive subroutine collect_unknown_fields(schema, table, prefix, &
+      errors, num_errors)
+    type(hsd_schema_t), intent(in) :: schema
+    type(hsd_table), intent(in) :: table
+    character(len=*), intent(in) :: prefix
+    type(hsd_error_t), intent(inout) :: errors(:)
+    integer, intent(inout) :: num_errors
+
+    class(hsd_node), pointer :: child
+    character(len=:), allocatable :: child_path
+    type(hsd_error_t), allocatable :: tmp_error
+    integer :: i
+    logical :: found
+
+    do i = 1, table%num_children
+      call table%get_child(i, child)
+      if (.not. associated(child)) cycle
+      if (.not. allocated(child%name)) cycle
+      if (len_trim(child%name) == 0) cycle
+
+      ! Build the full path for this child
+      if (len_trim(prefix) > 0) then
+        child_path = prefix // "/" // trim(child%name)
+      else
+        child_path = trim(child%name)
+      end if
+
+      ! Check whether this path is declared in the schema
+      found = path_in_schema(schema, child_path)
+
+      if (.not. found) then
+        if (num_errors < size(errors)) then
+          num_errors = num_errors + 1
+          call make_error(tmp_error, HSD_STAT_SCHEMA_ERROR, &
+            "Unknown field '" // child_path // "' not declared in schema")
+          errors(num_errors) = tmp_error
+          deallocate(tmp_error)
+        end if
+      end if
+
+      ! Recurse into sub-tables
+      select type (child)
+      type is (hsd_table)
+        call collect_unknown_fields(schema, child, child_path, errors, num_errors)
+      end select
+    end do
+
+  end subroutine collect_unknown_fields
+
+  !> Check if a path (case-insensitive) matches any schema field path
+  !> Also returns true if the path is a prefix of a schema field
+  !> (i.e. intermediate table on the way to a declared leaf).
+  pure function path_in_schema(schema, path) result(found)
+    type(hsd_schema_t), intent(in) :: schema
+    character(len=*), intent(in) :: path
+    logical :: found
+
+    character(len=:), allocatable :: lower_path, lower_field
+    integer :: i, path_len
+
+    found = .false.
+    lower_path = to_lower(path)
+    path_len = len(lower_path)
+
+    do i = 1, schema%num_fields
+      lower_field = to_lower(schema%fields(i)%path)
+
+      ! Exact match
+      if (lower_field == lower_path) then
+        found = .true.
+        return
+      end if
+
+      ! Path is a prefix of a declared field (intermediate table)
+      if (len(lower_field) > path_len) then
+        if (lower_field(1:path_len) == lower_path .and. &
+            lower_field(path_len+1:path_len+1) == "/") then
+          found = .true.
+          return
+        end if
+      end if
+    end do
+
+  end function path_in_schema
 
   !> Validate method wrapper
   subroutine schema_validate_method(self, root, errors)
