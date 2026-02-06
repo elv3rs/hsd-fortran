@@ -1,8 +1,7 @@
 # HSD-Fortran TODO
-- [x] Remove ford integration
-- [x] Update Docs, Readme and Agents.md 
 - [ ] Review code structure
 - [ ] move stray type declarations to hsd types
+- [ ] Add reference to required 'fortitude check' code quality to AGENTS.md 
 - [ ] overhaul / remove benchmark suites
 - [ ] document common operation durations
 - [ ] Expand example programs
@@ -13,9 +12,9 @@
     - Array/matrix operations
     - Error handling patterns
     - Tree traversal with visitors
-
-- [ ] Move documentation to code / expand code documentation
+- [ ] Update Docs, Readme and Agents.md 
 - [ ] Expand code coverage to 100%
 - [ ] Clean up horrible test organisation
 - [ ] Integrate library in dftb+ and ensure no breakage / adapt library as needed
+- [ ] Perform a thorough review of the project and replace the todo with actionable tasks ordered by importance.
 
