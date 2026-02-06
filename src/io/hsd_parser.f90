@@ -725,13 +725,18 @@ contains
 
   end function resolve_path
 
-  !> Get absolute path (simplified - just returns input for now)
+  !> Get absolute path by prepending the current working directory
+  !>
+  !> Uses Fortran 2003 `getcwd()` to resolve relative paths to absolute.
+  !> If the path is already absolute (starts with '/'), it is returned unchanged.
   function get_absolute_path(path) result(abs_path)
     character(len=*), intent(in) :: path
     character(len=:), allocatable :: abs_path
 
-    logical :: file_exists
+    character(len=4096) :: cwd
+    integer :: cwd_stat
 
+    ! Already absolute — return as-is
     if (len(path) > 0) then
       if (path(1:1) == "/") then
         abs_path = path
@@ -739,16 +744,16 @@ contains
       end if
     end if
 
-    ! Check if file already exists at the given relative path
-    inquire(file=path, exist=file_exists)
-    if (file_exists) then
+    ! Obtain the current working directory
+    call getcwd(cwd, cwd_stat)   ! Fortran 2003 intrinsic (GNU/Intel)
+    if (cwd_stat /= 0) then
+      ! Fallback: return relative path unchanged (file-open will fail
+      ! with a meaningful OS error if the path is invalid).
       abs_path = path
       return
     end if
 
-    ! File doesn't exist at relative path - use current directory as base
-    ! (will fail later when trying to read, but provides better error context)
-    abs_path = "./" // path
+    abs_path = trim(cwd) // "/" // path
 
   end function get_absolute_path
 
