@@ -5,7 +5,7 @@
 !> creation for nested structures.
 module hsd_mutators
   use hsd_constants, only: dp, sp
-  use hsd_utils, only: to_lower
+  use hsd_utils, only: to_lower, string_buffer_t
   use hsd_error, only: HSD_STAT_OK, HSD_STAT_NOT_FOUND, HSD_STAT_TYPE_ERROR
   use hsd_types, only: hsd_node, hsd_table, hsd_value, new_table, new_value
   implicit none (type, external)
@@ -196,8 +196,8 @@ contains
 
     class(hsd_node), pointer :: child
     integer :: local_stat, i
-    character(len=:), allocatable :: text
     character(len=32) :: buffer
+    type(string_buffer_t) :: buf
 
     call get_or_create_child(table, path, child, local_stat)
 
@@ -208,14 +208,13 @@ contains
 
     select type (child)
     type is (hsd_value)
-      ! Convert array to space-separated string
-      text = ""
+      call buf%init(size(val) * 12)
       do i = 1, size(val)
         write(buffer, '(I0)') val(i)
-        if (i > 1) text = text // " "
-        text = text // trim(adjustl(buffer))
+        if (i > 1) call buf%append_char(' ')
+        call buf%append_str(trim(adjustl(buffer)))
       end do
-      call child%set_raw(text)
+      call child%set_raw(buf%get_string())
     class default
       if (present(stat)) stat = HSD_STAT_TYPE_ERROR
       return
@@ -234,8 +233,8 @@ contains
 
     class(hsd_node), pointer :: child
     integer :: local_stat, i
-    character(len=:), allocatable :: text
     character(len=32) :: buffer
+    type(string_buffer_t) :: buf
 
     call get_or_create_child(table, path, child, local_stat)
 
@@ -246,14 +245,13 @@ contains
 
     select type (child)
     type is (hsd_value)
-      ! Convert array to space-separated string
-      text = ""
+      call buf%init(size(val) * 16)
       do i = 1, size(val)
         write(buffer, '(G0)') val(i)
-        if (i > 1) text = text // " "
-        text = text // trim(adjustl(buffer))
+        if (i > 1) call buf%append_char(' ')
+        call buf%append_str(trim(adjustl(buffer)))
       end do
-      call child%set_raw(text)
+      call child%set_raw(buf%get_string())
     class default
       if (present(stat)) stat = HSD_STAT_TYPE_ERROR
       return
@@ -287,7 +285,7 @@ contains
 
     class(hsd_node), pointer :: child
     integer :: local_stat, i
-    character(len=:), allocatable :: text
+    type(string_buffer_t) :: buf
 
     call get_or_create_child(table, path, child, local_stat)
 
@@ -298,17 +296,16 @@ contains
 
     select type (child)
     type is (hsd_value)
-      ! Convert array to space-separated string
-      text = ""
+      call buf%init(size(val) * 4)
       do i = 1, size(val)
-        if (i > 1) text = text // " "
+        if (i > 1) call buf%append_char(' ')
         if (val(i)) then
-          text = text // "Yes"
+          call buf%append_str("Yes")
         else
-          text = text // "No"
+          call buf%append_str("No")
         end if
       end do
-      call child%set_raw(text)
+      call child%set_raw(buf%get_string())
     class default
       if (present(stat)) stat = HSD_STAT_TYPE_ERROR
       return
@@ -327,8 +324,8 @@ contains
 
     class(hsd_node), pointer :: child
     integer :: local_stat, i
-    character(len=:), allocatable :: text
     character(len=64) :: buffer
+    type(string_buffer_t) :: buf
 
     call get_or_create_child(table, path, child, local_stat)
 
@@ -339,18 +336,17 @@ contains
 
     select type (child)
     type is (hsd_value)
-      ! Convert array to space-separated string in a+bi format
-      text = ""
+      call buf%init(size(val) * 32)
       do i = 1, size(val)
-        if (i > 1) text = text // " "
+        if (i > 1) call buf%append_char(' ')
         if (aimag(val(i)) >= 0.0_dp) then
           write(buffer, '(G0,"+",G0,"i")') real(val(i)), aimag(val(i))
         else
           write(buffer, '(G0,G0,"i")') real(val(i)), aimag(val(i))
         end if
-        text = text // trim(adjustl(buffer))
+        call buf%append_str(trim(adjustl(buffer)))
       end do
-      call child%set_raw(text)
+      call child%set_raw(buf%get_string())
     class default
       if (present(stat)) stat = HSD_STAT_TYPE_ERROR
       return
