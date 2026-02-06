@@ -17,6 +17,7 @@ program testapp
   use test_fuzz_suite, only: fuzz_tests => tests
   use count_visitor_mod, only: count_visitor
   use test_full_coverage_suite, only: full_coverage_tests => tests
+  use test_dftb_integration_suite, only: dftb_integration_tests => tests
   implicit none (type, external)
 
   ! Execute all test suites
@@ -36,7 +37,8 @@ program testapp
       validation_mutator_coverage_tests(), &
       schema_tests(), &
       fuzz_tests(), &
-      full_coverage_tests() &
+      full_coverage_tests(), &
+      dftb_integration_tests() &
   ]))
 
 end program testapp
