@@ -1,28 +1,9 @@
 !> Additional tests for file-based operations and edge cases
 !> to maximize coverage of formatter, parser, and types modules
 module test_file_ops_suite
-  use hsd, only : &
-  & hsd_table, hsd_value, hsd_node, hsd_error_t, hsd_iterator, hsd_node_ptr, &
-  & hsd_load, hsd_load_string, hsd_dump, hsd_dump_to_string, hsd_get, &
-  & hsd_get_or, hsd_get_matrix, hsd_get_child, hsd_get_table, hsd_get_attrib, &
-  & hsd_get_keys, hsd_get_type, hsd_set, hsd_has_child, hsd_has_attrib, &
-  & hsd_is_table, hsd_is_value, hsd_is_array, hsd_child_count, hsd_require, &
-  & hsd_validate_range, hsd_validate_one_of, hsd_visitor_t, hsd_accept, &
-  & hsd_merge, hsd_clone, hsd_remove_child, dp, sp, VALUE_TYPE_NONE, &
-  & VALUE_TYPE_ARRAY, VALUE_TYPE_STRING, VALUE_TYPE_INTEGER, VALUE_TYPE_REAL, &
-  & VALUE_TYPE_LOGICAL, VALUE_TYPE_COMPLEX, HSD_STAT_OK, HSD_STAT_NOT_FOUND, &
-  & HSD_STAT_SYNTAX_ERROR, HSD_STAT_UNCLOSED_TAG, HSD_STAT_UNCLOSED_ATTRIB, &
-  & HSD_STAT_UNCLOSED_QUOTE, HSD_STAT_ORPHAN_TEXT, HSD_STAT_INCLUDE_CYCLE, &
-  & HSD_STAT_INCLUDE_DEPTH, HSD_STAT_FILE_NOT_FOUND, HSD_STAT_IO_ERROR, &
-  & HSD_STAT_TYPE_ERROR, hsd_schema_t, schema_init, schema_destroy, &
-  & schema_add_field, schema_add_field_enum, schema_validate, &
-  & schema_validate_strict, FIELD_REQUIRED, FIELD_OPTIONAL, FIELD_TYPE_STRING, &
-  & FIELD_TYPE_INTEGER, FIELD_TYPE_REAL, FIELD_TYPE_LOGICAL, FIELD_TYPE_ARRAY, &
-  & FIELD_TYPE_TABLE, new_table, new_value
-  use hsd_constants, only : dp, sp, CHAR_NEWLINE
-  use hsd_formatter, only : hsd_dump, hsd_dump_to_string
-  use hsd_error, only : error_message, HSD_STAT_FILE_NOT_FOUND, HSD_STAT_IO_ERROR, &
-      & HSD_STAT_INCLUDE_CYCLE, HSD_STAT_INCLUDE_DEPTH
+  use hsd
+  use hsd_constants, only : CHAR_NEWLINE
+  use hsd_error, only : error_message
   use build_env, only : build_dir, source_dir
   use fortuno_serial, only : is_equal, test => serial_case_item, check => serial_check, &
       & suite => serial_suite_item, test_list
@@ -70,7 +51,6 @@ contains
 
   end function tests
 
-
   !> Test dump to file and read back
   subroutine test_dump_to_file_read_back()
     type(hsd_table) :: root1, root2
@@ -113,7 +93,6 @@ contains
 
   end subroutine test_dump_to_file_read_back
 
-
   !> Test dumping multiline values
   subroutine test_dump_multiline_value()
     type(hsd_table) :: root
@@ -141,7 +120,6 @@ contains
 
   end subroutine test_dump_multiline_value
 
-
   !> Test dumping nested structures with attributes
   subroutine test_dump_nested_with_attribs()
     type(hsd_table) :: root
@@ -164,7 +142,6 @@ contains
     call delete_file(trim(filepath))
 
   end subroutine test_dump_nested_with_attribs
-
 
   !> Test HSD include (<<+)
   subroutine test_include_hsd_file()
@@ -201,7 +178,6 @@ contains
 
   end subroutine test_include_hsd_file
 
-
   !> Test text include (<<<)
   subroutine test_include_txt_file()
     type(hsd_table) :: root
@@ -234,7 +210,6 @@ contains
     call delete_file(trim(txt_path))
 
   end subroutine test_include_txt_file
-
 
   !> Test include cycle detection
   subroutine test_include_cycle_detection()
@@ -269,7 +244,6 @@ contains
 
   end subroutine test_include_cycle_detection
 
-
   !> Test include with missing file
   subroutine test_include_missing_file()
     type(hsd_table) :: root
@@ -292,7 +266,6 @@ contains
     call delete_file(trim(main_path))
 
   end subroutine test_include_missing_file
-
 
   !> Test strings that need both quote types
   subroutine test_quote_with_both_quotes()
@@ -331,7 +304,6 @@ contains
 
   end subroutine test_quote_with_both_quotes
 
-
   !> Test empty strings and values
   subroutine test_empty_strings_and_values()
     type(hsd_table) :: root
@@ -354,7 +326,6 @@ contains
 
   end subroutine test_empty_strings_and_values
 
-
   !> Test attribute parsing
   subroutine test_attribute_parsing()
     type(hsd_table) :: root
@@ -376,7 +347,6 @@ contains
 
   end subroutine test_attribute_parsing
 
-
   !> Test anonymous (unnamed) values
   subroutine test_anonymous_values()
     type(hsd_table) :: root
@@ -397,7 +367,6 @@ contains
 
   end subroutine test_anonymous_values
 
-
   !> Test getting real matrix
   subroutine test_get_real_matrix()
     type(hsd_table) :: root
@@ -416,7 +385,6 @@ contains
 
   end subroutine test_get_real_matrix
 
-
   !> Test getting complex array
   subroutine test_get_complex_array()
     type(hsd_table) :: root
@@ -434,7 +402,6 @@ contains
     call root%destroy()
 
   end subroutine test_get_complex_array
-
 
   !> Test iterator with mixed types
   subroutine test_iterator_mixed_types()
@@ -472,7 +439,6 @@ contains
 
   end subroutine test_iterator_mixed_types
 
-
   !> Test visitor with depth tracking
   subroutine test_visitor_with_depth()
     type(hsd_table) :: root
@@ -488,7 +454,6 @@ contains
     call root%destroy()
 
   end subroutine test_visitor_with_depth
-
 
   !> Test various block parsing patterns
   subroutine test_parse_block_variations()
@@ -517,7 +482,6 @@ contains
 
   end subroutine test_parse_block_variations
 
-
   !> Test various assignment patterns
   subroutine test_parse_assignment_variations()
     type(hsd_table) :: root
@@ -541,7 +505,6 @@ contains
 
   end subroutine test_parse_assignment_variations
 
-
   !> Test remove operations
   subroutine test_remove_operations()
     type(hsd_table) :: root
@@ -564,7 +527,6 @@ contains
 
   end subroutine test_remove_operations
 
-
   !> Test get with unit extraction
   subroutine test_get_with_unit()
     type(hsd_table) :: root
@@ -586,7 +548,6 @@ contains
     call root%destroy()
 
   end subroutine test_get_with_unit
-
 
   !> Test type checking functions
   subroutine test_type_checking()
@@ -621,7 +582,6 @@ contains
 
   end subroutine test_type_checking
 
-
   !> Test validation with context
   subroutine test_validate_with_context()
     type(hsd_table) :: root
@@ -647,7 +607,6 @@ contains
 
   end subroutine test_validate_with_context
 
-
   !> Test cloning complex tree
   subroutine test_clone_complex_tree()
     type(hsd_table) :: root, clone
@@ -671,7 +630,6 @@ contains
     call clone%destroy()
 
   end subroutine test_clone_complex_tree
-
 
   !> Test merging deeply nested structures
   subroutine test_merge_deeply_nested()
@@ -701,7 +659,6 @@ contains
 
   end subroutine test_merge_deeply_nested
 
-
   !> Test getting logical array
   subroutine test_get_logical_array()
     type(hsd_table) :: root
@@ -719,7 +676,6 @@ contains
     call root%destroy()
 
   end subroutine test_get_logical_array
-
 
   !> Test getting string array
   subroutine test_get_string_array()
@@ -739,7 +695,6 @@ contains
 
   end subroutine test_get_string_array
 
-
   !> Helper: Write text to a file
   subroutine write_text_file(filepath, content)
     character(len=*), intent(in) :: filepath
@@ -755,7 +710,6 @@ contains
 
   end subroutine write_text_file
 
-
   !> Helper: Delete a file
   subroutine delete_file(filepath)
     character(len=*), intent(in) :: filepath
@@ -765,7 +719,6 @@ contains
     if (io_stat == 0) close(unit_num, status='delete')
 
   end subroutine delete_file
-
 
   !> Test parsing with a relative path (triggers get_cwd_portable)
   subroutine test_parse_with_relative_path()
@@ -806,6 +759,5 @@ contains
     if (iostat == 0) close(unit_num, status='delete')
 
   end subroutine test_parse_with_relative_path
-
 
 end module test_file_ops_suite

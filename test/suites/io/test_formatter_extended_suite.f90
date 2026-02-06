@@ -1,26 +1,8 @@
 !> Additional formatter and output tests
 module test_formatter_extended_suite
-  use hsd, only : &
-  & hsd_table, hsd_value, hsd_node, hsd_error_t, hsd_iterator, hsd_node_ptr, &
-  & hsd_load, hsd_load_string, hsd_dump, hsd_dump_to_string, hsd_get, &
-  & hsd_get_or, hsd_get_matrix, hsd_get_child, hsd_get_table, hsd_get_attrib, &
-  & hsd_get_keys, hsd_get_type, hsd_set, hsd_has_child, hsd_has_attrib, &
-  & hsd_is_table, hsd_is_value, hsd_is_array, hsd_child_count, hsd_require, &
-  & hsd_validate_range, hsd_validate_one_of, hsd_visitor_t, hsd_accept, &
-  & hsd_merge, hsd_clone, hsd_remove_child, dp, sp, VALUE_TYPE_NONE, &
-  & VALUE_TYPE_ARRAY, VALUE_TYPE_STRING, VALUE_TYPE_INTEGER, VALUE_TYPE_REAL, &
-  & VALUE_TYPE_LOGICAL, VALUE_TYPE_COMPLEX, HSD_STAT_OK, HSD_STAT_NOT_FOUND, &
-  & HSD_STAT_SYNTAX_ERROR, HSD_STAT_UNCLOSED_TAG, HSD_STAT_UNCLOSED_ATTRIB, &
-  & HSD_STAT_UNCLOSED_QUOTE, HSD_STAT_ORPHAN_TEXT, HSD_STAT_INCLUDE_CYCLE, &
-  & HSD_STAT_INCLUDE_DEPTH, HSD_STAT_FILE_NOT_FOUND, HSD_STAT_IO_ERROR, &
-  & HSD_STAT_TYPE_ERROR, hsd_schema_t, schema_init, schema_destroy, &
-  & schema_add_field, schema_add_field_enum, schema_validate, &
-  & schema_validate_strict, FIELD_REQUIRED, FIELD_OPTIONAL, FIELD_TYPE_STRING, &
-  & FIELD_TYPE_INTEGER, FIELD_TYPE_REAL, FIELD_TYPE_LOGICAL, FIELD_TYPE_ARRAY, &
-  & FIELD_TYPE_TABLE, new_table, new_value
-  use hsd_constants, only : dp, sp, CHAR_NEWLINE
+  use hsd
+  use hsd_constants, only : CHAR_NEWLINE
   use hsd_utils, only : string_buffer_t
-  use hsd_formatter, only : hsd_dump, hsd_dump_to_string
   use build_env, only : build_dir, source_dir
   use fortuno_serial, only : is_equal, test => serial_case_item, check => serial_check, &
       & suite => serial_suite_item, test_list
@@ -57,7 +39,6 @@ contains
 
   end function tests
 
-
   !> Test dumping nested tables
   subroutine test_dump_nested_tables()
     type(hsd_table) :: root
@@ -81,7 +62,6 @@ contains
     call root%destroy()
 
   end subroutine test_dump_nested_tables
-
 
   !> Test dumping mixed content (tables and values)
   subroutine test_dump_mixed_content()
@@ -107,7 +87,6 @@ contains
 
   end subroutine test_dump_mixed_content
 
-
   !> Test dumping arrays
   subroutine test_dump_arrays()
     type(hsd_table) :: root
@@ -130,7 +109,6 @@ contains
 
   end subroutine test_dump_arrays
 
-
   !> Test dumping matrix
   subroutine test_dump_matrix()
     type(hsd_table) :: root
@@ -150,7 +128,6 @@ contains
 
   end subroutine test_dump_matrix
 
-
   !> Test dumping with attributes
   subroutine test_dump_with_attributes()
     type(hsd_table) :: root
@@ -169,7 +146,6 @@ contains
     call root%destroy()
 
   end subroutine test_dump_with_attributes
-
 
   !> Test dumping strings with special characters
   subroutine test_dump_special_chars()
@@ -204,7 +180,6 @@ contains
 
   end subroutine test_dump_special_chars
 
-
   !> Test dumping deeply nested structure
   subroutine test_dump_deep_nesting()
     type(hsd_table) :: root
@@ -224,7 +199,6 @@ contains
 
   end subroutine test_dump_deep_nesting
 
-
   !> Test dumping empty table
   subroutine test_dump_empty_table()
     type(hsd_table) :: root
@@ -240,7 +214,6 @@ contains
     call root%destroy()
 
   end subroutine test_dump_empty_table
-
 
   !> Test dumping to file
   subroutine test_dump_to_file()
@@ -267,7 +240,6 @@ contains
 
   end subroutine test_dump_to_file
 
-
   !> Test dumping complex values
   subroutine test_dump_complex_values()
     type(hsd_table) :: root
@@ -286,7 +258,6 @@ contains
     call root%destroy()
 
   end subroutine test_dump_complex_values
-
 
   !> Test dumping boolean values
   subroutine test_dump_boolean_values()
@@ -315,7 +286,6 @@ contains
 
   end subroutine test_dump_boolean_values
 
-
   !> Test dumping values in exponential format
   subroutine test_dump_exponential_format()
     type(hsd_table) :: root
@@ -340,7 +310,6 @@ contains
     call root%destroy()
 
   end subroutine test_dump_exponential_format
-
 
   !> Test extended buffer operations
   subroutine test_buffer_operations_extended()
@@ -374,7 +343,6 @@ contains
     call check(result == "Hello!", msg="Mixed append works")
 
   end subroutine test_buffer_operations_extended
-
 
   !> Test roundtrip of complex document
   subroutine test_roundtrip_complex_document()
@@ -417,7 +385,6 @@ contains
 
   end subroutine test_roundtrip_complex_document
 
-
   !> Test that order is preserved in output
   subroutine test_dump_preserved_order()
     type(hsd_table) :: root
@@ -443,7 +410,6 @@ contains
     call root%destroy()
 
   end subroutine test_dump_preserved_order
-
 
   !> Helper: Delete a file
   subroutine delete_file(filepath)

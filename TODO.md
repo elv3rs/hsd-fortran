@@ -45,11 +45,6 @@ copy directly in `test/` (e.g. `test/test_api_suite.f90` ≡
 `test/suites/api/test_api_suite.f90`). CMake only compiles the `suites/`
 versions. Delete all flat copies and `test/count_visitor_mod.f90`.
 
-### 8. Massive duplicate `use` blocks in every test file
-Almost every test module imports the same ~30-line `use hsd, only: …` block
-verbatim. Consider creating a `test_common` module that re-exports the test
-API symbols or use a shorter wildcard `use hsd` in test code.
-
 ### 9. O(n²) string concatenation in array setters
 `hsd_set_integer_array`, `hsd_set_real_dp_array`, `hsd_set_logical_array`,
 and `hsd_set_complex_dp_array` in [src/api/hsd_mutators.f90](src/api/hsd_mutators.f90)

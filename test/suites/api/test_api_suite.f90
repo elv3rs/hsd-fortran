@@ -1,23 +1,6 @@
 !> Unit tests for new API features: type introspection, default values, visitor pattern
 module test_api_suite
-  use hsd, only : &
-  & hsd_table, hsd_value, hsd_node, hsd_error_t, hsd_iterator, hsd_node_ptr, &
-  & hsd_load, hsd_load_string, hsd_dump, hsd_dump_to_string, hsd_get, &
-  & hsd_get_or, hsd_get_matrix, hsd_get_child, hsd_get_table, hsd_get_attrib, &
-  & hsd_get_keys, hsd_get_type, hsd_set, hsd_has_child, hsd_has_attrib, &
-  & hsd_is_table, hsd_is_value, hsd_is_array, hsd_child_count, hsd_require, &
-  & hsd_validate_range, hsd_validate_one_of, hsd_visitor_t, hsd_accept, &
-  & hsd_merge, hsd_clone, hsd_remove_child, dp, sp, VALUE_TYPE_NONE, &
-  & VALUE_TYPE_ARRAY, VALUE_TYPE_STRING, VALUE_TYPE_INTEGER, VALUE_TYPE_REAL, &
-  & VALUE_TYPE_LOGICAL, VALUE_TYPE_COMPLEX, HSD_STAT_OK, HSD_STAT_NOT_FOUND, &
-  & HSD_STAT_SYNTAX_ERROR, HSD_STAT_UNCLOSED_TAG, HSD_STAT_UNCLOSED_ATTRIB, &
-  & HSD_STAT_UNCLOSED_QUOTE, HSD_STAT_ORPHAN_TEXT, HSD_STAT_INCLUDE_CYCLE, &
-  & HSD_STAT_INCLUDE_DEPTH, HSD_STAT_FILE_NOT_FOUND, HSD_STAT_IO_ERROR, &
-  & HSD_STAT_TYPE_ERROR, hsd_schema_t, schema_init, schema_destroy, &
-  & schema_add_field, schema_add_field_enum, schema_validate, &
-  & schema_validate_strict, FIELD_REQUIRED, FIELD_OPTIONAL, FIELD_TYPE_STRING, &
-  & FIELD_TYPE_INTEGER, FIELD_TYPE_REAL, FIELD_TYPE_LOGICAL, FIELD_TYPE_ARRAY, &
-  & FIELD_TYPE_TABLE, new_table, new_value
+  use hsd
   use build_env, only : source_dir
   use fortuno_serial, only : is_equal, test => serial_case_item, check => serial_check, &
       & suite => serial_suite_item, test_list
@@ -74,7 +57,6 @@ contains
 
   end function tests
 
-
   !> Test type introspection with hsd_get_type
   subroutine test_type_introspection()
     type(hsd_table) :: root
@@ -111,7 +93,6 @@ contains
 
   end subroutine test_type_introspection
 
-
   !> Test hsd_is_table and hsd_is_value
   subroutine test_is_table_value()
     type(hsd_table) :: root
@@ -137,7 +118,6 @@ contains
     call root%destroy()
 
   end subroutine test_is_table_value
-
 
   !> Test hsd_child_count
   subroutine test_child_count()
@@ -171,7 +151,6 @@ contains
 
   end subroutine test_child_count
 
-
   !> Test hsd_get_keys
   subroutine test_get_keys()
     type(hsd_table) :: root
@@ -196,7 +175,6 @@ contains
 
   end subroutine test_get_keys
 
-
   !> Test hsd_get_or with integer default
   subroutine test_default_integer()
     type(hsd_table) :: root
@@ -219,7 +197,6 @@ contains
     call root%destroy()
 
   end subroutine test_default_integer
-
 
   !> Test hsd_get_or with real default
   subroutine test_default_real()
@@ -245,7 +222,6 @@ contains
 
   end subroutine test_default_real
 
-
   !> Test hsd_get_or with string default
   subroutine test_default_string()
     type(hsd_table) :: root
@@ -270,7 +246,6 @@ contains
 
   end subroutine test_default_string
 
-
   !> Test hsd_get_or with logical default
   subroutine test_default_logical()
     type(hsd_table) :: root
@@ -294,7 +269,6 @@ contains
     call root%destroy()
 
   end subroutine test_default_logical
-
 
   !> Test visitor pattern
   subroutine test_visitor_pattern()
@@ -331,7 +305,6 @@ contains
 
   end subroutine test_visitor_pattern
 
-
   subroutine counting_visit_table(self, table, path, depth, stat)
     class(counting_visitor), intent(inout) :: self
     type(hsd_table), intent(in), target :: table
@@ -355,7 +328,6 @@ contains
     if (present(stat)) stat = 0
 
   end subroutine counting_visit_value
-
 
   !> Test hsd_get_attrib
   subroutine test_get_attrib()
@@ -395,7 +367,6 @@ contains
 
   end subroutine test_get_attrib
 
-
   !> Test hsd_has_attrib
   subroutine test_has_attrib()
     type(hsd_table) :: root
@@ -416,7 +387,6 @@ contains
     call root%destroy()
 
   end subroutine test_has_attrib
-
 
   !> Test hsd_require
   subroutine test_hsd_require()
@@ -455,7 +425,6 @@ contains
     call root%destroy()
 
   end subroutine test_hsd_require
-
 
   !> Test hsd_validate_range
   subroutine test_validate_range()
@@ -500,7 +469,6 @@ contains
 
   end subroutine test_validate_range
 
-
   !> Test hsd_validate_one_of
   subroutine test_validate_one_of()
     type(hsd_table) :: root
@@ -540,7 +508,6 @@ contains
     call root%destroy()
 
   end subroutine test_validate_one_of
-
 
   !> Test hsd_clone
   subroutine test_hsd_clone()
@@ -591,7 +558,6 @@ contains
     call cloned%destroy()
 
   end subroutine test_hsd_clone
-
 
   !> Test hsd_merge
   subroutine test_hsd_merge()
@@ -656,7 +622,6 @@ contains
 
   end subroutine test_hsd_merge
 
-
   !> Test loading HSD from file using build_env paths
   subroutine test_file_load()
     type(hsd_table) :: root
@@ -689,7 +654,6 @@ contains
     call root%destroy()
 
   end subroutine test_file_load
-
 
   !> Test hsd_get_matrix for 2D array retrieval
   subroutine test_matrix_getter()
@@ -732,7 +696,6 @@ contains
 
   end subroutine test_matrix_getter
 
-
   !> Test hsd_remove_child functionality
   subroutine test_remove_child()
     type(hsd_table) :: root
@@ -758,7 +721,6 @@ contains
     call root%destroy()
 
   end subroutine test_remove_child
-
 
   !> Test iterator functionality
   subroutine test_iterator()
@@ -787,7 +749,6 @@ contains
 
   end subroutine test_iterator
 
-
   !> Test hsd_has_child function
   subroutine test_has_child()
     type(hsd_table) :: root
@@ -803,7 +764,6 @@ contains
     call root%destroy()
 
   end subroutine test_has_child
-
 
   !> Test single-precision real values
   subroutine test_sp_values()
@@ -832,7 +792,6 @@ contains
 
   end subroutine test_sp_values
 
-
   !> Test hsd_get_table function
   subroutine test_get_table()
     type(hsd_table) :: root
@@ -855,7 +814,6 @@ contains
 
   end subroutine test_get_table
 
-
   !> Test hsd_is_array function
   subroutine test_is_array()
     type(hsd_table) :: root
@@ -877,7 +835,6 @@ contains
     call root%destroy()
 
   end subroutine test_is_array
-
 
   !> Test hsd_set for arrays
   subroutine test_set_arrays()
@@ -915,7 +872,6 @@ contains
     call root%destroy()
 
   end subroutine test_set_arrays
-
 
   !> Test hsd_get_or for complex with default
   subroutine test_default_complex()

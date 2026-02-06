@@ -1,27 +1,8 @@
 !> Targeted tests for remaining uncovered code paths
 !> Focus on hsd_types.f90, hsd.f90, hsd_formatter.f90 edge cases
 module test_edge_cases_suite
-  use hsd, only : &
-  & hsd_table, hsd_value, hsd_node, hsd_error_t, hsd_iterator, hsd_node_ptr, &
-  & hsd_load, hsd_load_string, hsd_dump, hsd_dump_to_string, hsd_get, &
-  & hsd_get_or, hsd_get_matrix, hsd_get_child, hsd_get_table, hsd_get_attrib, &
-  & hsd_get_keys, hsd_get_type, hsd_set, hsd_has_child, hsd_has_attrib, &
-  & hsd_is_table, hsd_is_value, hsd_is_array, hsd_child_count, hsd_require, &
-  & hsd_validate_range, hsd_validate_one_of, hsd_visitor_t, hsd_accept, &
-  & hsd_merge, hsd_clone, hsd_remove_child, dp, sp, VALUE_TYPE_NONE, &
-  & VALUE_TYPE_ARRAY, VALUE_TYPE_STRING, VALUE_TYPE_INTEGER, VALUE_TYPE_REAL, &
-  & VALUE_TYPE_LOGICAL, VALUE_TYPE_COMPLEX, HSD_STAT_OK, HSD_STAT_NOT_FOUND, &
-  & HSD_STAT_SYNTAX_ERROR, HSD_STAT_UNCLOSED_TAG, HSD_STAT_UNCLOSED_ATTRIB, &
-  & HSD_STAT_UNCLOSED_QUOTE, HSD_STAT_ORPHAN_TEXT, HSD_STAT_INCLUDE_CYCLE, &
-  & HSD_STAT_INCLUDE_DEPTH, HSD_STAT_FILE_NOT_FOUND, HSD_STAT_IO_ERROR, &
-  & HSD_STAT_TYPE_ERROR, hsd_schema_t, schema_init, schema_destroy, &
-  & schema_add_field, schema_add_field_enum, schema_validate, &
-  & schema_validate_strict, FIELD_REQUIRED, FIELD_OPTIONAL, FIELD_TYPE_STRING, &
-  & FIELD_TYPE_INTEGER, FIELD_TYPE_REAL, FIELD_TYPE_LOGICAL, FIELD_TYPE_ARRAY, &
-  & FIELD_TYPE_TABLE, new_table, new_value
-  use hsd_constants, only : dp, sp, CHAR_NEWLINE
-  use hsd_formatter, only : hsd_dump, hsd_dump_to_string
-  use hsd_error, only : HSD_STAT_TYPE_ERROR, HSD_STAT_NOT_FOUND
+  use hsd
+  use hsd_constants, only : CHAR_NEWLINE
   use build_env, only : build_dir, source_dir
   use fortuno_serial, only : is_equal, test => serial_case_item, check => serial_check, &
       & suite => serial_suite_item, test_list
@@ -73,7 +54,6 @@ contains
 
   end function tests
 
-
   !> Test matrix parsing with semicolon row separators
   subroutine test_matrix_with_semicolons()
     type(hsd_table) :: root
@@ -93,7 +73,6 @@ contains
     call root%destroy()
 
   end subroutine test_matrix_with_semicolons
-
 
   !> Test matrix with irregular row lengths
   subroutine test_matrix_irregular_rows()
@@ -118,7 +97,6 @@ contains
 
   end subroutine test_matrix_irregular_rows
 
-
   !> Test matrix with empty rows
   subroutine test_matrix_empty_rows()
     type(hsd_table) :: root
@@ -136,7 +114,6 @@ contains
     call root%destroy()
 
   end subroutine test_matrix_empty_rows
-
 
   !> Test complex with 'j' notation
   subroutine test_complex_j_notation()
@@ -156,7 +133,6 @@ contains
     call root%destroy()
 
   end subroutine test_complex_j_notation
-
 
   !> Test complex with capital I notation
   subroutine test_complex_capital_i()
@@ -184,7 +160,6 @@ contains
 
   end subroutine test_complex_capital_i
 
-
   !> Test complex with negative imaginary
   subroutine test_complex_negative_imaginary()
     type(hsd_table) :: root
@@ -202,7 +177,6 @@ contains
     call root%destroy()
 
   end subroutine test_complex_negative_imaginary
-
 
   !> Test pure imaginary values
   subroutine test_pure_imaginary_values()
@@ -222,7 +196,6 @@ contains
     call root%destroy()
 
   end subroutine test_pure_imaginary_values
-
 
   !> Test hsd_get_or with all types
   subroutine test_get_or_fallback_all_types()
@@ -260,7 +233,6 @@ contains
     call root%destroy()
 
   end subroutine test_get_or_fallback_all_types
-
 
   !> Test setting all value types
   subroutine test_set_all_types()
@@ -309,7 +281,6 @@ contains
 
   end subroutine test_set_all_types
 
-
   !> Test table capacity growth
   subroutine test_table_grow_capacity()
     type(hsd_table) :: root
@@ -331,7 +302,6 @@ contains
     call root%destroy()
 
   end subroutine test_table_grow_capacity
-
 
   !> Test iterator reset
   subroutine test_iterator_reset()
@@ -364,7 +334,6 @@ contains
 
   end subroutine test_iterator_reset
 
-
   !> Test remove_child edge cases
   subroutine test_remove_child_edge_cases()
     type(hsd_table) :: root
@@ -389,7 +358,6 @@ contains
     call root%destroy()
 
   end subroutine test_remove_child_edge_cases
-
 
   !> Test get_keys variations
   subroutine test_get_keys_variations()
@@ -418,7 +386,6 @@ contains
 
   end subroutine test_get_keys_variations
 
-
   !> Test visitor on deep tree
   subroutine test_visitor_deep_tree()
     type(hsd_table) :: root
@@ -433,7 +400,6 @@ contains
     call root%destroy()
 
   end subroutine test_visitor_deep_tree
-
 
   !> Test parsing quoted strings in arrays
   subroutine test_parse_quoted_strings()
@@ -451,7 +417,6 @@ contains
     call root%destroy()
 
   end subroutine test_parse_quoted_strings
-
 
   !> Test logical value variations
   subroutine test_logical_variations()
@@ -480,7 +445,6 @@ contains
 
   end subroutine test_logical_variations
 
-
   !> Test single precision real values
   subroutine test_real_sp_values()
     type(hsd_table) :: root
@@ -498,7 +462,6 @@ contains
     call root%destroy()
 
   end subroutine test_real_sp_values
-
 
   !> Test double precision complex values with various formats
   subroutine test_complex_dp_values()
@@ -519,7 +482,6 @@ contains
 
   end subroutine test_complex_dp_values
 
-
   !> Test matrix inside a block
   subroutine test_matrix_in_block()
     type(hsd_table) :: root
@@ -539,7 +501,6 @@ contains
 
   end subroutine test_matrix_in_block
 
-
   !> Test deeply nested blocks
   subroutine test_nested_blocks()
     type(hsd_table) :: root
@@ -556,7 +517,6 @@ contains
     call root%destroy()
 
   end subroutine test_nested_blocks
-
 
   !> Test get_child with type mismatch
   subroutine test_get_child_type_mismatch()
@@ -582,7 +542,6 @@ contains
 
   end subroutine test_get_child_type_mismatch
 
-
   !> Test formatting large numbers
   subroutine test_format_large_numbers()
     type(hsd_table) :: root
@@ -606,7 +565,6 @@ contains
 
   end subroutine test_format_large_numbers
 
-
   !> Test formatting small numbers
   subroutine test_format_small_numbers()
     type(hsd_table) :: root
@@ -629,7 +587,6 @@ contains
     call root%destroy()
 
   end subroutine test_format_small_numbers
-
 
   !> Test integer formatting edge cases
   subroutine test_format_integer_edge()
@@ -659,7 +616,6 @@ contains
 
   end subroutine test_format_integer_edge
 
-
   !> Test hsd_require with type variations
   subroutine test_require_type_variations()
     type(hsd_table) :: root
@@ -686,7 +642,6 @@ contains
 
   end subroutine test_require_type_variations
 
-
   !> Test cloning with arrays
   subroutine test_clone_with_arrays()
     type(hsd_table) :: root, clone
@@ -708,7 +663,6 @@ contains
     call clone%destroy()
 
   end subroutine test_clone_with_arrays
-
 
   !> Test merging different value types
   subroutine test_merge_value_types()
@@ -737,7 +691,6 @@ contains
 
   end subroutine test_merge_value_types
 
-
   !> Test getting child directly
   subroutine test_get_child_direct()
     type(hsd_table) :: root
@@ -761,7 +714,6 @@ contains
     call root%destroy()
 
   end subroutine test_get_child_direct
-
 
   !> Test string with escape sequences
   subroutine test_string_escapes()
@@ -790,7 +742,6 @@ contains
     call root%destroy()
 
   end subroutine test_string_escapes
-
 
   !> Test SP array values
   subroutine test_sp_array_values()

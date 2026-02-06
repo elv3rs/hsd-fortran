@@ -1,30 +1,7 @@
 !> Test suite targeting specific error paths for maximum coverage
 !> Focuses on: NOT_FOUND errors, TYPE_ERROR errors, empty allocations
 module test_error_paths_suite
-  use hsd, only : &
-  & hsd_table, hsd_value, hsd_node, hsd_error_t, hsd_iterator, hsd_node_ptr, &
-  & hsd_load, hsd_load_string, hsd_dump, hsd_dump_to_string, hsd_get, &
-  & hsd_get_or, hsd_get_matrix, hsd_get_child, hsd_get_table, hsd_get_attrib, &
-  & hsd_get_keys, hsd_get_type, hsd_set, hsd_has_child, hsd_has_attrib, &
-  & hsd_is_table, hsd_is_value, hsd_is_array, hsd_child_count, hsd_require, &
-  & hsd_validate_range, hsd_validate_one_of, hsd_visitor_t, hsd_accept, &
-  & hsd_merge, hsd_clone, hsd_remove_child, dp, sp, VALUE_TYPE_NONE, &
-  & VALUE_TYPE_ARRAY, VALUE_TYPE_STRING, VALUE_TYPE_INTEGER, VALUE_TYPE_REAL, &
-  & VALUE_TYPE_LOGICAL, VALUE_TYPE_COMPLEX, HSD_STAT_OK, HSD_STAT_NOT_FOUND, &
-  & HSD_STAT_SYNTAX_ERROR, HSD_STAT_UNCLOSED_TAG, HSD_STAT_UNCLOSED_ATTRIB, &
-  & HSD_STAT_UNCLOSED_QUOTE, HSD_STAT_ORPHAN_TEXT, HSD_STAT_INCLUDE_CYCLE, &
-  & HSD_STAT_INCLUDE_DEPTH, HSD_STAT_FILE_NOT_FOUND, HSD_STAT_IO_ERROR, &
-  & HSD_STAT_TYPE_ERROR, hsd_schema_t, schema_init, schema_destroy, &
-  & schema_add_field, schema_add_field_enum, schema_validate, &
-  & schema_validate_strict, FIELD_REQUIRED, FIELD_OPTIONAL, FIELD_TYPE_STRING, &
-  & FIELD_TYPE_INTEGER, FIELD_TYPE_REAL, FIELD_TYPE_LOGICAL, FIELD_TYPE_ARRAY, &
-  & FIELD_TYPE_TABLE, new_table, new_value
-  use hsd_constants, only: dp, sp
-  use hsd_types, only: hsd_table, hsd_value, new_value, &
-    VALUE_TYPE_NONE, VALUE_TYPE_STRING, VALUE_TYPE_INTEGER, &
-    VALUE_TYPE_REAL, VALUE_TYPE_LOGICAL, VALUE_TYPE_ARRAY, VALUE_TYPE_COMPLEX
-  use hsd_formatter, only: hsd_dump, hsd_dump_to_string
-  use hsd_error, only: hsd_error_t, HSD_STAT_OK, HSD_STAT_NOT_FOUND, HSD_STAT_TYPE_ERROR
+  use hsd
   use fortuno_serial, only: is_equal, test => serial_case_item, check => serial_check, &
       & suite => serial_suite_item, test_list
   implicit none (type, external)
@@ -89,7 +66,6 @@ contains
         ])
   end function error_paths_tests
 
-
   !> Test get string NOT_FOUND path
   subroutine test_get_string_not_found()
     type(hsd_table) :: root
@@ -106,7 +82,6 @@ contains
     call root%destroy()
   end subroutine test_get_string_not_found
 
-
   !> Test get integer NOT_FOUND path
   subroutine test_get_integer_not_found()
     type(hsd_table) :: root
@@ -121,7 +96,6 @@ contains
 
     call root%destroy()
   end subroutine test_get_integer_not_found
-
 
   !> Test get real NOT_FOUND path
   subroutine test_get_real_not_found()
@@ -139,7 +113,6 @@ contains
     call root%destroy()
   end subroutine test_get_real_not_found
 
-
   !> Test get logical NOT_FOUND path
   subroutine test_get_logical_not_found()
     type(hsd_table) :: root
@@ -156,7 +129,6 @@ contains
     call root%destroy()
   end subroutine test_get_logical_not_found
 
-
   !> Test get complex NOT_FOUND path
   subroutine test_get_complex_not_found()
     type(hsd_table) :: root
@@ -172,7 +144,6 @@ contains
 
     call root%destroy()
   end subroutine test_get_complex_not_found
-
 
   !> Test get integer array NOT_FOUND path
   subroutine test_get_int_array_not_found()
@@ -192,7 +163,6 @@ contains
     call root%destroy()
   end subroutine test_get_int_array_not_found
 
-
   !> Test get real array NOT_FOUND path
   subroutine test_get_real_array_not_found()
     type(hsd_table) :: root
@@ -210,7 +180,6 @@ contains
 
     call root%destroy()
   end subroutine test_get_real_array_not_found
-
 
   !> Test get logical array NOT_FOUND path
   subroutine test_get_logical_array_not_found()
@@ -230,7 +199,6 @@ contains
     call root%destroy()
   end subroutine test_get_logical_array_not_found
 
-
   !> Test get complex array NOT_FOUND path
   subroutine test_get_complex_array_not_found()
     type(hsd_table) :: root
@@ -248,7 +216,6 @@ contains
 
     call root%destroy()
   end subroutine test_get_complex_array_not_found
-
 
   !> Test get string array NOT_FOUND path
   subroutine test_get_string_array_not_found()
@@ -268,7 +235,6 @@ contains
     call root%destroy()
   end subroutine test_get_string_array_not_found
 
-
   !> Test get integer matrix NOT_FOUND path
   subroutine test_get_int_matrix_not_found()
     type(hsd_table) :: root
@@ -286,7 +252,6 @@ contains
 
     call root%destroy()
   end subroutine test_get_int_matrix_not_found
-
 
   !> Test get real matrix NOT_FOUND path
   subroutine test_get_real_matrix_not_found()
@@ -306,7 +271,6 @@ contains
     call root%destroy()
   end subroutine test_get_real_matrix_not_found
 
-
   !> Test get string TYPE_ERROR path
   subroutine test_get_string_type_error()
     type(hsd_table) :: root
@@ -323,7 +287,6 @@ contains
     call root%destroy()
   end subroutine test_get_string_type_error
 
-
   !> Test get integer TYPE_ERROR path
   subroutine test_get_integer_type_error()
     type(hsd_table) :: root
@@ -338,7 +301,6 @@ contains
 
     call root%destroy()
   end subroutine test_get_integer_type_error
-
 
   !> Test get real TYPE_ERROR path
   subroutine test_get_real_type_error()
@@ -356,7 +318,6 @@ contains
     call root%destroy()
   end subroutine test_get_real_type_error
 
-
   !> Test get logical TYPE_ERROR path
   subroutine test_get_logical_type_error()
     type(hsd_table) :: root
@@ -372,7 +333,6 @@ contains
 
     call root%destroy()
   end subroutine test_get_logical_type_error
-
 
   !> Test get complex TYPE_ERROR path
   subroutine test_get_complex_type_error()
@@ -390,7 +350,6 @@ contains
     call root%destroy()
   end subroutine test_get_complex_type_error
 
-
   !> Test get int array TYPE_ERROR path
   subroutine test_get_int_array_type_error()
     type(hsd_table) :: root
@@ -406,7 +365,6 @@ contains
 
     call root%destroy()
   end subroutine test_get_int_array_type_error
-
 
   !> Test get real array TYPE_ERROR path
   subroutine test_get_real_array_type_error()
@@ -424,7 +382,6 @@ contains
     call root%destroy()
   end subroutine test_get_real_array_type_error
 
-
   !> Test get string array TYPE_ERROR path
   subroutine test_get_string_array_type_error()
     type(hsd_table) :: root
@@ -441,7 +398,6 @@ contains
     call root%destroy()
   end subroutine test_get_string_array_type_error
 
-
   !> Test get complex array TYPE_ERROR path
   subroutine test_get_complex_array_type_error()
     type(hsd_table) :: root
@@ -457,7 +413,6 @@ contains
 
     call root%destroy()
   end subroutine test_get_complex_array_type_error
-
 
   !> Test get int matrix TYPE_ERROR path
   subroutine test_get_int_matrix_type_error()
@@ -476,7 +431,6 @@ contains
     call root%destroy()
   end subroutine test_get_int_matrix_type_error
 
-
   !> Test get real matrix TYPE_ERROR path
   subroutine test_get_real_matrix_type_error()
     type(hsd_table) :: root
@@ -494,7 +448,6 @@ contains
     call root%destroy()
   end subroutine test_get_real_matrix_type_error
 
-
   !> Test get_keys on empty table
   subroutine test_get_keys_empty_table()
     type(hsd_table) :: root
@@ -510,7 +463,6 @@ contains
 
     call root%destroy()
   end subroutine test_get_keys_empty_table
-
 
   !> Test get_child NOT_FOUND
   subroutine test_get_child_not_found()
@@ -528,7 +480,6 @@ contains
     call root%destroy()
   end subroutine test_get_child_not_found
 
-
   !> Test get_table NOT_FOUND
   subroutine test_get_table_not_found()
     type(hsd_table) :: root
@@ -544,7 +495,6 @@ contains
 
     call root%destroy()
   end subroutine test_get_table_not_found
-
 
   !> Test hsd_value get_string with raw_text fallback
   subroutine test_value_get_string_raw()
@@ -564,7 +514,6 @@ contains
     deallocate(val)
   end subroutine test_value_get_string_raw
 
-
   !> Test hsd_value get_string when empty
   subroutine test_value_get_string_empty()
     type(hsd_value), allocatable :: val
@@ -580,7 +529,6 @@ contains
     call val%destroy()
     deallocate(val)
   end subroutine test_value_get_string_empty
-
 
   !> Test hsd_value get_real from integer value
   subroutine test_value_get_real_from_int()
@@ -601,7 +549,6 @@ contains
     deallocate(val)
   end subroutine test_value_get_real_from_int
 
-
   !> Test hsd_value get_int NOT_FOUND
   subroutine test_value_get_int_not_found()
     type(hsd_value), allocatable :: val
@@ -616,7 +563,6 @@ contains
     call val%destroy()
     deallocate(val)
   end subroutine test_value_get_int_not_found
-
 
   !> Test hsd_value get_real NOT_FOUND
   subroutine test_value_get_real_not_found()
@@ -634,7 +580,6 @@ contains
     deallocate(val)
   end subroutine test_value_get_real_not_found
 
-
   !> Test hsd_value get_logical NOT_FOUND
   subroutine test_value_get_logical_not_found()
     type(hsd_value), allocatable :: val
@@ -651,7 +596,6 @@ contains
     deallocate(val)
   end subroutine test_value_get_logical_not_found
 
-
   !> Test hsd_value get_complex NOT_FOUND
   subroutine test_value_get_complex_not_found()
     type(hsd_value), allocatable :: val
@@ -667,7 +611,6 @@ contains
     call val%destroy()
     deallocate(val)
   end subroutine test_value_get_complex_not_found
-
 
   !> Test direct access to int_array from hsd_value
   subroutine test_value_get_int_array_direct()
@@ -689,7 +632,6 @@ contains
     deallocate(val)
   end subroutine test_value_get_int_array_direct
 
-
   !> Test direct access to real_array from hsd_value
   subroutine test_value_get_real_array_direct()
     type(hsd_value), allocatable :: val
@@ -709,7 +651,6 @@ contains
     call val%destroy()
     deallocate(val)
   end subroutine test_value_get_real_array_direct
-
 
   !> Test direct access to logical_array from hsd_value
   subroutine test_value_get_logical_array_direct()
@@ -731,7 +672,6 @@ contains
     deallocate(val)
   end subroutine test_value_get_logical_array_direct
 
-
   !> Test direct access to complex_array from hsd_value
   subroutine test_value_get_complex_array_direct()
     type(hsd_value), allocatable :: val
@@ -752,7 +692,6 @@ contains
     deallocate(val)
   end subroutine test_value_get_complex_array_direct
 
-
   !> Test direct access to string_array from hsd_value
   subroutine test_value_get_string_array_direct()
     type(hsd_value), allocatable :: val
@@ -772,7 +711,6 @@ contains
     call val%destroy()
     deallocate(val)
   end subroutine test_value_get_string_array_direct
-
 
   !> Test direct access to int_matrix from hsd_value
   subroutine test_value_get_int_matrix_direct()
@@ -797,7 +735,6 @@ contains
     deallocate(val)
   end subroutine test_value_get_int_matrix_direct
 
-
   !> Test direct access to real_matrix from hsd_value
   subroutine test_value_get_real_matrix_direct()
     type(hsd_value), allocatable :: val
@@ -821,7 +758,6 @@ contains
     deallocate(val)
   end subroutine test_value_get_real_matrix_direct
 
-
   !> Test parsing and accessing an empty matrix value
   subroutine test_empty_matrix_parse()
     type(hsd_table) :: root
@@ -838,7 +774,6 @@ contains
 
     call root%destroy()
   end subroutine test_empty_matrix_parse
-
 
   !> Test table%num_children function
   subroutine test_table_num_children_fn()
@@ -858,7 +793,6 @@ contains
 
     call root%destroy()
   end subroutine test_table_num_children_fn
-
 
   !> Test get_attrib when empty
   subroutine test_get_attrib_empty()
@@ -880,7 +814,6 @@ contains
     call root%destroy()
   end subroutine test_get_attrib_empty
 
-
   !> Test formatting value with attribute
   subroutine test_format_value_attrib()
     type(hsd_table) :: root
@@ -896,7 +829,6 @@ contains
 
     call root%destroy()
   end subroutine test_format_value_attrib
-
 
   !> Test nested table with single child formatting
   subroutine test_nested_single_child()
@@ -914,7 +846,6 @@ contains
     call root%destroy()
   end subroutine test_nested_single_child
 
-
   !> Test logical array with mixed values
   subroutine test_logical_array_mixed()
     type(hsd_table) :: root
@@ -931,7 +862,6 @@ contains
     call root%destroy()
   end subroutine test_logical_array_mixed
 
-
   !> Test format integer
   subroutine test_format_integer()
     type(hsd_table) :: root
@@ -946,7 +876,6 @@ contains
 
     call root%destroy()
   end subroutine test_format_integer
-
 
   !> Test dump_to_string produces valid output
   subroutine test_dump_to_string_test()

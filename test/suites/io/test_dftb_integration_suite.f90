@@ -10,13 +10,7 @@
 !>   - Deep path navigation
 !>   - Round-trip parse/dump/re-parse fidelity
 module test_dftb_integration_suite
-  use hsd, only : &
-    & hsd_table, hsd_value, hsd_node, hsd_error_t, hsd_iterator, hsd_node_ptr, &
-    & hsd_load, hsd_load_string, hsd_dump, hsd_dump_to_string, hsd_get, &
-    & hsd_get_or, hsd_get_matrix, hsd_get_child, hsd_get_table, hsd_get_attrib, &
-    & hsd_get_keys, hsd_get_type, hsd_set, hsd_has_child, hsd_has_attrib, &
-    & hsd_is_table, hsd_is_value, hsd_is_array, hsd_child_count, dp, sp, &
-    & HSD_STAT_OK, HSD_STAT_NOT_FOUND, new_table, new_value
+  use hsd
   use fortuno_serial, only : is_equal, test => serial_case_item, &
       & check => serial_check, suite => serial_suite_item, test_list
   use build_env, only : source_dir, build_dir

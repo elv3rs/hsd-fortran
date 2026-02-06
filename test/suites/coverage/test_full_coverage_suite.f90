@@ -1,30 +1,11 @@
 !> Comprehensive coverage tests targeting all remaining uncovered code paths
 module test_full_coverage_suite
-  use hsd, only: hsd_node, hsd_table, hsd_value, hsd_error_t, hsd_iterator, &
-      & hsd_node_ptr, &
-      & new_table, new_value, hsd_load, hsd_load_string, hsd_dump, hsd_dump_to_string, &
-      & hsd_get, hsd_get_or, hsd_get_matrix, hsd_get_table, hsd_get_attrib, &
-      & hsd_get_child, hsd_set, hsd_has_child, hsd_remove_child, hsd_merge, hsd_clone, &
-      & hsd_child_count, hsd_get_keys, &
-      & hsd_require, hsd_validate_range, hsd_validate_one_of, hsd_get_with_unit, &
-      & hsd_accept, hsd_visitor_t, &
-      & VALUE_TYPE_NONE, VALUE_TYPE_STRING, VALUE_TYPE_INTEGER, VALUE_TYPE_REAL, &
-      & VALUE_TYPE_LOGICAL, VALUE_TYPE_ARRAY, VALUE_TYPE_COMPLEX, &
-      & HSD_STAT_OK, HSD_STAT_NOT_FOUND, HSD_STAT_TYPE_ERROR, &
-      & HSD_STAT_SYNTAX_ERROR, HSD_STAT_SCHEMA_ERROR, &
-      & HSD_STAT_UNCLOSED_ATTRIB, HSD_STAT_ORPHAN_TEXT, &
-      & HSD_STAT_INCLUDE_CYCLE, HSD_STAT_INCLUDE_DEPTH, HSD_STAT_IO_ERROR, &
-      & dp, sp
+  use hsd
   use hsd_error, only: make_syntax_error, make_type_error, make_error, &
       & error_message
   use hsd_token, only: token_name, TOKEN_WHITESPACE, TOKEN_NEWLINE, TOKEN_COMMENT, &
       & TOKEN_LBRACKET, TOKEN_RBRACKET, TOKEN_SEMICOLON, TOKEN_INCLUDE_TXT, &
       & TOKEN_INCLUDE_HSD, TOKEN_EOF, hsd_token_t
-  use hsd_schema, only: hsd_schema_t, hsd_field_def_t, schema_init, schema_destroy, &
-      & schema_add_field, schema_add_field_enum, schema_validate, &
-      & FIELD_REQUIRED, FIELD_OPTIONAL, &
-      & FIELD_TYPE_ANY, FIELD_TYPE_STRING, FIELD_TYPE_INTEGER, FIELD_TYPE_REAL, &
-      & FIELD_TYPE_LOGICAL, FIELD_TYPE_TABLE, FIELD_TYPE_ARRAY, FIELD_TYPE_COMPLEX
   use count_visitor_mod, only: count_visitor
   use fortuno_serial, only: test => serial_case_item, &
       & check => serial_check, suite => serial_suite_item, test_list

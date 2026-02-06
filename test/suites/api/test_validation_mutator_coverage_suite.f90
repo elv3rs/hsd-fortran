@@ -1,27 +1,6 @@
 !> Validation and mutator coverage tests
 module test_validation_mutator_coverage_suite
-  use hsd, only : &
-  & hsd_table, hsd_value, hsd_node, hsd_error_t, hsd_iterator, hsd_node_ptr, &
-  & hsd_load, hsd_load_string, hsd_dump, hsd_dump_to_string, hsd_get, &
-  & hsd_get_or, hsd_get_matrix, hsd_get_child, hsd_get_table, hsd_get_attrib, &
-  & hsd_get_keys, hsd_get_type, hsd_set, hsd_has_child, hsd_has_attrib, &
-  & hsd_is_table, hsd_is_value, hsd_is_array, hsd_child_count, hsd_require, &
-  & hsd_validate_range, hsd_validate_one_of, hsd_visitor_t, hsd_accept, &
-  & hsd_merge, hsd_clone, hsd_remove_child, dp, sp, VALUE_TYPE_NONE, &
-  & VALUE_TYPE_ARRAY, VALUE_TYPE_STRING, VALUE_TYPE_INTEGER, VALUE_TYPE_REAL, &
-  & VALUE_TYPE_LOGICAL, VALUE_TYPE_COMPLEX, HSD_STAT_OK, HSD_STAT_NOT_FOUND, &
-  & HSD_STAT_SYNTAX_ERROR, HSD_STAT_UNCLOSED_TAG, HSD_STAT_UNCLOSED_ATTRIB, &
-  & HSD_STAT_UNCLOSED_QUOTE, HSD_STAT_ORPHAN_TEXT, HSD_STAT_INCLUDE_CYCLE, &
-  & HSD_STAT_INCLUDE_DEPTH, HSD_STAT_FILE_NOT_FOUND, HSD_STAT_IO_ERROR, &
-  & HSD_STAT_TYPE_ERROR, hsd_schema_t, schema_init, schema_destroy, &
-  & schema_add_field, schema_add_field_enum, schema_validate, &
-  & schema_validate_strict, FIELD_REQUIRED, FIELD_OPTIONAL, FIELD_TYPE_STRING, &
-  & FIELD_TYPE_INTEGER, FIELD_TYPE_REAL, FIELD_TYPE_LOGICAL, FIELD_TYPE_ARRAY, &
-  & FIELD_TYPE_TABLE, new_table, new_value
-  use hsd_constants, only: dp
-  use hsd_types, only: hsd_table, new_table, VALUE_TYPE_INTEGER, VALUE_TYPE_REAL, VALUE_TYPE_STRING
-  use hsd_error, only: hsd_error_t, HSD_STAT_OK
-  use hsd_validation, only: hsd_require, hsd_validate_range, hsd_validate_one_of
+  use hsd
   use build_env, only: build_dir
   use fortuno_serial, only: test => serial_case_item, check => serial_check, &
       & suite => serial_suite_item, test_list
@@ -48,7 +27,6 @@ contains
         ])
   end function validation_mutator_coverage_tests
 
-
   !> Test hsd_require with missing field
   subroutine test_require_missing_field()
     type(hsd_table) :: root
@@ -63,7 +41,6 @@ contains
 
     call root%destroy()
   end subroutine test_require_missing_field
-
 
   !> Test hsd_require with wrong type
   subroutine test_require_wrong_type()
@@ -80,7 +57,6 @@ contains
     call root%destroy()
   end subroutine test_require_wrong_type
 
-
   !> Test hsd_require expecting value but got table
   subroutine test_require_table_vs_value()
     type(hsd_table) :: root
@@ -95,7 +71,6 @@ contains
 
     call root%destroy()
   end subroutine test_require_table_vs_value
-
 
   !> Test hsd_validate_range with violation
   subroutine test_validate_range_violation()
@@ -112,7 +87,6 @@ contains
     call root%destroy()
   end subroutine test_validate_range_violation
 
-
   !> Test hsd_validate_one_of with violation
   subroutine test_validate_one_of_violation()
     type(hsd_table) :: root
@@ -127,7 +101,6 @@ contains
 
     call root%destroy()
   end subroutine test_validate_one_of_violation
-
 
   !> Test hsd_set operations (mutators)
   subroutine test_mutator_set_operations()
@@ -162,7 +135,6 @@ contains
     call root%destroy()
   end subroutine test_mutator_set_operations
 
-
   !> Test hsd_require with context string
   subroutine test_require_with_context()
     type(hsd_table) :: root
@@ -177,10 +149,8 @@ contains
     call root%destroy()
   end subroutine test_require_with_context
 
-
   !> Test hsd_get_with_unit for unit conversion
   subroutine test_get_with_unit_conversion()
-    use hsd_validation, only: hsd_get_with_unit
     type(hsd_table) :: root
     type(hsd_error_t), allocatable :: error
     real(dp) :: val
@@ -197,7 +167,6 @@ contains
 
     call root%destroy()
   end subroutine test_get_with_unit_conversion
-
 
   !> Simple length unit converter for testing
   pure function simple_length_converter(value, from_unit, to_unit) result(converted)
@@ -232,7 +201,6 @@ contains
 
     converted = value * from_meters / to_meters
   end function simple_length_converter
-
 
   !> Test mutator error paths (trying to set through a value node)
   subroutine test_mutator_error_paths()

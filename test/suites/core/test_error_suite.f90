@@ -1,23 +1,6 @@
 !> Error handling and edge case unit tests using Fortuno framework
 module test_error_suite
-  use hsd, only : &
-  & hsd_table, hsd_value, hsd_node, hsd_error_t, hsd_iterator, hsd_node_ptr, &
-  & hsd_load, hsd_load_string, hsd_dump, hsd_dump_to_string, hsd_get, &
-  & hsd_get_or, hsd_get_matrix, hsd_get_child, hsd_get_table, hsd_get_attrib, &
-  & hsd_get_keys, hsd_get_type, hsd_set, hsd_has_child, hsd_has_attrib, &
-  & hsd_is_table, hsd_is_value, hsd_is_array, hsd_child_count, hsd_require, &
-  & hsd_validate_range, hsd_validate_one_of, hsd_visitor_t, hsd_accept, &
-  & hsd_merge, hsd_clone, hsd_remove_child, dp, sp, VALUE_TYPE_NONE, &
-  & VALUE_TYPE_ARRAY, VALUE_TYPE_STRING, VALUE_TYPE_INTEGER, VALUE_TYPE_REAL, &
-  & VALUE_TYPE_LOGICAL, VALUE_TYPE_COMPLEX, HSD_STAT_OK, HSD_STAT_NOT_FOUND, &
-  & HSD_STAT_SYNTAX_ERROR, HSD_STAT_UNCLOSED_TAG, HSD_STAT_UNCLOSED_ATTRIB, &
-  & HSD_STAT_UNCLOSED_QUOTE, HSD_STAT_ORPHAN_TEXT, HSD_STAT_INCLUDE_CYCLE, &
-  & HSD_STAT_INCLUDE_DEPTH, HSD_STAT_FILE_NOT_FOUND, HSD_STAT_IO_ERROR, &
-  & HSD_STAT_TYPE_ERROR, hsd_schema_t, schema_init, schema_destroy, &
-  & schema_add_field, schema_add_field_enum, schema_validate, &
-  & schema_validate_strict, FIELD_REQUIRED, FIELD_OPTIONAL, FIELD_TYPE_STRING, &
-  & FIELD_TYPE_INTEGER, FIELD_TYPE_REAL, FIELD_TYPE_LOGICAL, FIELD_TYPE_ARRAY, &
-  & FIELD_TYPE_TABLE, new_table, new_value
+  use hsd
   use hsd_error, only : error_message, make_error
   use hsd_token, only : token_name, TOKEN_EOF, TOKEN_LBRACE, TOKEN_RBRACE, &
       & TOKEN_EQUAL, TOKEN_STRING, TOKEN_TEXT, TOKEN_INVALID
@@ -55,7 +38,6 @@ contains
 
   end function tests
 
-
   !> Test unclosed brace error handling
   subroutine test_unclosed_brace()
     type(hsd_table) :: root
@@ -68,7 +50,6 @@ contains
 
   end subroutine test_unclosed_brace
 
-
   !> Test unclosed quote error handling
   subroutine test_unclosed_quote()
     type(hsd_table) :: root
@@ -80,7 +61,6 @@ contains
     call root%destroy()
 
   end subroutine test_unclosed_quote
-
 
   !> Test accessing non-existent path
   subroutine test_missing_path()
@@ -98,7 +78,6 @@ contains
     call root%destroy()
 
   end subroutine test_missing_path
-
 
   !> Test type mismatch
   subroutine test_type_mismatch()
@@ -118,7 +97,6 @@ contains
 
   end subroutine test_type_mismatch
 
-
   !> Test parsing empty input
   subroutine test_empty_input()
     type(hsd_table) :: root
@@ -132,7 +110,6 @@ contains
     call root%destroy()
 
   end subroutine test_empty_input
-
 
   !> Test complex number parsing
   subroutine test_complex_number()
@@ -176,7 +153,6 @@ contains
 
   end subroutine test_complex_number
 
-
   !> Test complex array parsing
   subroutine test_complex_array()
     type(hsd_table) :: root
@@ -201,7 +177,6 @@ contains
     call root%destroy()
 
   end subroutine test_complex_array
-
 
   !> Test hsd_set functionality
   subroutine test_set_value()
@@ -249,7 +224,6 @@ contains
 
   end subroutine test_set_value
 
-
   !> Test hsd_set with nested paths (creating intermediate nodes)
   subroutine test_set_nested_value()
     type(hsd_table) :: root
@@ -275,7 +249,6 @@ contains
     call root%destroy()
 
   end subroutine test_set_nested_value
-
 
   !> Test that large structures don't truncate
   subroutine test_large_output()
@@ -306,7 +279,6 @@ contains
     call root%destroy()
 
   end subroutine test_large_output
-
 
   !> Test error_message function for all error codes
   subroutine test_error_messages()
@@ -339,7 +311,6 @@ contains
 
   end subroutine test_error_messages
 
-
   !> Test token_name function for all token types
   subroutine test_token_names()
     character(len=:), allocatable :: name
@@ -371,7 +342,6 @@ contains
 
   end subroutine test_token_names
 
-
   !> Test error printing functionality
   subroutine test_error_print()
     type(hsd_error_t), allocatable :: error
@@ -392,11 +362,9 @@ contains
 
   end subroutine test_error_print
 
-
   !> Test specialized error construction helpers
   subroutine test_error_helpers()
-    use hsd_error, only : make_syntax_error, make_type_error, &
-        & HSD_STAT_SYNTAX_ERROR, HSD_STAT_TYPE_ERROR
+  use hsd_error, only : make_syntax_error, make_type_error
     type(hsd_error_t), allocatable :: error
 
     ! Test make_syntax_error
@@ -416,6 +384,5 @@ contains
     deallocate(error)
 
   end subroutine test_error_helpers
-
 
 end module test_error_suite
