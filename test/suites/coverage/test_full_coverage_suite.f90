@@ -2827,9 +2827,7 @@ contains
       call root%add_child(val)
     end block
     call hsd_get_matrix(root, "data", imat, nrows, ncols, stat)
-    call check(stat == HSD_STAT_OK, msg="Ragged int matrix ok")
-    call check(nrows == 2, msg="Two rows")
-    call check(ncols == 3, msg="Max cols = 3")
+    call check(stat == HSD_STAT_TYPE_ERROR, msg="Ragged int matrix returns error")
   end subroutine test_int_matrix_ragged_direct
 
   !> Test ragged real matrix via value raw_text
@@ -2847,9 +2845,7 @@ contains
       call root%add_child(val)
     end block
     call hsd_get_matrix(root, "data", rmat, nrows, ncols, stat)
-    call check(stat == HSD_STAT_OK, msg="Ragged real matrix ok")
-    call check(nrows == 2, msg="Two rows")
-    call check(ncols == 3, msg="Max cols = 3")
+    call check(stat == HSD_STAT_TYPE_ERROR, msg="Ragged real matrix returns error")
   end subroutine test_real_matrix_ragged_direct
 
   !> Test empty real matrix via value raw_text (whitespace only)

@@ -1411,8 +1411,12 @@ contains
             first_cols = col_count
             ncols = col_count
           else if (col_count /= first_cols) then
-            ! Inconsistent column count - use max
-            ncols = max(ncols, col_count)
+            ! Inconsistent column count - report error
+            stat = HSD_STAT_TYPE_ERROR
+            allocate(mat(0,0))
+            nrows = 0
+            ncols = 0
+            return
           end if
         end if
       end if
@@ -1442,7 +1446,7 @@ contains
         end if
         if (size(row_vals) > 0) then
           j = j + 1
-          mat(j, 1:min(size(row_vals), ncols)) = row_vals(1:min(size(row_vals), ncols))
+          mat(j, 1:size(row_vals)) = row_vals
         end if
       end if
     end do
@@ -1478,7 +1482,12 @@ contains
             first_cols = col_count
             ncols = col_count
           else if (col_count /= first_cols) then
-            ncols = max(ncols, col_count)
+            ! Inconsistent column count - report error
+            stat = HSD_STAT_TYPE_ERROR
+            allocate(mat(0,0))
+            nrows = 0
+            ncols = 0
+            return
           end if
         end if
       end if
@@ -1508,7 +1517,7 @@ contains
         end if
         if (size(row_vals) > 0) then
           j = j + 1
-          mat(j, 1:min(size(row_vals), ncols)) = row_vals(1:min(size(row_vals), ncols))
+          mat(j, 1:size(row_vals)) = row_vals
         end if
       end if
     end do
