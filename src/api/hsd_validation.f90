@@ -25,6 +25,11 @@ contains
   !> Require that a path exists and optionally check its type
   !>
   !> If the path doesn't exist or type doesn't match, creates a descriptive error.
+  !>
+  !> Both optional arguments should be passed as keyword arguments for clarity:
+  !>
+  !>   call hsd_require(root, "Driver/MaxSteps", error, &
+  !>     expected_type=FIELD_TYPE_INTEGER, context="load_config")
   subroutine hsd_require(table, path, error, expected_type, context)
     type(hsd_table), intent(in), target :: table
     character(len=*), intent(in) :: path
