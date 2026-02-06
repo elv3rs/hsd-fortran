@@ -17,7 +17,7 @@ Thread Safety Summary
     Operation                              Thread-Safe   Notes
     ====================================== ============= ================================
     Parsing different files                ✅ Yes        Independent trees can be parsed concurrently
-    Reading the same tree                  ✅ Yes        Multiple threads can read the same tree
+    Reading the same tree                  ⚠️ Conditional First access to ``hsd_value`` getters mutates internal caches; safe after all caches are populated
     Modifying the same tree                ❌ No         Requires external synchronization
     Parsing to the same tree               ❌ No         Undefined behavior
     Using shared iterators                 ❌ No         Each thread needs its own iterator
@@ -39,14 +39,31 @@ Safe Operations (No Synchronization Needed)
     ! Thread 2 (can run concurrently)
     call hsd_load("config2.hsd", root2, error2)
 
-**2. Reading from a shared tree (read-only)**
+**2. Reading from a shared tree (after cache warmup)**
+
+.. warning::
+
+    ``hsd_value`` nodes use lazy caching: the first call to a typed getter
+    (e.g. ``get_int``, ``get_real``) parses and stores the result internally.
+    This **mutates** the node and is therefore **NOT thread-safe** if two
+    threads access the same value concurrently for the first time.
+
+    To make concurrent reads safe, populate all caches in a single-threaded
+    context before sharing the tree ("cache warmup").
 
 .. code-block:: fortran
 
-    ! After parsing is complete, multiple threads can safely:
+    ! Step 1 — warm up caches in the master thread
     call hsd_get(shared_root, "path/to/value", val)
-    call hsd_has_child(shared_root, "some/path")
-    call hsd_child_count(shared_root, "table/path")
+    call hsd_get(shared_root, "path/to/other", val2)
+    ! ... access every value node once ...
+
+    ! Step 2 — now multiple threads can safely read the same tree
+    !$omp parallel
+      call hsd_get(shared_root, "path/to/value", val)
+      call hsd_has_child(shared_root, "some/path")
+      call hsd_child_count(shared_root, "table/path")
+    !$omp end parallel
 
 **3. Cloning a tree for thread-local use**
 
@@ -91,7 +108,12 @@ hsd_types
 ~~~~~~~~~
 
 - ``hsd_table`` and ``hsd_value`` types are NOT thread-safe for modification
-- Read operations (get_child, get_string, etc.) are thread-safe if no concurrent writes
+- ``hsd_value`` typed getters (``get_int``, ``get_real``, ``get_logical``, etc.)
+  **mutate internal caches** on first access and are therefore NOT thread-safe
+  for concurrent first reads. After all caches are populated ("warmed up"),
+  subsequent reads are safe.
+- ``hsd_table`` read operations (``get_child``, ``child_count``, etc.) are
+  thread-safe if no concurrent writes
 - The internal hash index (``name_index``) is NOT thread-safe
 
 hsd_parser
@@ -103,8 +125,9 @@ hsd_parser
 hsd_formatter
 ~~~~~~~~~~~~~
 
-- ``hsd_dump()`` is thread-safe for read-only trees
-- ``hsd_dump_to_string()`` is thread-safe for read-only trees
+- ``hsd_dump()`` is thread-safe for trees whose value caches are populated
+- ``hsd_dump_to_string()`` is thread-safe for trees whose value caches are populated
+- Both may trigger cache mutation on ``hsd_value`` nodes if caches are not yet populated
 
 hsd_schema
 ~~~~~~~~~~
@@ -139,8 +162,12 @@ For shared reading with OpenMP:
     ! Parse once in serial region
     call hsd_load("shared.hsd", shared_root, error)
 
+    ! Warm up all value caches in serial region
+    call hsd_get(shared_root, "value", my_val)
+    ! ... access every value node once ...
+
     !$omp parallel
-      ! Safe: read-only access to shared_root
+      ! Safe: caches already populated, read-only access
       call hsd_get(shared_root, "value", my_val)
     !$omp end parallel
 
@@ -161,7 +188,8 @@ Each image should maintain its own HSD trees:
 Recommendations
 ---------------
 
-1. **Parse configuration files in the master thread**, then share read-only
+1. **Parse configuration files in the master thread** and access every value
+   node once (cache warmup), then share read-only
 2. **Clone trees** if multiple threads need to modify
 3. **Use thread-local iterators** when traversing shared trees
 4. **Avoid modifying shared trees** without external locks

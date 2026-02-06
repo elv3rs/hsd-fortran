@@ -222,7 +222,7 @@ This ensures tests work regardless of where CTest runs from.
 - **Includes**: `<<< "file"` (text), `<<+ "file.hsd"` (parsed); cycle detection enabled
 - **Formatting**: Dumps use consistent 2-space indent and `{}` block syntax
 - **Hash Table**: O(1) child lookup for all tables using persistent hash indexing
-- **Thread Safety**: Read-only access is thread-safe; modifications require external synchronization
+- **Thread Safety**: NOT fully thread-safe for concurrent reads — `hsd_value` getters mutate internal caches on first access (see `hsd_types.f90` header). Safe after all caches are populated; modifications always require external synchronization
 - **Status Parameters**: Optional `stat` parameters use `intent(out)` and must be set on ALL code paths (see `docs/error_handling.md`)
 
 ## CMake Options
