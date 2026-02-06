@@ -4,7 +4,7 @@
 !> It converts a token stream into a tree of hsd_table and hsd_value nodes.
 !> Includes cycle detection for <<+ includes.
 module hsd_parser
-  use hsd_constants, only: dp, hsd_max_line_length, hsd_max_include_depth, CHAR_NEWLINE
+  use hsd_constants, only: dp, hsd_max_include_depth, CHAR_NEWLINE
   use hsd_token, only: hsd_token_t, TOKEN_EOF, TOKEN_STRING, &
     TOKEN_LBRACE, TOKEN_RBRACE, TOKEN_EQUAL, TOKEN_LBRACKET, TOKEN_RBRACKET, &
     TOKEN_INCLUDE_TXT, TOKEN_INCLUDE_HSD, TOKEN_SEMICOLON, TOKEN_COMMENT, &

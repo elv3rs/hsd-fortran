@@ -3,7 +3,7 @@
 !> This module provides the lexer that converts a character stream into
 !> a sequence of tokens for the HSD parser.
 module hsd_lexer
-  use hsd_constants, only: hsd_max_line_length, &
+  use hsd_constants, only: &
       & CHAR_TAB, CHAR_BACKSLASH, CHAR_SPACE, CHAR_NEWLINE, CHAR_LBRACE, &
       & CHAR_RBRACE, CHAR_LBRACKET, CHAR_RBRACKET, CHAR_EQUAL, CHAR_SEMICOLON, &
       & CHAR_HASH, CHAR_DQUOTE, CHAR_SQUOTE, CHAR_LESS

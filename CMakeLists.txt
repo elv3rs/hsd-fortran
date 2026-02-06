@@ -11,7 +11,6 @@ project(hsd-fortran
 )
 
 # Options
-option(HSD_ACCEPT_TRUE_FALSE "Accept True/False as boolean values" ON)
 option(HSD_BUILD_TESTS "Build test suite" ON)
 option(HSD_BUILD_EXAMPLES "Build examples" ON)
 option(HSD_BUILD_BENCHMARKS "Build benchmarks" ON)

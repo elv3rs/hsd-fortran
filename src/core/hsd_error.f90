@@ -3,7 +3,6 @@
 !> This module provides error types and utilities for reporting parsing
 !> errors with file location information.
 module hsd_error
-  use hsd_constants, only: hsd_max_line_length
   implicit none (type, external)
   private
 

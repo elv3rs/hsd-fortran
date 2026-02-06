@@ -96,7 +96,6 @@ cmake --install build --prefix /path/to/install
 
 | Option | Default | Description |
 |--------|---------|-------------|
-| `HSD_ACCEPT_TRUE_FALSE` | `ON` | Accept `True`/`False` as boolean values |
 | `HSD_BUILD_TESTS` | `ON` | Build test suite |
 | `HSD_BUILD_EXAMPLES` | `ON` | Build example programs |
 | `HSD_COVERAGE` | `OFF` | Enable code coverage (GCC only) |

@@ -229,7 +229,6 @@ This ensures tests work regardless of where CTest runs from.
 
 | Option | Default | Description |
 |--------|---------|-------------|
-| `HSD_ACCEPT_TRUE_FALSE` | `ON` | Accept `True`/`False` as boolean values |
 | `HSD_BUILD_TESTS` | `ON` | Build test suite |
 | `HSD_BUILD_EXAMPLES` | `ON` | Build examples |
 | `HSD_COVERAGE` | `OFF` | Enable code coverage (GCC only) |

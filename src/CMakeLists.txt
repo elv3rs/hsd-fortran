@@ -56,11 +56,6 @@ target_include_directories(hsd PUBLIC
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/hsd>
 )
 
-# Preprocessor definitions
-if(HSD_ACCEPT_TRUE_FALSE)
-  target_compile_definitions(hsd PRIVATE HSD_ACCEPT_TRUE_FALSE)
-endif()
-
 # Compiler flags
 if(CMAKE_Fortran_COMPILER_ID MATCHES "GNU")
   target_compile_options(hsd PRIVATE
