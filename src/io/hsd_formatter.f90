@@ -126,14 +126,18 @@ contains
           return
 
         type is (hsd_value)
-          ! Tag = value
-          if (allocated(table%name) .and. len_trim(table%name) > 0) then
-            call write_tag_value(unit_num, table%name, attrib_str, &
-                                 single_child, indent_level)
-          else
-            call write_value_node(unit_num, single_child, indent_level)
+          ! Tag = value (only for unnamed/anonymous children)
+          if (.not. (allocated(single_child%name) .and. &
+              len_trim(single_child%name) > 0)) then
+            if (allocated(table%name) .and. len_trim(table%name) > 0) then
+              call write_tag_value(unit_num, table%name, attrib_str, &
+                                   single_child, indent_level)
+            else
+              call write_value_node(unit_num, single_child, indent_level)
+            end if
+            return
           end if
-          return
+          ! Named child — fall through to regular block
         end select
       end block
     end if
@@ -367,6 +371,9 @@ contains
   end function escape_quotes
 
   !> Write table to string_buffer_t (for string output, avoids O(n²) concatenation)
+  !>
+  !> Mirrors the file-output path including the single-child `= ChildTag { }`
+  !> and `Tag = value` shorthand syntax.
   recursive subroutine write_table_to_string_buf(table, indent_level, buf)
     type(hsd_table), intent(in) :: table
     integer, intent(in) :: indent_level
@@ -374,7 +381,7 @@ contains
 
     integer :: i
     class(hsd_node), pointer :: child
-    character(len=:), allocatable :: indent, attrib_str, line
+    character(len=:), allocatable :: indent, attrib_str, line, value_str
 
     indent = repeat(INDENT_STR, indent_level)
 
@@ -384,23 +391,7 @@ contains
 
       select type (child)
       type is (hsd_table)
-        if (child%has_attrib()) then
-          attrib_str = " [" // child%get_attrib() // "]"
-        else
-          attrib_str = ""
-        end if
-
-        if (allocated(child%name) .and. len_trim(child%name) > 0) then
-          line = indent // trim(child%name) // attrib_str // " {"
-          call buf%append_str(line)
-          call buf%append_str(CHAR_NEWLINE)
-          call write_table_to_string_buf(child, indent_level + 1, buf)
-          line = indent // "}"
-          call buf%append_str(line)
-          call buf%append_str(CHAR_NEWLINE)
-        else
-          call write_table_to_string_buf(child, indent_level, buf)
-        end if
+        call write_table_node_to_buf(child, indent_level, buf)
 
       type is (hsd_value)
         if (child%has_attrib()) then
@@ -409,16 +400,149 @@ contains
           attrib_str = ""
         end if
 
+        value_str = format_value(child)
+
         if (allocated(child%name) .and. len_trim(child%name) > 0) then
-          line = indent // trim(child%name) // attrib_str // " = " // format_value(child)
+          if (index(value_str, CHAR_NEWLINE) > 0) then
+            ! Multi-line value: Tag { \n content \n }
+            call buf%append_str(indent // trim(child%name) // attrib_str // " {")
+            call buf%append_str(CHAR_NEWLINE)
+            call write_multiline_to_buf(value_str, indent_level + 1, buf)
+            call buf%append_str(indent // "}")
+            call buf%append_str(CHAR_NEWLINE)
+          else
+            line = indent // trim(child%name) // attrib_str // " = " // value_str
+            call buf%append_str(line)
+            call buf%append_str(CHAR_NEWLINE)
+          end if
         else
-          line = indent // format_value(child)
+          if (index(value_str, CHAR_NEWLINE) > 0) then
+            call write_multiline_to_buf(value_str, indent_level, buf)
+          else
+            line = indent // value_str
+            call buf%append_str(line)
+            call buf%append_str(CHAR_NEWLINE)
+          end if
         end if
-        call buf%append_str(line)
-        call buf%append_str(CHAR_NEWLINE)
       end select
     end do
 
   end subroutine write_table_to_string_buf
+
+  !> Write a table node to string buffer with single-child shorthand
+  recursive subroutine write_table_node_to_buf(table, indent_level, buf)
+    type(hsd_table), intent(in) :: table
+    integer, intent(in) :: indent_level
+    type(string_buffer_t), intent(inout) :: buf
+
+    character(len=:), allocatable :: indent, attrib_str, value_str, val_attrib
+
+    indent = repeat(INDENT_STR, indent_level)
+
+    ! Build attribute string
+    if (table%has_attrib()) then
+      attrib_str = " [" // table%get_attrib() // "]"
+    else
+      attrib_str = ""
+    end if
+
+    ! Check for single-child shorthand (= syntax)
+    if (table%num_children == 1) then
+      block
+        class(hsd_node), pointer :: single_child
+        call table%get_child(1, single_child)
+
+        select type (single_child)
+        type is (hsd_table)
+          ! Tag = ChildTag { ... }
+          if (allocated(table%name) .and. len_trim(table%name) > 0) then
+            call buf%append_str(indent // trim(table%name) // attrib_str // &
+              " = " // trim(single_child%name) // " {")
+            call buf%append_str(CHAR_NEWLINE)
+            call write_table_to_string_buf(single_child, indent_level + 1, buf)
+            call buf%append_str(indent // "}")
+            call buf%append_str(CHAR_NEWLINE)
+          else
+            call write_table_to_string_buf(table, indent_level, buf)
+          end if
+          return
+
+        type is (hsd_value)
+          ! Tag = value (only for unnamed/anonymous children)
+          if (.not. (allocated(single_child%name) .and. &
+              len_trim(single_child%name) > 0)) then
+            if (allocated(table%name) .and. len_trim(table%name) > 0) then
+              value_str = format_value(single_child)
+              if (single_child%has_attrib()) then
+                val_attrib = " [" // single_child%get_attrib() // "]"
+              else
+                val_attrib = attrib_str
+              end if
+              if (index(value_str, CHAR_NEWLINE) > 0) then
+                call buf%append_str(indent // trim(table%name) // val_attrib // " {")
+                call buf%append_str(CHAR_NEWLINE)
+                call write_multiline_to_buf(value_str, indent_level + 1, buf)
+                call buf%append_str(indent // "}")
+                call buf%append_str(CHAR_NEWLINE)
+              else
+                call buf%append_str(indent // trim(table%name) // val_attrib // &
+                  " = " // value_str)
+                call buf%append_str(CHAR_NEWLINE)
+              end if
+            else
+              value_str = format_value(single_child)
+              call buf%append_str(indent // value_str)
+              call buf%append_str(CHAR_NEWLINE)
+            end if
+            return
+          end if
+          ! Named child — fall through to regular block
+        end select
+      end block
+    end if
+
+    ! Regular block: Tag { ... }
+    if (allocated(table%name) .and. len_trim(table%name) > 0) then
+      call buf%append_str(indent // trim(table%name) // attrib_str // " {")
+      call buf%append_str(CHAR_NEWLINE)
+      call write_table_to_string_buf(table, indent_level + 1, buf)
+      call buf%append_str(indent // "}")
+      call buf%append_str(CHAR_NEWLINE)
+    else
+      call write_table_to_string_buf(table, indent_level, buf)
+    end if
+
+  end subroutine write_table_node_to_buf
+
+  !> Write multi-line content to string buffer
+  subroutine write_multiline_to_buf(text, indent_level, buf)
+    character(len=*), intent(in) :: text
+    integer, intent(in) :: indent_level
+    type(string_buffer_t), intent(inout) :: buf
+
+    character(len=:), allocatable :: indent
+    integer :: pos, next_pos, text_len
+
+    indent = repeat(INDENT_STR, indent_level)
+    text_len = len(text)
+    pos = 1
+
+    do while (pos <= text_len)
+      next_pos = index(text(pos:), CHAR_NEWLINE)
+      if (next_pos > 0) then
+        next_pos = pos + next_pos - 1
+        if (next_pos > pos) then
+          call buf%append_str(indent // text(pos:next_pos-1))
+        end if
+        call buf%append_str(CHAR_NEWLINE)
+        pos = next_pos + 1
+      else
+        call buf%append_str(indent // text(pos:))
+        call buf%append_str(CHAR_NEWLINE)
+        exit
+      end if
+    end do
+
+  end subroutine write_multiline_to_buf
 
 end module hsd_formatter
