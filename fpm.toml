@@ -26,7 +26,7 @@ main = "testapp.f90"
 select = ["C", "E", "S"]
 respect-gitignore = false
 ignore = []
-per-file-ignores = { "test/**/*.f90" = ["C121"], "src/io/hsd_parser.f90" = ["C071", "C072", "C003"] }
+per-file-ignores = { "test/**/*.f90" = ["C121"] }
 line-length = 100
 
 [dev-dependencies]
