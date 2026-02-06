@@ -67,7 +67,7 @@ The CI pipeline enforces this check — PRs with lint warnings will not be merge
 hsd-fortran/
 ├── src/                        # Library source
 │   ├── hsd.f90                 # Public API (re-exports all modules)
-│   ├── hsd_types.f90           # Type aliases and re-exports
+│   ├── hsd_types.f90           # Data structures (node, table, value, iterator)
 │   ├── api/                    # High-level API modules
 │   │   ├── hsd_accessors.f90   # hsd_get, hsd_get_or, hsd_get_matrix
 │   │   ├── hsd_mutators.f90    # hsd_set
@@ -77,14 +77,14 @@ hsd-fortran/
 │   │   └── hsd_visitor.f90     # Visitor pattern for tree traversal
 │   ├── core/                   # Core infrastructure
 │   │   ├── hsd_constants.f90   # dp, sp precision constants
-│   │   ├── hsd_error.f90       # Error types and status codes
-│   │   └── hsd_hash_table.f90  # O(1) child lookup
-│   ├── io/                     # Parsing and serialization
-│   │   ├── hsd_lexer.f90       # Tokenizer
-│   │   ├── hsd_token.f90       # Token types
-│   │   ├── hsd_parser.f90      # Parser (includes file handling)
-│   │   └── hsd_formatter.f90   # Output serialization
-│   └── hsd_types.f90           # Data structures (node, table, value, iterator)
+│   │   ├── hsd_error.f90       # Error types, status codes (incl. HSD_STAT_SCHEMA_ERROR)
+│   │   ├── hsd_hash_table.f90  # O(1) child lookup
+│   │   └── hsd_utils.f90       # String utilities (to_lower, string_buffer_t)
+│   └── io/                     # Parsing and serialization
+│       ├── hsd_lexer.f90       # Tokenizer
+│       ├── hsd_token.f90       # Token types
+│       ├── hsd_parser.f90      # Parser (includes file handling)
+│       └── hsd_formatter.f90   # Output serialization
 ├── test/                       # Test suite
 │   ├── testapp.f90             # Test driver (Fortuno)
 │   ├── build_env.f90.in        # CMake-configured paths

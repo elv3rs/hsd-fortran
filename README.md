@@ -99,6 +99,7 @@ cmake --install build --prefix /path/to/install
 | `HSD_ACCEPT_TRUE_FALSE` | `ON` | Accept `True`/`False` as boolean values |
 | `HSD_BUILD_TESTS` | `ON` | Build test suite |
 | `HSD_BUILD_EXAMPLES` | `ON` | Build example programs |
+| `HSD_COVERAGE` | `OFF` | Enable code coverage (GCC only) |
 
 ## Examples
 
@@ -115,8 +116,6 @@ cmake --build build
 # Run config demo
 (cd example && ../build/example/config_demo)
 ```
-| `HSD_BUILD_EXAMPLES` | `ON` | Build examples |
-| `HSD_COVERAGE` | `OFF` | Enable code coverage (GCC only) |
 
 ### Build with fpm
 
