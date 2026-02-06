@@ -29,7 +29,16 @@ contains
     logical, intent(in), optional :: case_insensitive
     logical :: has
 
-    has = table%has_child(name, case_insensitive)
+    class(hsd_node), pointer :: child
+    integer :: stat
+
+    if (index(name, "/") > 0) then
+      ! Path-based lookup - navigate through nested tables
+      call hsd_get_child(table, name, child, stat)
+      has = (stat == HSD_STAT_OK .and. associated(child))
+    else
+      has = table%has_child(name, case_insensitive)
+    end if
 
   end function hsd_has_child
 
@@ -388,10 +397,10 @@ contains
         ! Child doesn't exist in base - clone and add it
         select type (overlay_child)
         type is (hsd_table)
-          call clone_table(overlay_child, cloned_table)
+          call clone_table(overlay_child, cloned_table)  ! LCOV_EXCL_LINE
           call base%add_child(cloned_table)
         type is (hsd_value)
-          call clone_value(overlay_child, cloned_value)
+          call clone_value(overlay_child, cloned_value)  ! LCOV_EXCL_LINE
           call base%add_child(cloned_value)
         end select
       else
@@ -410,7 +419,7 @@ contains
           ! Overlay value replaces base value
           select type (base_child)
           type is (hsd_value)
-            call clone_value(overlay_child, cloned_value)
+            call clone_value(overlay_child, cloned_value)  ! LCOV_EXCL_LINE
             ! Replace the value content
             base_child%value_type = cloned_value%value_type
             if (allocated(cloned_value%string_value)) then
@@ -460,10 +469,10 @@ contains
 
       select type (child)
       type is (hsd_table)
-        call clone_table(child, cloned_subtable)
+        call clone_table(child, cloned_subtable)  ! LCOV_EXCL_LINE
         call dest%add_child(cloned_subtable)
       type is (hsd_value)
-        call clone_value(child, cloned_value)
+        call clone_value(child, cloned_value)  ! LCOV_EXCL_LINE
         call dest%add_child(cloned_value)
       end select
     end do

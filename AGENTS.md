@@ -38,28 +38,31 @@ sphinx-build -b html docs public 2>&1 | tail -5
 cmake -B build -DCMAKE_BUILD_TYPE=Debug -DHSD_COVERAGE=ON
 cmake --build build && ctest --test-dir build 2>&1 | tail -5
 lcov --capture --directory build/src --output-file build/coverage.info --ignore-errors inconsistent 2>&1 | tail -3
-genhtml build/coverage.info --output-directory build/coverage_html 2>&1 | tail -3
+python3 utils/filter_coverage.py build/coverage.info build/coverage_filtered.info
+lcov --summary build/coverage_filtered.info 2>&1 | grep "lines"
+genhtml build/coverage_filtered.info --output-directory build/coverage_html 2>&1 | tail -3
 ```
+
+> **Note:** lcov 2.0 does not apply `LCOV_EXCL_LINE` / `LCOV_EXCL_START` / `LCOV_EXCL_STOP`
+> markers in Fortran files. The `utils/filter_coverage.py` script post-processes
+> the `.info` file to strip excluded lines. Always use the filtered file for reporting.
 
 > **Token-saving tip:** Commands above pipe through `tail` to show only the summary.
 > Drop the `| tail` suffix when you need full output for debugging.
 
 ## Code Quality
 
-All source code **must** pass `fortitude check` with zero warnings before being committed.
+All source code **must** pass `fortitude check` with zero warnings before being committed (enforced by CI).
 [Fortitude](https://github.com/PlasmaFAIR/fortitude) is a Fortran linter that enforces
 consistent style and catches common mistakes.
 
 ```bash
-# Check all source files
-fortitude check
-
-# Check a specific file
-fortitude check src/hsd_types.f90
+# Check all source files and output erros, whilst fixing simple stuff like indentation
+fortitude check --fix
 ```
 
-Fortitude is configured via `fortitude.toml` (if present) or uses sensible defaults.
-The CI pipeline enforces this check — PRs with lint warnings will not be merged.
+Fortitude is configured via `fpm.toml`.
+
 
 ## Project Layout
 

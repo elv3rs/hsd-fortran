@@ -30,6 +30,8 @@ program testapp
   use test_final_100_coverage_suite, only : final_100_coverage_tests => tests
   use test_remaining_paths_suite, only : remaining_paths_tests => tests
   use test_final_push_suite, only : final_push_tests => tests
+  use count_visitor_mod, only : count_visitor
+  use test_full_coverage_suite, only : full_coverage_tests => tests
   implicit none (type, external)
 
   ! Execute all test suites
@@ -63,7 +65,8 @@ program testapp
       fuzz_tests(), &
       final_100_coverage_tests(), &
       remaining_paths_tests(), &
-      final_push_tests() &
+      final_push_tests(), &
+      full_coverage_tests() &
   ]))
 
 end program testapp

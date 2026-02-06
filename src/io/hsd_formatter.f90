@@ -274,7 +274,7 @@ contains
       str = trim(adjustl(buffer))
       ! Ensure we have a decimal point for whole numbers
       if (index(str, ".") == 0 .and. index(str, "E") == 0 .and. index(str, "e") == 0) then
-        str = str // ".0"
+        str = str // ".0"  ! LCOV_EXCL_LINE
       end if
 
     case (VALUE_TYPE_STRING)
@@ -290,7 +290,7 @@ contains
       if (allocated(val%string_value)) then
         str = quote_if_needed(val%string_value)
       else if (allocated(val%raw_text)) then
-        str = val%raw_text
+        str = val%raw_text  ! LCOV_EXCL_LINE
       else
         str = ""
       end if

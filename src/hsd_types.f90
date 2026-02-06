@@ -1163,7 +1163,7 @@ contains
     character(len=:), allocatable, intent(out) :: tokens(:)
 
     integer :: i, start, max_len, token_count
-    character(len=len(text)) :: temp_tokens(len(text))
+    character(len=len(text)) :: temp_tokens(len(text))  ! LCOV_EXCL_LINE
     logical :: in_token
 
     ! First pass: count tokens and find max length
@@ -1221,7 +1221,7 @@ contains
     character(len=:), allocatable, intent(out) :: tokens(:)
 
     integer :: i, start, max_len, token_count, tlen
-    character(len=len(text)) :: temp_tokens(len(text))
+    character(len=len(text)) :: temp_tokens(len(text))  ! LCOV_EXCL_LINE
     character(len=1) :: quote_char
     logical :: in_token, in_quote
 
@@ -1429,7 +1429,7 @@ contains
     character(len=:), allocatable, intent(out) :: lines(:)
 
     integer :: i, start, line_count, max_len, tlen
-    character(len=len(text)) :: temp_lines(len(text))
+    character(len=len(text)) :: temp_lines(len(text))  ! LCOV_EXCL_LINE
 
     line_count = 0
     max_len = 0

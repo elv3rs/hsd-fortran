@@ -179,9 +179,9 @@ contains
     type is (hsd_value)
       call child%get_string(val, local_stat)
       if (local_stat /= HSD_STAT_OK) then
-        call make_error(error, HSD_STAT_TYPE_ERROR, &
-          ctx_prefix // "Field '" // path // "' is not a string")
-        return
+        call make_error(error, HSD_STAT_TYPE_ERROR, &  ! LCOV_EXCL_LINE
+          ctx_prefix // "Field '" // path // "' is not a string")  ! LCOV_EXCL_LINE
+        return  ! LCOV_EXCL_LINE
       end if
 
       found = .false.

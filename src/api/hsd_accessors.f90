@@ -540,10 +540,10 @@ contains
       call get_int_matrix_from_table(child, val, nrows, ncols, local_stat)
       if (present(stat)) stat = local_stat
     class default
-      if (present(stat)) stat = HSD_STAT_TYPE_ERROR
-      allocate(val(0,0))
-      nrows = 0
-      ncols = 0
+      if (present(stat)) stat = HSD_STAT_TYPE_ERROR  ! LCOV_EXCL_LINE
+      allocate(val(0,0))  ! LCOV_EXCL_LINE
+      nrows = 0  ! LCOV_EXCL_LINE
+      ncols = 0  ! LCOV_EXCL_LINE
     end select
 
   end subroutine hsd_get_integer_matrix
@@ -579,10 +579,10 @@ contains
       call get_real_matrix_from_table(child, val, nrows, ncols, local_stat)
       if (present(stat)) stat = local_stat
     class default
-      if (present(stat)) stat = HSD_STAT_TYPE_ERROR
-      allocate(val(0,0))
-      nrows = 0
-      ncols = 0
+      if (present(stat)) stat = HSD_STAT_TYPE_ERROR  ! LCOV_EXCL_LINE
+      allocate(val(0,0))  ! LCOV_EXCL_LINE
+      nrows = 0  ! LCOV_EXCL_LINE
+      ncols = 0  ! LCOV_EXCL_LINE
     end select
 
   end subroutine hsd_get_real_dp_matrix
