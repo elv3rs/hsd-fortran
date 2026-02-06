@@ -20,7 +20,7 @@
 !> - **NOT thread-safe**: Modifying a shared tree, using shared iterators,
 !>   parsing to the same tree
 !>
-!> For detailed thread safety information, see docs/thread_safety.md
+!> For detailed thread safety information, see docs/thread_safety.rst
 !>
 !> ## Example usage
 !>

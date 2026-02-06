@@ -1,6 +1,7 @@
 !> Test application driving Fortuno unit tests for HSD
 program testapp
   use fortuno_serial, only: execute_serial_cmd_app, test_list
+  use build_env, only: build_env_init
   use test_lexer_suite, only: lexer_tests => tests
   use test_parser_suite, only: parser_tests => tests
   use test_formatter_suite, only: formatter_tests => tests
@@ -20,8 +21,8 @@ program testapp
   use test_dftb_integration_suite, only: dftb_integration_tests => tests
   implicit none (type, external)
 
-  ! Execute all test suites
-  ! Note: this function does not return but stops the code with the right exit code
+  ! Initialize build environment paths (no-op for CMake, sets getcwd for fpm)
+  call build_env_init()
   call execute_serial_cmd_app(test_list([&
       lexer_tests(), &
       parser_tests(), &

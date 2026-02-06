@@ -247,7 +247,7 @@ contains
     end if
     if (present(line)) table%line = line
 
-    table%capacity = 8
+    table%capacity = 4
     allocate(table%children(table%capacity))
     table%num_children = 0
 
@@ -398,16 +398,8 @@ contains
     ignore_case = .false.
     if (present(case_insensitive)) ignore_case = case_insensitive
 
-    ! Ensure index is built if there are children but index isn't active
-    ! (Should normally be active if added via add_child, but safety first)
-    if (.not. self%index_active .and. self%num_children > 0) then
-      ! Deeply constant intent(in) self prevents calling build_index directly
-      ! but we can use a select type or just assume it's active.
-      ! Since this is intent(in), we can't build it here.
-      ! Let's assume it IS active if num_children > 0.
-    end if
-
     if (self%index_active) then
+      ! O(1) hash-based lookup
       if (ignore_case) then
         idx = self%name_index%lookup_case_insensitive(name, found)
       else
@@ -419,6 +411,21 @@ contains
           child => self%children(idx)%node
         end if
       end if
+    else
+      ! Linear fallback when hash index is not active
+      do idx = 1, self%num_children
+        if (.not. allocated(self%children(idx)%node)) cycle
+        if (.not. allocated(self%children(idx)%node%name)) cycle
+        if (ignore_case) then
+          found = to_lower(self%children(idx)%node%name) == to_lower(name)
+        else
+          found = self%children(idx)%node%name == name
+        end if
+        if (found) then
+          child => self%children(idx)%node
+          return
+        end if
+      end do
     end if
 
   end subroutine table_get_child_by_name
@@ -679,12 +686,39 @@ contains
   end subroutine value_set_complex
 
   !> Set raw text (for arrays/matrices)
+  !>
+  !> Detects whether the text contains multiple values (space/comma/newline
+  !> separated) and sets VALUE_TYPE_ARRAY accordingly, so that hsd_is_array
+  !> returns the correct result for programmatically set arrays.
   subroutine value_set_raw(self, text)
     class(hsd_value), intent(inout) :: self
     character(len=*), intent(in) :: text
-    self%value_type = VALUE_TYPE_STRING
+
+    integer :: i, token_count
+    logical :: in_token
+
+    ! Quick count of whitespace/comma-separated tokens
+    token_count = 0
+    in_token = .false.
+    do i = 1, len(text)
+      if (is_separator(text(i:i))) then
+        in_token = .false.
+      else
+        if (.not. in_token) then
+          token_count = token_count + 1
+          in_token = .true.
+        end if
+      end if
+    end do
+
+    if (token_count > 1) then
+      self%value_type = VALUE_TYPE_ARRAY
+    else
+      self%value_type = VALUE_TYPE_STRING
+    end if
     self%raw_text = text
     self%string_value = text
+
   end subroutine value_set_raw
 
   !> Get string value
@@ -1158,12 +1192,15 @@ contains
   end subroutine parse_real_array
 
   !> Tokenize string by whitespace and commas
+  !>
+  !> Uses a two-pass approach: first counts tokens and measures max length,
+  !> then allocates and fills. Avoids O(n²) stack allocation that the previous
+  !> `temp_tokens(len(text))` approach suffered from.
   subroutine tokenize_string(text, tokens)
     character(len=*), intent(in) :: text
     character(len=:), allocatable, intent(out) :: tokens(:)
 
     integer :: i, start, max_len, token_count
-    character(len=len(text)) :: temp_tokens(len(text))  ! LCOV_EXCL_LINE
     logical :: in_token
 
     ! First pass: count tokens and find max length
@@ -1177,7 +1214,6 @@ contains
         if (in_token) then
           token_count = token_count + 1
           max_len = max(max_len, i - start)
-          temp_tokens(token_count) = text(start:i-1)
           in_token = .false.
         end if
       else
@@ -1192,17 +1228,39 @@ contains
     if (in_token) then
       token_count = token_count + 1
       max_len = max(max_len, len(text) - start + 1)
-      temp_tokens(token_count) = text(start:len(text))
     end if
 
-    ! Allocate and copy
-    if (token_count > 0 .and. max_len > 0) then
-      allocate(character(len=max_len) :: tokens(token_count))
-      do i = 1, token_count
-        tokens(i) = trim(temp_tokens(i))
-      end do
-    else
-      allocate(character(len=1) :: tokens(0))  ! LCOV_EXCL_LINE
+    if (token_count == 0 .or. max_len == 0) then
+      allocate(character(len=1) :: tokens(0))
+      return
+    end if
+
+    ! Allocate result array
+    allocate(character(len=max_len) :: tokens(token_count))
+
+    ! Second pass: extract tokens
+    token_count = 0
+    in_token = .false.
+
+    do i = 1, len(text)
+      if (is_separator(text(i:i))) then
+        if (in_token) then
+          token_count = token_count + 1
+          tokens(token_count) = text(start:i-1)
+          in_token = .false.
+        end if
+      else
+        if (.not. in_token) then
+          start = i
+          in_token = .true.
+        end if
+      end if
+    end do
+
+    ! Handle last token
+    if (in_token) then
+      token_count = token_count + 1
+      tokens(token_count) = text(start:len(text))
     end if
 
   end subroutine tokenize_string
@@ -1216,35 +1274,32 @@ contains
   end function is_separator
 
   !> Tokenize string preserving quoted sections
+  !>
+  !> Uses a two-pass approach to avoid O(n²) stack allocation.
   subroutine tokenize_quoted_string(text, tokens)
     character(len=*), intent(in) :: text
     character(len=:), allocatable, intent(out) :: tokens(:)
 
     integer :: i, start, max_len, token_count, tlen
-    character(len=len(text)) :: temp_tokens(len(text))  ! LCOV_EXCL_LINE
     character(len=1) :: quote_char
     logical :: in_token, in_quote
 
+    tlen = len_trim(text)
+
+    ! First pass: count tokens and find max length
     token_count = 0
     max_len = 0
     in_token = .false.
     in_quote = .false.
     quote_char = ' '
     start = 1
-    tlen = len_trim(text)
 
     i = 1
     do while (i <= tlen)
       if (in_quote) then
-        ! Look for closing quote
         if (text(i:i) == quote_char) then
           token_count = token_count + 1
           max_len = max(max_len, i - start - 1)
-          if (i > start + 1) then
-            temp_tokens(token_count) = text(start+1:i-1)
-          else
-            temp_tokens(token_count) = ""
-          end if
           in_quote = .false.
           in_token = .false.
         end if
@@ -1257,7 +1312,6 @@ contains
         if (in_token) then
           token_count = token_count + 1
           max_len = max(max_len, i - start)
-          temp_tokens(token_count) = text(start:i-1)
           in_token = .false.
         end if
       else
@@ -1269,21 +1323,61 @@ contains
       i = i + 1
     end do
 
-    ! Handle last token
     if (in_token .and. .not. in_quote) then
       token_count = token_count + 1
       max_len = max(max_len, tlen - start + 1)
-      temp_tokens(token_count) = text(start:tlen)
     end if
 
-    ! Allocate and copy
-    if (token_count > 0 .and. max_len > 0) then
-      allocate(character(len=max_len) :: tokens(token_count))
-      do i = 1, token_count
-        tokens(i) = trim(temp_tokens(i))
-      end do
-    else
+    if (token_count == 0 .or. max_len == 0) then
       allocate(character(len=1) :: tokens(0))
+      return
+    end if
+
+    ! Allocate result array
+    allocate(character(len=max_len) :: tokens(token_count))
+
+    ! Second pass: extract tokens
+    token_count = 0
+    in_token = .false.
+    in_quote = .false.
+    quote_char = ' '
+
+    i = 1
+    do while (i <= tlen)
+      if (in_quote) then
+        if (text(i:i) == quote_char) then
+          token_count = token_count + 1
+          if (i > start + 1) then
+            tokens(token_count) = text(start+1:i-1)
+          else
+            tokens(token_count) = ""
+          end if
+          in_quote = .false.
+          in_token = .false.
+        end if
+      else if (text(i:i) == '"' .or. text(i:i) == "'") then
+        quote_char = text(i:i)
+        in_quote = .true.
+        start = i
+        in_token = .true.
+      else if (is_separator(text(i:i))) then
+        if (in_token) then
+          token_count = token_count + 1
+          tokens(token_count) = text(start:i-1)
+          in_token = .false.
+        end if
+      else
+        if (.not. in_token) then
+          start = i
+          in_token = .true.
+        end if
+      end if
+      i = i + 1
+    end do
+
+    if (in_token .and. .not. in_quote) then
+      token_count = token_count + 1
+      tokens(token_count) = text(start:tlen)
     end if
 
   end subroutine tokenize_quoted_string
@@ -1424,27 +1518,25 @@ contains
   end subroutine parse_real_matrix
 
   !> Split text by newlines
+  !>
+  !> Uses a two-pass approach to avoid O(n²) stack allocation.
   subroutine split_by_newlines(text, lines)
     character(len=*), intent(in) :: text
     character(len=:), allocatable, intent(out) :: lines(:)
 
     integer :: i, start, line_count, max_len, tlen
-    character(len=len(text)) :: temp_lines(len(text))  ! LCOV_EXCL_LINE
 
+    tlen = len(text)
+
+    ! First pass: count lines and find max length
     line_count = 0
     max_len = 0
     start = 1
-    tlen = len(text)
 
     do i = 1, tlen
       if (text(i:i) == char(10) .or. text(i:i) == ';') then
         line_count = line_count + 1
         max_len = max(max_len, i - start)
-        if (i > start) then
-          temp_lines(line_count) = text(start:i-1)
-        else
-          temp_lines(line_count) = ""
-        end if
         start = i + 1
       end if
     end do
@@ -1453,17 +1545,37 @@ contains
     if (start <= tlen) then
       line_count = line_count + 1
       max_len = max(max_len, tlen - start + 1)
-      temp_lines(line_count) = text(start:tlen)
     end if
 
-    if (line_count > 0 .and. max_len > 0) then
-      allocate(character(len=max_len) :: lines(line_count))
-      do i = 1, line_count
-        lines(i) = trim(temp_lines(i))
-      end do
-    else
-      allocate(character(len=1) :: lines(1))
+    if (line_count == 0 .or. max_len == 0) then
+      allocate(character(len=max(1, len(text))) :: lines(1))
       lines(1) = text
+      return
+    end if
+
+    ! Allocate result array
+    allocate(character(len=max_len) :: lines(line_count))
+
+    ! Second pass: extract lines
+    line_count = 0
+    start = 1
+
+    do i = 1, tlen
+      if (text(i:i) == char(10) .or. text(i:i) == ';') then
+        line_count = line_count + 1
+        if (i > start) then
+          lines(line_count) = text(start:i-1)
+        else
+          lines(line_count) = ""
+        end if
+        start = i + 1
+      end if
+    end do
+
+    ! Handle last line
+    if (start <= tlen) then
+      line_count = line_count + 1
+      lines(line_count) = text(start:tlen)
     end if
 
   end subroutine split_by_newlines

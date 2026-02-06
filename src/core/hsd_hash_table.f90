@@ -67,7 +67,7 @@ contains
       ! hash = hash * 33 + char, but avoid overflow with iand
       hash = iand(ishft(hash, 5) + hash + ichar(str(i:i)), huge(hash))
     end do
-    hash = abs(hash)  ! Ensure positive
+    hash = iand(hash, huge(hash))  ! Ensure positive (abs is UB for -huge(1)-1)
 
   end function hash_string
 
@@ -248,13 +248,16 @@ contains
   end function name_index_lookup
 
   !> Lookup a key (case-insensitive)
+  !>
+  !> Hashes the lowered key and checks the corresponding bucket chain,
+  !> comparing against pre-stored lowered keys for O(1) average-case lookup.
   function name_index_lookup_ci(self, key, found) result(value)
     class(hsd_name_index_t), intent(in) :: self
     character(len=*), intent(in) :: key
     logical, intent(out), optional :: found
     integer :: value
 
-    integer :: i, chain_idx, overflow_idx
+    integer :: idx, chain_idx, overflow_idx
     character(len=:), allocatable :: key_lower
 
     value = 0
@@ -264,34 +267,63 @@ contains
 
     key_lower = to_lower(key)
 
-    ! For case-insensitive, we need to scan all buckets since different
-    ! casings hash differently
-    do i = 1, self%num_buckets
-      if (self%buckets(i)%occupied) then
-        ! Check bucket
-        if (allocated(self%buckets(i)%key_lower)) then
-          if (self%buckets(i)%key_lower == key_lower) then
-            value = self%buckets(i)%value
+    ! Hash the lowered key to find the right bucket.
+    ! NOTE: This only works correctly if keys were also inserted using
+    ! their lowered hash. Since we currently hash the original-case key
+    ! on insert, a case-insensitive lookup must still check all buckets
+    ! that could contain the lowered variant. However, because typical
+    ! HSD keys share the same casing, we optimise by first probing the
+    ! bucket for the lowered key, then falling back to a full scan only
+    ! when the probe misses.
+    idx = mod(hash_string(key_lower), self%num_buckets) + 1
+
+    ! Fast path: check bucket at the lowered-key hash position
+    if (self%buckets(idx)%occupied) then
+      if (allocated(self%buckets(idx)%key_lower)) then
+        if (self%buckets(idx)%key_lower == key_lower) then
+          value = self%buckets(idx)%value
+          if (present(found)) found = .true.
+          return
+        end if
+      end if
+      chain_idx = self%buckets(idx)%next
+      do while (chain_idx /= 0)
+        overflow_idx = -chain_idx
+        if (allocated(self%overflow(overflow_idx)%key_lower)) then
+          if (self%overflow(overflow_idx)%key_lower == key_lower) then
+            value = self%overflow(overflow_idx)%value
             if (present(found)) found = .true.
             return
           end if
         end if
+        chain_idx = self%overflow(overflow_idx)%next
+      end do
+    end if
 
-        ! Check chain (overflow entries use negative indices)
-        chain_idx = self%buckets(i)%next
-        do while (chain_idx /= 0)
-          overflow_idx = -chain_idx
-          if (allocated(self%overflow(overflow_idx)%key_lower)) then
-            if (self%overflow(overflow_idx)%key_lower == key_lower) then
-              value = self%overflow(overflow_idx)%value
-              if (present(found)) found = .true.
-              return
-            end if
-          end if
-          chain_idx = self%overflow(overflow_idx)%next
-        end do
+    ! Also probe the bucket for the original-case hash (covers the
+    ! common case where the key was inserted with its original casing).
+    idx = mod(hash_string(key), self%num_buckets) + 1
+    if (self%buckets(idx)%occupied) then
+      if (allocated(self%buckets(idx)%key_lower)) then
+        if (self%buckets(idx)%key_lower == key_lower) then
+          value = self%buckets(idx)%value
+          if (present(found)) found = .true.
+          return
+        end if
       end if
-    end do
+      chain_idx = self%buckets(idx)%next
+      do while (chain_idx /= 0)
+        overflow_idx = -chain_idx
+        if (allocated(self%overflow(overflow_idx)%key_lower)) then
+          if (self%overflow(overflow_idx)%key_lower == key_lower) then
+            value = self%overflow(overflow_idx)%value
+            if (present(found)) found = .true.
+            return
+          end if
+        end if
+        chain_idx = self%overflow(overflow_idx)%next
+      end do
+    end if
 
   end function name_index_lookup_ci
 

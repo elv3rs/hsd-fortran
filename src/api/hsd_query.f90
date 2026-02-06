@@ -440,6 +440,28 @@ contains
               if (allocated(base_child%real_array)) deallocate(base_child%real_array)
               allocate(base_child%real_array, source=cloned_value%real_array)
             end if
+            if (allocated(cloned_value%logical_array)) then
+              if (allocated(base_child%logical_array)) deallocate(base_child%logical_array)
+              allocate(base_child%logical_array, source=cloned_value%logical_array)
+            end if
+            if (allocated(cloned_value%string_array)) then
+              if (allocated(base_child%string_array)) deallocate(base_child%string_array)
+              allocate(base_child%string_array, source=cloned_value%string_array)
+            end if
+            if (allocated(cloned_value%complex_array)) then
+              if (allocated(base_child%complex_array)) deallocate(base_child%complex_array)
+              allocate(base_child%complex_array, source=cloned_value%complex_array)
+            end if
+            if (allocated(cloned_value%int_matrix)) then
+              if (allocated(base_child%int_matrix)) deallocate(base_child%int_matrix)
+              allocate(base_child%int_matrix, source=cloned_value%int_matrix)
+            end if
+            if (allocated(cloned_value%real_matrix)) then
+              if (allocated(base_child%real_matrix)) deallocate(base_child%real_matrix)
+              allocate(base_child%real_matrix, source=cloned_value%real_matrix)
+            end if
+            base_child%nrows = cloned_value%nrows
+            base_child%ncols = cloned_value%ncols
           class default
             ! Type mismatch - skip
           end select

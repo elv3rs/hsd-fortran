@@ -7,6 +7,7 @@ module hsd_accessors
   use hsd_constants, only: dp, sp
   use hsd_error, only: HSD_STAT_OK, HSD_STAT_NOT_FOUND, HSD_STAT_TYPE_ERROR
   use hsd_types, only: hsd_node, hsd_table, hsd_value, new_value, VALUE_TYPE_ARRAY
+  use hsd_query, only: hsd_get_child
   implicit none (type, external)
   private
 
@@ -63,7 +64,7 @@ contains
     class(hsd_node), pointer :: child
     integer :: local_stat
 
-    call get_child_by_path(table, path, child, local_stat)
+    call hsd_get_child(table, path, child, local_stat)
 
     if (local_stat /= 0 .or. .not. associated(child)) then
       if (present(stat)) stat = HSD_STAT_NOT_FOUND
@@ -96,7 +97,7 @@ contains
 
     if (local_stat /= 0) then
       val = default
-      if (present(stat)) stat = HSD_STAT_NOT_FOUND
+      if (present(stat)) stat = local_stat
     else
       if (present(stat)) stat = HSD_STAT_OK
     end if
@@ -113,7 +114,7 @@ contains
     class(hsd_node), pointer :: child
     integer :: local_stat
 
-    call get_child_by_path(table, path, child, local_stat)
+    call hsd_get_child(table, path, child, local_stat)
 
     if (local_stat /= 0 .or. .not. associated(child)) then
       if (present(stat)) stat = HSD_STAT_NOT_FOUND
@@ -146,7 +147,7 @@ contains
 
     if (local_stat /= 0) then
       val = default
-      if (present(stat)) stat = HSD_STAT_NOT_FOUND
+      if (present(stat)) stat = local_stat
     else
       if (present(stat)) stat = HSD_STAT_OK
     end if
@@ -163,7 +164,7 @@ contains
     class(hsd_node), pointer :: child
     integer :: local_stat
 
-    call get_child_by_path(table, path, child, local_stat)
+    call hsd_get_child(table, path, child, local_stat)
 
     if (local_stat /= 0 .or. .not. associated(child)) then
       if (present(stat)) stat = HSD_STAT_NOT_FOUND
@@ -196,7 +197,7 @@ contains
 
     if (local_stat /= 0) then
       val = default
-      if (present(stat)) stat = HSD_STAT_NOT_FOUND
+      if (present(stat)) stat = local_stat
     else
       if (present(stat)) stat = HSD_STAT_OK
     end if
@@ -233,7 +234,7 @@ contains
 
     if (local_stat /= 0) then
       val = default
-      if (present(stat)) stat = HSD_STAT_NOT_FOUND
+      if (present(stat)) stat = local_stat
     else
       if (present(stat)) stat = HSD_STAT_OK
     end if
@@ -250,7 +251,7 @@ contains
     class(hsd_node), pointer :: child
     integer :: local_stat
 
-    call get_child_by_path(table, path, child, local_stat)
+    call hsd_get_child(table, path, child, local_stat)
 
     if (local_stat /= 0 .or. .not. associated(child)) then
       if (present(stat)) stat = HSD_STAT_NOT_FOUND
@@ -283,7 +284,7 @@ contains
 
     if (local_stat /= 0) then
       val = default
-      if (present(stat)) stat = HSD_STAT_NOT_FOUND
+      if (present(stat)) stat = local_stat
     else
       if (present(stat)) stat = HSD_STAT_OK
     end if
@@ -300,7 +301,7 @@ contains
     class(hsd_node), pointer :: child
     integer :: local_stat
 
-    call get_child_by_path(table, path, child, local_stat)
+    call hsd_get_child(table, path, child, local_stat)
 
     if (local_stat /= 0 .or. .not. associated(child)) then
       if (present(stat)) stat = HSD_STAT_NOT_FOUND
@@ -333,7 +334,7 @@ contains
 
     if (local_stat /= 0) then
       val = default
-      if (present(stat)) stat = HSD_STAT_NOT_FOUND
+      if (present(stat)) stat = local_stat
     else
       if (present(stat)) stat = HSD_STAT_OK
     end if
@@ -350,7 +351,7 @@ contains
     class(hsd_node), pointer :: child
     integer :: local_stat
 
-    call get_child_by_path(table, path, child, local_stat)
+    call hsd_get_child(table, path, child, local_stat)
 
     if (local_stat /= 0 .or. .not. associated(child)) then
       if (present(stat)) stat = HSD_STAT_NOT_FOUND
@@ -379,7 +380,7 @@ contains
     class(hsd_node), pointer :: child
     integer :: local_stat
 
-    call get_child_by_path(table, path, child, local_stat)
+    call hsd_get_child(table, path, child, local_stat)
 
     if (local_stat /= 0 .or. .not. associated(child)) then
       if (present(stat)) stat = HSD_STAT_NOT_FOUND
@@ -432,7 +433,7 @@ contains
     class(hsd_node), pointer :: child
     integer :: local_stat
 
-    call get_child_by_path(table, path, child, local_stat)
+    call hsd_get_child(table, path, child, local_stat)
 
     if (local_stat /= 0 .or. .not. associated(child)) then
       if (present(stat)) stat = HSD_STAT_NOT_FOUND
@@ -461,7 +462,7 @@ contains
     class(hsd_node), pointer :: child
     integer :: local_stat
 
-    call get_child_by_path(table, path, child, local_stat)
+    call hsd_get_child(table, path, child, local_stat)
 
     if (local_stat /= 0 .or. .not. associated(child)) then
       if (present(stat)) stat = HSD_STAT_NOT_FOUND
@@ -490,7 +491,7 @@ contains
     class(hsd_node), pointer :: child
     integer :: local_stat
 
-    call get_child_by_path(table, path, child, local_stat)
+    call hsd_get_child(table, path, child, local_stat)
 
     if (local_stat /= 0 .or. .not. associated(child)) then
       if (present(stat)) stat = HSD_STAT_NOT_FOUND
@@ -521,7 +522,7 @@ contains
     class(hsd_node), pointer :: child
     integer :: local_stat
 
-    call get_child_by_path(table, path, child, local_stat)
+    call hsd_get_child(table, path, child, local_stat)
 
     if (local_stat /= 0 .or. .not. associated(child)) then
       if (present(stat)) stat = HSD_STAT_NOT_FOUND
@@ -560,7 +561,7 @@ contains
     class(hsd_node), pointer :: child
     integer :: local_stat
 
-    call get_child_by_path(table, path, child, local_stat)
+    call hsd_get_child(table, path, child, local_stat)
 
     if (local_stat /= 0 .or. .not. associated(child)) then
       if (present(stat)) stat = HSD_STAT_NOT_FOUND
@@ -688,55 +689,5 @@ contains
     end block
 
   end subroutine get_real_matrix_from_table
-
-  !> Helper to navigate path and get child (imported from hsd_query)
-  !> This is a forward reference - actual implementation in hsd_query
-  recursive subroutine get_child_by_path(table, path, child, stat)
-    type(hsd_table), intent(in), target :: table
-    character(len=*), intent(in) :: path
-    class(hsd_node), pointer, intent(out) :: child
-    integer, intent(out), optional :: stat
-
-    character(len=:), allocatable :: remaining, segment
-    class(hsd_node), pointer :: current
-    integer :: sep_pos
-
-    child => null()
-    remaining = path
-
-    ! Get first segment
-    sep_pos = index(remaining, "/")
-    if (sep_pos > 0) then
-      segment = remaining(1:sep_pos-1)
-      remaining = remaining(sep_pos+1:)
-    else
-      segment = remaining
-      remaining = ""
-    end if
-
-    ! Find child with this name
-    call table%get_child_by_name(segment, current, case_insensitive=.true.)
-
-    if (.not. associated(current)) then
-      if (present(stat)) stat = HSD_STAT_NOT_FOUND
-      return
-    end if
-
-    ! If no more path, return this node
-    if (len_trim(remaining) == 0) then
-      child => current
-      if (present(stat)) stat = HSD_STAT_OK
-      return
-    end if
-
-    ! Otherwise, recurse into child table
-    select type (current)
-    type is (hsd_table)
-      call get_child_by_path(current, remaining, child, stat)
-    class default
-      if (present(stat)) stat = HSD_STAT_NOT_FOUND
-    end select
-
-  end subroutine get_child_by_path
 
 end module hsd_accessors

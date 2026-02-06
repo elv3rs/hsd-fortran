@@ -8,6 +8,7 @@ module hsd_formatter
     VALUE_TYPE_NONE, VALUE_TYPE_ARRAY, VALUE_TYPE_STRING, &
     VALUE_TYPE_INTEGER, VALUE_TYPE_REAL, VALUE_TYPE_LOGICAL, VALUE_TYPE_COMPLEX
   use hsd_error, only: hsd_error_t, HSD_STAT_OK, HSD_STAT_IO_ERROR, make_error
+  use hsd_utils, only: string_buffer_t
   implicit none (type, external)
   private
 
@@ -47,14 +48,17 @@ contains
   end subroutine hsd_dump
 
   !> Write HSD table to a string (dynamically allocated)
+  !>
+  !> Uses string_buffer_t internally to avoid O(n²) concatenation.
   subroutine hsd_dump_to_string(root, output)
     type(hsd_table), intent(in) :: root
     character(len=:), allocatable, intent(out) :: output
 
-    ! Start with empty string and build up dynamically
-    output = ""
+    type(string_buffer_t) :: buf
 
-    call write_table_to_string(root, 0, output)
+    call buf%init(1024)
+    call write_table_to_string_buf(root, 0, buf)
+    output = buf%get_string()
 
   end subroutine hsd_dump_to_string
 
@@ -274,8 +278,16 @@ contains
       str = trim(adjustl(buffer))
       ! Ensure we have a decimal point for whole numbers
       if (index(str, ".") == 0 .and. index(str, "E") == 0 .and. index(str, "e") == 0) then
-        str = str // ".0"  ! LCOV_EXCL_LINE
+        str = str // ".0"
       end if
+
+    case (VALUE_TYPE_COMPLEX)
+      block
+        character(len=64) :: re_buf, im_buf
+        write(re_buf, '(G0)') real(val%complex_value)
+        write(im_buf, '(G0)') aimag(val%complex_value)
+        str = "(" // trim(adjustl(re_buf)) // "," // trim(adjustl(im_buf)) // ")"
+      end block
 
     case (VALUE_TYPE_STRING)
       if (allocated(val%string_value)) then
@@ -333,28 +345,32 @@ contains
   end function quote_if_needed
 
   !> Escape double quotes in a string
+  !>
+  !> Uses string_buffer_t to avoid O(n²) concatenation.
   function escape_quotes(str) result(escaped)
     character(len=*), intent(in) :: str
     character(len=:), allocatable :: escaped
 
+    type(string_buffer_t) :: buf
     integer :: i
 
-    escaped = ""
+    call buf%init(len(str) + 16)
     do i = 1, len(str)
       if (str(i:i) == CHAR_DQUOTE) then
-        escaped = escaped // CHAR_BACKSLASH // CHAR_DQUOTE
+        call buf%append_str(CHAR_BACKSLASH // CHAR_DQUOTE)
       else
-        escaped = escaped // str(i:i)
+        call buf%append_char(str(i:i))
       end if
     end do
+    escaped = buf%get_string()
 
   end function escape_quotes
 
-  !> Write table to dynamically allocated string (for string output)
-  recursive subroutine write_table_to_string(table, indent_level, output)
+  !> Write table to string_buffer_t (for string output, avoids O(n²) concatenation)
+  recursive subroutine write_table_to_string_buf(table, indent_level, buf)
     type(hsd_table), intent(in) :: table
     integer, intent(in) :: indent_level
-    character(len=:), allocatable, intent(inout) :: output
+    type(string_buffer_t), intent(inout) :: buf
 
     integer :: i
     class(hsd_node), pointer :: child
@@ -376,12 +392,14 @@ contains
 
         if (allocated(child%name) .and. len_trim(child%name) > 0) then
           line = indent // trim(child%name) // attrib_str // " {"
-          output = output // line // CHAR_NEWLINE
-          call write_table_to_string(child, indent_level + 1, output)
+          call buf%append_str(line)
+          call buf%append_str(CHAR_NEWLINE)
+          call write_table_to_string_buf(child, indent_level + 1, buf)
           line = indent // "}"
-          output = output // line // CHAR_NEWLINE
+          call buf%append_str(line)
+          call buf%append_str(CHAR_NEWLINE)
         else
-          call write_table_to_string(child, indent_level, output)
+          call write_table_to_string_buf(child, indent_level, buf)
         end if
 
       type is (hsd_value)
@@ -396,10 +414,11 @@ contains
         else
           line = indent // format_value(child)
         end if
-        output = output // line // CHAR_NEWLINE
+        call buf%append_str(line)
+        call buf%append_str(CHAR_NEWLINE)
       end select
     end do
 
-  end subroutine write_table_to_string
+  end subroutine write_table_to_string_buf
 
 end module hsd_formatter
