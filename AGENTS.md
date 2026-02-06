@@ -1,7 +1,10 @@
 # AGENTS.md - HSD-Fortran Development Guide
 
 ## Main directive
-Work through the `TODO.md` step by step. Do not stop before finishing all tasks. Take your time in order to do things properly. Use git -- Whenever an atomic task is complete, remove it from the README and commit it. If a task changed anything important with regard to the project, update `AGENTS.md` correspondingly. 
+Work through the `TODO.md` step by step. Do not stop before finishing all tasks, defer outputting a summary of changes until the todo is complete.
+
+
+Take your time in order to do things properly. Use git -- Whenever an atomic task is complete, remove it from the README and commit it. If a task changed anything important with regard to the project, update `AGENTS.md` correspondingly. 
 The project is currently under development / undergoing major refactoring, thus breaking changes are allowed with no further consideration required, as long as the new behaviour is documented accordingly.
 If during a task it becomes apparent that some hsd-fortran behaviour is suboptimal, instead of working around it prefer to either fix it on the spot or tack it onto the `TODO.md` to resolve it later on.
 

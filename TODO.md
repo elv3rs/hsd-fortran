@@ -2,10 +2,9 @@
 - [ ] Review code structure
 - [ ] move stray type declarations to hsd types
 - [ ] Add reference to required 'fortitude check' code quality to AGENTS.md
-- [ ] Overhaul commands with long ot 
+- [ ] Overhaul commands with long output in AGENTS.md to instead recommend adding e.g. || tail and only reading the summary to save tokens.
 - [ ] overhaul / remove benchmark suites
 - [ ] document common operation durations
-- [x] Expand example programs
   - Add examples showcasing common use cases:
     - Configuration file parsing
     - Data validation and schema enforcement
