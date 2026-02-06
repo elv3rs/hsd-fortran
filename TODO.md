@@ -26,6 +26,8 @@
   error was a type conversion failure. Should propagate `local_stat` instead in
   `src/api/hsd_accessors.f90`.
 
+- [ ] Fix fpm not building tests (cmake works)
+
 ## High — API & Documentation Accuracy
 
 - [ ] **Fix API docs: `hsd_dump` signature**: Docs show `stat` (integer) but
@@ -58,11 +60,10 @@
   calls `schema_validate` without checking for unknown fields. Either implement
   the advertised behavior or clearly mark as unimplemented in docs and code.
 
-- [ ] **Fix version inconsistency**: `fpm.toml` says `1.0.0`, `CMakeLists.txt`
-  says `0.1.0`. Decide on canonical version and synchronize.
+- [ ] **Fix version inconsistency**: `fpm.toml` says `1.0.0`, fix `CMakeLists.txt` to say `1.0.0`. synchronize.
 
 - [ ] **Fix user guide code snippets**: Several examples in `docs/user_guide.rst`
-  use wrong signatures that won't compile. Update to match actual API.
+  use wrong signatures that won't compile. Update to match actual API. Prevent this from occuring again by making all examples in user guide executable and including the files instead.
 
 ## Medium — Maintainability & Performance
 
@@ -90,7 +91,7 @@
 
 - [ ] **Move `src/build_env.f90` to test directory**: This test support module
   lives in the library source and gets compiled into the library even for
-  non-test builds. Should live in `test/`.
+  non-test builds. Should live in `test/`. (also check if fpm build / test works with this)
 
 - [ ] **Remove unused `TOKEN_NAME` import from lexer**: `src/io/hsd_lexer.f90:11`
   imports `TOKEN_NAME` which resolves to the `token_name` function but is never
@@ -101,9 +102,10 @@
   deep trees.
 
 ## Low — Polish & Documentation Completeness
+-[ ] **Avoid metric-gaming** Remove lcov exclude markers and script. 
 
-- [ ] **Fix GitHub URL inconsistency**: README badges use `elv3rs/hsd-fortran`
-  while docs reference `dftbplus/hsd-fortran`. Pick one and update everywhere.
+- [ ] **Fix GitHub URL inconsistency**: README badges use `elv3rs/hsd-fortran`,
+  while docs reference `dftbplus/hsd-fortran`. Switch to elv3rs and update everywhere.
 
 - [ ] **Fix README fuzz link**: Points to `utils/fuzz/README.rst` but file is
   `utils/fuzz/README.md`.
@@ -111,7 +113,7 @@
 - [ ] **Add `HSD_STAT_SCHEMA_ERROR` to error handling docs**: Missing from the
   error codes table in `docs/error_handling.rst`.
 
-- [ ] **Remove or implement `setup_fpm_tests.sh`**: Referenced in
+- [ ] **Remove `setup_fpm_tests.sh`**: Referenced in
   `docs/build_systems.rst` but doesn't exist.
 
 - [ ] **Document `HSD_BUILD_BENCHMARKS` CMake option**: Defined in CMakeLists.txt
@@ -132,4 +134,5 @@
   `simple_read` is registered; the other two cannot be run via `fpm run`.
 
 - [ ] **Fix source comment**: `src/hsd_types.f90` references
-  `docs/thread_safety.md` but the file is `docs/thread_safety.rst`.
+  `docs/thread_safety.md` but the file is `docs/thread_safety.rst`
+- [ ] **Update TODO.md**: Finally, update the todo file by checking the codebase and determining how the project could be simplified (i.e. main src loc reduced).
