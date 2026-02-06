@@ -6,7 +6,7 @@
 module hsd_mutators
   use hsd_constants, only: dp, sp
   use hsd_utils, only: to_lower
-  use hsd_error, only: HSD_STAT_OK, HSD_STAT_NOT_FOUND
+  use hsd_error, only: HSD_STAT_OK, HSD_STAT_NOT_FOUND, HSD_STAT_TYPE_ERROR
   use hsd_types, only: hsd_node, hsd_table, hsd_value, new_table, new_value
   implicit none (type, external)
   private
@@ -51,6 +51,9 @@ contains
     select type (child)
     type is (hsd_value)
       call child%set_string(val)
+    class default
+      if (present(stat)) stat = HSD_STAT_TYPE_ERROR
+      return
     end select
 
     if (present(stat)) stat = HSD_STAT_OK
@@ -77,6 +80,9 @@ contains
     select type (child)
     type is (hsd_value)
       call child%set_integer(val)
+    class default
+      if (present(stat)) stat = HSD_STAT_TYPE_ERROR
+      return
     end select
 
     if (present(stat)) stat = HSD_STAT_OK
@@ -103,6 +109,9 @@ contains
     select type (child)
     type is (hsd_value)
       call child%set_real(val)
+    class default
+      if (present(stat)) stat = HSD_STAT_TYPE_ERROR
+      return
     end select
 
     if (present(stat)) stat = HSD_STAT_OK
@@ -140,6 +149,9 @@ contains
     select type (child)
     type is (hsd_value)
       call child%set_logical(val)
+    class default
+      if (present(stat)) stat = HSD_STAT_TYPE_ERROR
+      return
     end select
 
     if (present(stat)) stat = HSD_STAT_OK
@@ -166,6 +178,9 @@ contains
     select type (child)
     type is (hsd_value)
       call child%set_complex(val)
+    class default
+      if (present(stat)) stat = HSD_STAT_TYPE_ERROR
+      return
     end select
 
     if (present(stat)) stat = HSD_STAT_OK
@@ -201,6 +216,9 @@ contains
         text = text // trim(adjustl(buffer))
       end do
       call child%set_raw(text)
+    class default
+      if (present(stat)) stat = HSD_STAT_TYPE_ERROR
+      return
     end select
 
     if (present(stat)) stat = HSD_STAT_OK
@@ -236,6 +254,9 @@ contains
         text = text // trim(adjustl(buffer))
       end do
       call child%set_raw(text)
+    class default
+      if (present(stat)) stat = HSD_STAT_TYPE_ERROR
+      return
     end select
 
     if (present(stat)) stat = HSD_STAT_OK
@@ -288,6 +309,9 @@ contains
         end if
       end do
       call child%set_raw(text)
+    class default
+      if (present(stat)) stat = HSD_STAT_TYPE_ERROR
+      return
     end select
 
     if (present(stat)) stat = HSD_STAT_OK
@@ -327,6 +351,9 @@ contains
         text = text // trim(adjustl(buffer))
       end do
       call child%set_raw(text)
+    class default
+      if (present(stat)) stat = HSD_STAT_TYPE_ERROR
+      return
     end select
 
     if (present(stat)) stat = HSD_STAT_OK
