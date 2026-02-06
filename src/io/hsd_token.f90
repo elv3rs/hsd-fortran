@@ -13,6 +13,13 @@ module hsd_token
   public :: token_name
 
   !> Token kind constants
+  !>
+  !> TOKEN_INVALID and TOKEN_WHITESPACE are sentinel values:
+  !>  - TOKEN_INVALID is never emitted by the lexer; it serves as the error
+  !>    sentinel for is_valid() and token_name().
+  !>  - TOKEN_WHITESPACE is never emitted by the current lexer (whitespace
+  !>    is silently consumed), but the parser defensively skips it so that a
+  !>    future whitespace-preserving lexer mode would work without changes.
   integer, parameter :: TOKEN_INVALID = -1
   integer, parameter :: TOKEN_EOF = 0
   integer, parameter :: TOKEN_WHITESPACE = 1
