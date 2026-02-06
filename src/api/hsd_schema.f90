@@ -313,6 +313,10 @@ contains
   end subroutine schema_validate
 
   !> Validate an HSD tree strictly (also checks for unknown fields)
+  !>
+  !> NOTE: Unknown-field checking is not yet implemented. Currently this
+  !> delegates to schema_validate(). A future implementation should walk
+  !> the tree and report any children not declared in the schema.
   subroutine schema_validate_strict(schema, root, errors)
     type(hsd_schema_t), intent(in) :: schema
     type(hsd_table), intent(in), target :: root
@@ -389,7 +393,7 @@ contains
           ! Validate integer range
           if (field_def%has_int_range) then
             if (int_val < field_def%min_int .or. int_val > field_def%max_int) then
-              call make_range_error(error, field_def%path, &  ! LCOV_EXCL_LINE
+              call make_range_error(error, field_def%path, &
                   int_val, field_def%min_int, field_def%max_int)
               return
             end if
@@ -405,7 +409,7 @@ contains
           ! Validate real range
           if (field_def%has_real_range) then
             if (real_val < field_def%min_real .or. real_val > field_def%max_real) then
-              call make_range_error_real(error, field_def%path, &  ! LCOV_EXCL_LINE
+              call make_range_error_real(error, field_def%path, &
                   real_val, field_def%min_real, field_def%max_real)
               return
             end if
@@ -425,9 +429,9 @@ contains
         case (FIELD_TYPE_STRING)
           call child%get_string(str_val, stat)
           if (stat /= HSD_STAT_OK) then
-            call make_error(error, HSD_STAT_TYPE_ERROR, &  ! LCOV_EXCL_LINE
-              "Field '" // field_def%path // "' cannot be converted to string")  ! LCOV_EXCL_LINE
-            return  ! LCOV_EXCL_LINE
+            call make_error(error, HSD_STAT_TYPE_ERROR, &
+              "Field '" // field_def%path // "' cannot be converted to string")
+            return
           end if
           ! Validate enum values
           if (field_def%num_allowed > 0) then
@@ -441,7 +445,7 @@ contains
           if (actual_type /= VALUE_TYPE_ARRAY .and. &
               .not. allocated(child%int_array) .and. &
               .not. allocated(child%real_array) .and. &
-              .not. allocated(child%raw_text)) then  ! LCOV_EXCL_LINE
+              .not. allocated(child%raw_text)) then
             call make_error(error, HSD_STAT_TYPE_ERROR, &
               "Field '" // field_def%path // "' is not an array")
             return
@@ -492,7 +496,7 @@ contains
 
     select case (type_id)
     case (FIELD_TYPE_ANY)
-      name = "any"  ! LCOV_EXCL_LINE
+      name = "any"
     case (FIELD_TYPE_STRING)
       name = "string"
     case (FIELD_TYPE_INTEGER)
@@ -506,9 +510,9 @@ contains
     case (FIELD_TYPE_COMPLEX)
       name = "complex"
     case (FIELD_TYPE_TABLE)
-      name = "table"  ! LCOV_EXCL_LINE
+      name = "table"
     case default
-      name = "unknown"  ! LCOV_EXCL_LINE
+      name = "unknown"
     end select
 
   end function get_type_name

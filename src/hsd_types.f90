@@ -445,11 +445,11 @@ contains
   end function table_has_child
 
   !> Get number of children
-  pure function table_num_children(self) result(n)  ! LCOV_EXCL_START
+  pure function table_num_children(self) result(n)
     class(hsd_table), intent(in) :: self
     integer :: n
     n = self%num_children
-  end function table_num_children  ! LCOV_EXCL_STOP
+  end function table_num_children
 
   !> Get list of all child names
   subroutine table_get_keys(self, keys)
@@ -481,10 +481,10 @@ contains
         end if
       end do
     else
-      allocate(character(len=1) :: keys(0))  ! LCOV_EXCL_LINE
+      allocate(character(len=1) :: keys(0))
     end if
 
-  end subroutine table_get_keys  ! LCOV_EXCL_LINE
+  end subroutine table_get_keys
 
   !> Remove child at given index
   !>
@@ -999,9 +999,9 @@ contains
     else if (allocated(self%string_value)) then
       text = self%string_value
     else
-      allocate(val(0))  ! LCOV_EXCL_LINE
-      if (present(stat)) stat = HSD_STAT_NOT_FOUND  ! LCOV_EXCL_LINE
-      return  ! LCOV_EXCL_LINE
+      allocate(val(0))
+      if (present(stat)) stat = HSD_STAT_NOT_FOUND
+      return
     end if
 
     ! Count and parse values
@@ -1035,9 +1035,9 @@ contains
     else if (allocated(self%string_value)) then
       text = self%string_value
     else
-      allocate(character(len=1) :: val(0))  ! LCOV_EXCL_LINE
-      if (present(stat)) stat = HSD_STAT_NOT_FOUND  ! LCOV_EXCL_LINE
-      return  ! LCOV_EXCL_LINE
+      allocate(character(len=1) :: val(0))
+      if (present(stat)) stat = HSD_STAT_NOT_FOUND
+      return
     end if
 
     call tokenize_quoted_string(text, val)

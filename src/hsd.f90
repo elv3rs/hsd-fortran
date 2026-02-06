@@ -41,7 +41,7 @@
 module hsd
   ! Core infrastructure
   use hsd_constants, only: dp, sp
-  use hsd_error, only: hsd_error_t, hsd_stat, &
+  use hsd_error, only: hsd_error_t, &
     HSD_STAT_OK, HSD_STAT_SYNTAX_ERROR, HSD_STAT_UNCLOSED_TAG, &
     HSD_STAT_UNCLOSED_ATTRIB, HSD_STAT_UNCLOSED_QUOTE, HSD_STAT_ORPHAN_TEXT, &
     HSD_STAT_INCLUDE_CYCLE, HSD_STAT_INCLUDE_DEPTH, HSD_STAT_FILE_NOT_FOUND, &
@@ -76,7 +76,7 @@ module hsd
 
   ! Re-export public types and constants
   public :: dp, sp
-  public :: hsd_error_t, hsd_stat
+  public :: hsd_error_t
   public :: HSD_STAT_OK, HSD_STAT_SYNTAX_ERROR, HSD_STAT_UNCLOSED_TAG
   public :: HSD_STAT_UNCLOSED_ATTRIB, HSD_STAT_UNCLOSED_QUOTE, HSD_STAT_ORPHAN_TEXT
   public :: HSD_STAT_INCLUDE_CYCLE, HSD_STAT_INCLUDE_DEPTH, HSD_STAT_FILE_NOT_FOUND

@@ -184,10 +184,10 @@ Write a tree to a file.
 
 .. code-block:: fortran
 
-   subroutine hsd_dump(root, filename, stat)
+   subroutine hsd_dump(root, filename, error)
      type(hsd_table), intent(in) :: root
      character(len=*), intent(in) :: filename
-     integer, intent(out), optional :: stat
+     type(hsd_error_t), allocatable, intent(out), optional :: error
    end subroutine
 
 hsd_dump_to_string
@@ -482,55 +482,68 @@ Validation Procedures
 hsd_require
 ~~~~~~~~~~~
 
-Get a required value (returns error if missing).
+Check that a required field exists (optionally check its type).
 
 .. code-block:: fortran
 
-   subroutine hsd_require(root, path, value, error)
-     type(hsd_table), intent(in) :: root
+   subroutine hsd_require(table, path, error, expected_type, context)
+     type(hsd_table), intent(in), target :: table
      character(len=*), intent(in) :: path
-     <type>, intent(out) :: value
      type(hsd_error_t), allocatable, intent(out) :: error
+     integer, intent(in), optional :: expected_type  ! FIELD_TYPE_* constant
+     character(len=*), intent(in), optional :: context
    end subroutine
 
 hsd_validate_range
 ~~~~~~~~~~~~~~~~~~
 
-Validate that a value is within a range.
+Validate that a numeric value at a path is within a range.
 
 .. code-block:: fortran
 
-   subroutine hsd_validate_range(value, min_val, max_val, error)
-     <numeric_type>, intent(in) :: value
-     <numeric_type>, intent(in), optional :: min_val, max_val
+   subroutine hsd_validate_range(table, path, min_val, max_val, error, context)
+     type(hsd_table), intent(in), target :: table
+     character(len=*), intent(in) :: path
+     real(dp), intent(in) :: min_val, max_val
      type(hsd_error_t), allocatable, intent(out) :: error
+     character(len=*), intent(in), optional :: context
    end subroutine
 
 hsd_validate_one_of
 ~~~~~~~~~~~~~~~~~~~
 
-Validate that a value is in a set of allowed values.
+Validate that a string value at a path is one of the allowed choices.
 
 .. code-block:: fortran
 
-   subroutine hsd_validate_one_of(value, allowed, error)
-     character(len=*), intent(in) :: value
-     character(len=*), intent(in) :: allowed(:)
+   subroutine hsd_validate_one_of(table, path, choices, error, context)
+     type(hsd_table), intent(in), target :: table
+     character(len=*), intent(in) :: path
+     character(len=*), intent(in) :: choices(:)
      type(hsd_error_t), allocatable, intent(out) :: error
+     character(len=*), intent(in), optional :: context
    end subroutine
 
 hsd_get_with_unit
 ~~~~~~~~~~~~~~~~~
 
-Get a value and its unit.
+Get a value with unit conversion via a user-supplied converter function.
 
 .. code-block:: fortran
 
-   subroutine hsd_get_with_unit(root, path, value, unit, stat)
-     type(hsd_table), intent(in) :: root
+   subroutine hsd_get_with_unit(table, path, val, target_unit, converter, stat)
+     type(hsd_table), intent(in), target :: table
      character(len=*), intent(in) :: path
-     real(dp), intent(out) :: value
-     character(len=*), intent(out) :: unit
+     real(dp), intent(out) :: val
+     character(len=*), intent(in) :: target_unit
+     interface
+       pure function converter(value, from_unit, to_unit) result(converted)
+         import :: dp
+         real(dp), intent(in) :: value
+         character(len=*), intent(in) :: from_unit, to_unit
+         real(dp) :: converted
+       end function
+     end interface
      integer, intent(out), optional :: stat
    end subroutine
 
@@ -566,11 +579,15 @@ Add a field definition to the schema.
 
 .. code-block:: fortran
 
-   subroutine schema_add_field(schema, path, field_type, required)
+   subroutine schema_add_field(schema, path, requirement, field_type, &
+       min_int, max_int, min_real, max_real, description)
      type(hsd_schema_t), intent(inout) :: schema
      character(len=*), intent(in) :: path
-     integer, intent(in) :: field_type  ! FIELD_TYPE_* constant
-     integer, intent(in) :: required    ! FIELD_REQUIRED or FIELD_OPTIONAL
+     integer, intent(in) :: requirement         ! FIELD_REQUIRED or FIELD_OPTIONAL
+     integer, intent(in), optional :: field_type ! FIELD_TYPE_* constant
+     integer, intent(in), optional :: min_int, max_int
+     real(dp), intent(in), optional :: min_real, max_real
+     character(len=*), intent(in), optional :: description
    end subroutine
 
 schema_add_field_enum
@@ -590,27 +607,30 @@ Add a field with enumerated allowed values.
 schema_validate
 ~~~~~~~~~~~~~~~
 
-Validate a tree against the schema.
+Validate a tree against the schema. Returns an array of all validation errors.
 
 .. code-block:: fortran
 
-   subroutine schema_validate(schema, root, error)
+   subroutine schema_validate(schema, root, errors)
      type(hsd_schema_t), intent(in) :: schema
-     type(hsd_table), intent(in) :: root
-     type(hsd_error_t), allocatable, intent(out) :: error
+     type(hsd_table), intent(in), target :: root
+     type(hsd_error_t), allocatable, intent(out) :: errors(:)
    end subroutine
 
 schema_validate_strict
 ~~~~~~~~~~~~~~~~~~~~~~
 
-Strict validation (fails on unknown fields).
+Strict validation (also checks for unknown fields not in the schema).
+
+.. note:: Currently delegates to ``schema_validate`` — unknown-field checking
+   is not yet implemented.
 
 .. code-block:: fortran
 
-   subroutine schema_validate_strict(schema, root, error)
+   subroutine schema_validate_strict(schema, root, errors)
      type(hsd_schema_t), intent(in) :: schema
-     type(hsd_table), intent(in) :: root
-     type(hsd_error_t), allocatable, intent(out) :: error
+     type(hsd_table), intent(in), target :: root
+     type(hsd_error_t), allocatable, intent(out) :: errors(:)
    end subroutine
 
 Visitor Pattern

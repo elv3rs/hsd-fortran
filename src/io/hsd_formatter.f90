@@ -301,10 +301,10 @@ contains
     case default
       if (allocated(val%string_value)) then
         str = quote_if_needed(val%string_value)
-      else if (allocated(val%raw_text)) then  ! LCOV_EXCL_LINE
-        str = val%raw_text  ! LCOV_EXCL_LINE
+      else if (allocated(val%raw_text)) then
+        str = val%raw_text
       else
-        str = ""  ! LCOV_EXCL_LINE
+        str = ""
       end if
     end select
 

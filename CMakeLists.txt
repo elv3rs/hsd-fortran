@@ -5,7 +5,7 @@
 cmake_minimum_required(VERSION 3.14)
 
 project(hsd-fortran
-  VERSION 0.1.0
+  VERSION 1.0.0
   LANGUAGES Fortran
   DESCRIPTION "Human-friendly Structured Data parser for Fortran"
 )

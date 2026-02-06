@@ -248,7 +248,7 @@ Full documentation is available at [https://elv3rs.github.io/hsd-fortran](https:
 - [HSD Format](docs/hsd_format.rst) — Format specification
 - [Error Handling](docs/error_handling.rst) — Error types and handling
 - [Thread Safety](docs/thread_safety.rst) — Concurrency guidelines
-- [Fuzz Testing](utils/fuzz/README.rst) — AFL++ fuzzing guide
+- [Fuzz Testing](utils/fuzz/README.md) — AFL++ fuzzing guide
 
 ### Building Documentation Locally
 

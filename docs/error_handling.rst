@@ -115,6 +115,9 @@ Error Codes
    * - 11
      - ``HSD_STAT_NOT_FOUND``
      - Key not found in tree
+   * - 20
+     - ``HSD_STAT_SCHEMA_ERROR``
+     - Schema validation failed
 
 Usage Examples
 --------------

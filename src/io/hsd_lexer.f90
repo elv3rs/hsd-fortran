@@ -81,10 +81,10 @@ contains
     open(newunit=unit_num, file=filename, status='old', action='read', &
          access='stream', form='unformatted', iostat=io_stat, iomsg=io_msg)
     if (io_stat /= 0) then
-      if (present(error)) then  ! LCOV_EXCL_LINE
-        call make_error(error, HSD_STAT_IO_ERROR, trim(io_msg), filename)  ! LCOV_EXCL_LINE
-      end if  ! LCOV_EXCL_LINE
-      return  ! LCOV_EXCL_LINE
+      if (present(error)) then
+        call make_error(error, HSD_STAT_IO_ERROR, trim(io_msg), filename)
+      end if
+      return
     end if
 
     ! Allocate and read content
@@ -93,10 +93,10 @@ contains
     close(unit_num)
 
     if (io_stat /= 0 .and. io_stat /= -1) then  ! -1 is EOF, which is okay
-      if (present(error)) then  ! LCOV_EXCL_LINE
-        call make_error(error, HSD_STAT_IO_ERROR, "Error reading file", filename)  ! LCOV_EXCL_LINE
-      end if  ! LCOV_EXCL_LINE
-      return  ! LCOV_EXCL_LINE
+      if (present(error)) then
+        call make_error(error, HSD_STAT_IO_ERROR, "Error reading file", filename)
+      end if
+      return
     end if
 
     lexer%filename = filename
@@ -340,15 +340,15 @@ contains
     character(len=:), allocatable :: stop_chars
     logical :: inside_attrib
 
-    if (present(in_attrib)) then  ! LCOV_EXCL_START
+    if (present(in_attrib)) then
       inside_attrib = in_attrib
-    else  ! LCOV_EXCL_STOP
+    else
       inside_attrib = self%in_attrib
     end if
 
-    if (inside_attrib) then  ! LCOV_EXCL_START
+    if (inside_attrib) then
       stop_chars = attrib_stop
-    else  ! LCOV_EXCL_STOP
+    else
       stop_chars = general_stop
     end if
 

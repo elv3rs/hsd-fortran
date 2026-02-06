@@ -45,6 +45,7 @@ CMake Options
     ``HSD_ACCEPT_TRUE_FALSE``                    ``ON``     Accept ``True``/``False`` as boolean values
     ``HSD_BUILD_TESTS``                          ``ON``     Build test suite
     ``HSD_BUILD_EXAMPLES``                       ``ON``     Build example programs
+    ``HSD_BUILD_BENCHMARKS``                     ``ON``     Build benchmark programs
     ``HSD_COVERAGE``                             ``OFF``    Enable code coverage (requires GCC)
     ``HSD_SANITIZERS``                           ``OFF``    Enable sanitizers for leak/memory detection
     ============================================ ========== ============================================
@@ -112,15 +113,18 @@ FPM Build System
 Setup and Limitations
 ~~~~~~~~~~~~~~~~~~~~~
 
-⚠️ **fpm 0.10.1 doesn't recursively scan subdirectories**: Test suites are organized in ``test/suites/{api,core,io,coverage}/``, but fpm can't discover them automatically.
+⚠️ **fpm 0.10.x doesn't recursively scan subdirectories**: Test suites are organized in ``test/suites/{api,core,io,coverage}/``, but fpm can't discover them automatically.
 
-**Workaround**: Run the setup script to create symlinks:
+**Workaround**: Symlinks are created in ``test/`` pointing to the actual test files in subdirectories.
+These symlinks are listed in ``test/.gitignore`` and need to be recreated if test files are added.
 
 .. code-block:: bash
 
-    ./setup_fpm_tests.sh
-
-This creates symlinks from ``test/suites/{api,core,io,coverage}/*.f90`` to ``test/`` root, allowing fpm to find the test files.
+    # Create symlinks (from project root)
+    cd test
+    for f in suites/api/*.f90 suites/core/*.f90 suites/io/*.f90 suites/coverage/*.f90; do
+      ln -sf "$f" "$(basename $f)"
+    done
 
 **Note**: This is only needed for fpm. CMake explicitly lists all source files and doesn't require symlinks.
 
@@ -273,11 +277,14 @@ If you get sanitizer runtime errors, ensure libasan is installed:
 FPM Test Failures
 ~~~~~~~~~~~~~~~~~
 
-If fpm tests fail with "module not found", re-run the setup script:
+If fpm tests fail with "module not found", re-create the symlinks:
 
 .. code-block:: bash
 
-    ./setup_fpm_tests.sh
+    cd test
+    for f in suites/api/*.f90 suites/core/*.f90 suites/io/*.f90 suites/coverage/*.f90; do
+      ln -sf "$f" "$(basename $f)"
+    done
 
 Coverage Generation Issues
 ~~~~~~~~~~~~~~~~~~~~~~~~~~

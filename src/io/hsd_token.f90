@@ -5,36 +5,14 @@ module hsd_token
   implicit none (type, external)
   private
 
-  public :: hsd_token_t, token_kind
+  public :: hsd_token_t
   public :: TOKEN_INVALID, TOKEN_EOF, TOKEN_WHITESPACE, TOKEN_NEWLINE
   public :: TOKEN_COMMENT, TOKEN_LBRACE, TOKEN_RBRACE, TOKEN_LBRACKET
   public :: TOKEN_RBRACKET, TOKEN_EQUAL, TOKEN_SEMICOLON, TOKEN_STRING
   public :: TOKEN_TEXT, TOKEN_INCLUDE_TXT, TOKEN_INCLUDE_HSD
   public :: token_name
 
-  !> Token kind enumeration
-  type :: enum_token_kind
-    integer :: invalid = -1
-    integer :: eof = 0
-    integer :: whitespace = 1
-    integer :: newline = 2
-    integer :: comment = 3
-    integer :: lbrace = 4      ! {
-    integer :: rbrace = 5      ! }
-    integer :: lbracket = 6    ! [
-    integer :: rbracket = 7    ! ]
-    integer :: equal = 8       ! =
-    integer :: semicolon = 9   ! ;
-    integer :: string = 10     ! quoted string
-    integer :: text = 11       ! unquoted text/identifier
-    integer :: include_txt = 12  ! <<<
-    integer :: include_hsd = 13  ! <<+
-  end type enum_token_kind
-
   !> Token kind constants
-  type(enum_token_kind), parameter :: token_kind = enum_token_kind()
-
-  !> Convenience aliases
   integer, parameter :: TOKEN_INVALID = -1
   integer, parameter :: TOKEN_EOF = 0
   integer, parameter :: TOKEN_WHITESPACE = 1

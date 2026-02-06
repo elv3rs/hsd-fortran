@@ -79,7 +79,7 @@ contains
     integer :: new_capacity, str_len
 
     str_len = len(str)
-    if (str_len == 0) return  ! LCOV_EXCL_LINE
+    if (str_len == 0) return
 
     ! Initialize if needed
     if (self%capacity == 0) call self%init()

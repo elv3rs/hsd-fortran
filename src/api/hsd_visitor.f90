@@ -128,13 +128,13 @@ contains
         if (allocated(child%name)) then
           child_path = child%name
         else
-          child_path = ""  ! LCOV_EXCL_LINE
+          child_path = ""
         end if
       else
         if (allocated(child%name)) then
           child_path = path // "/" // child%name
         else
-          child_path = path  ! LCOV_EXCL_LINE
+          child_path = path
         end if
       end if
 

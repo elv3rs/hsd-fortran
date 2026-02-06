@@ -4,7 +4,7 @@ license = "BSD-2-Clause-Patent"
 maintainer = ["DFTB+ developers group"]
 author = ["DFTB+ developers group"]
 copyright = "2026 DFTB+ developers group"
-homepage = "https://github.com/dftbplus/hsd-fortran"
+homepage = "https://github.com/elv3rs/hsd-fortran"
 keywords = ["hsd", "parser", "dftb+", "structured-data"]
 description = "HSD (Human-friendly Structured Data) parser for Fortran"
 
@@ -34,6 +34,16 @@ fortuno = { git = "https://github.com/fortuno-repos/fortuno-fpm-serial.git" }
 name = "simple_read"
 source-dir = "example"
 main = "simple_read.f90"
+
+[[example]]
+name = "config_demo"
+source-dir = "example"
+main = "config_demo.f90"
+
+[[example]]
+name = "matrix_demo"
+source-dir = "example"
+main = "matrix_demo.f90"
 
 [[example]]
 name = "bench_lookup"

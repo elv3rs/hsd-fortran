@@ -139,7 +139,7 @@ contains
     integer :: idx, chain_idx, overflow_idx
 
     ! Initialize if needed
-    if (self%num_buckets == 0) call self%init()  ! LCOV_EXCL_LINE
+    if (self%num_buckets == 0) call self%init()
 
     ! Check load factor and rehash if needed (> 0.75)
     if (self%num_entries * 4 > self%num_buckets * 3) then
@@ -169,7 +169,7 @@ contains
 
     ! Follow chain to check for existing key and find end
     chain_idx = self%buckets(idx)%next
-    do while (chain_idx /= 0)  ! LCOV_EXCL_START
+    do while (chain_idx /= 0)
       ! In overflow area (chain_idx is always negative for overflow entries)
       overflow_idx = -chain_idx
       if (allocated(self%overflow(overflow_idx)%key)) then
@@ -180,7 +180,7 @@ contains
       end if
       if (self%overflow(overflow_idx)%next == 0) exit
       chain_idx = self%overflow(overflow_idx)%next
-    end do  ! LCOV_EXCL_STOP
+    end do
 
     ! Add new entry to overflow and link it
     overflow_idx = add_overflow_entry(self, key, value)
@@ -233,7 +233,7 @@ contains
 
     ! Check chain (overflow entries use negative indices)
     chain_idx = self%buckets(idx)%next
-    do while (chain_idx /= 0)  ! LCOV_EXCL_START
+    do while (chain_idx /= 0)
       overflow_idx = -chain_idx
       if (allocated(self%overflow(overflow_idx)%key)) then
         if (self%overflow(overflow_idx)%key == key) then
@@ -243,7 +243,7 @@ contains
         end if
       end if
       chain_idx = self%overflow(overflow_idx)%next
-    end do  ! LCOV_EXCL_STOP
+    end do
 
   end function name_index_lookup
 
@@ -334,7 +334,7 @@ contains
 
     integer :: idx, chain_idx, overflow_idx
 
-    if (self%num_buckets == 0) return  ! LCOV_EXCL_LINE
+    if (self%num_buckets == 0) return
 
     idx = mod(hash_string(key), self%num_buckets) + 1
 
@@ -349,14 +349,14 @@ contains
         self%buckets(idx)%value = 0
 
         ! If there's a chain, promote first chain entry (overflow uses negative indices)
-        if (self%buckets(idx)%next /= 0) then  ! LCOV_EXCL_START
+        if (self%buckets(idx)%next /= 0) then
           overflow_idx = -self%buckets(idx)%next
           self%buckets(idx)%key = self%overflow(overflow_idx)%key
           self%buckets(idx)%key_lower = self%overflow(overflow_idx)%key_lower
           self%buckets(idx)%value = self%overflow(overflow_idx)%value
           self%buckets(idx)%next = self%overflow(overflow_idx)%next
           self%overflow(overflow_idx)%occupied = .false.
-        else  ! LCOV_EXCL_STOP
+        else
           self%buckets(idx)%occupied = .false.
         end if
 
@@ -366,22 +366,22 @@ contains
     end if
 
     ! Check chain (overflow entries use negative indices)
-    chain_idx = self%buckets(idx)%next  ! LCOV_EXCL_LINE
-    do while (chain_idx /= 0)  ! LCOV_EXCL_LINE
-      overflow_idx = -chain_idx  ! LCOV_EXCL_LINE
-      if (allocated(self%overflow(overflow_idx)%key)) then  ! LCOV_EXCL_LINE
-        if (self%overflow(overflow_idx)%key == key) then  ! LCOV_EXCL_LINE
-          if (allocated(self%overflow(overflow_idx)%key)) &  ! LCOV_EXCL_LINE
-            deallocate(self%overflow(overflow_idx)%key)  ! LCOV_EXCL_LINE
-          if (allocated(self%overflow(overflow_idx)%key_lower)) &  ! LCOV_EXCL_LINE
-            deallocate(self%overflow(overflow_idx)%key_lower)  ! LCOV_EXCL_LINE
-          self%overflow(overflow_idx)%occupied = .false.  ! LCOV_EXCL_LINE
-          self%num_entries = self%num_entries - 1  ! LCOV_EXCL_LINE
-          return  ! LCOV_EXCL_LINE
-        end if  ! LCOV_EXCL_LINE
-      end if  ! LCOV_EXCL_LINE
-      chain_idx = self%overflow(overflow_idx)%next  ! LCOV_EXCL_LINE
-    end do  ! LCOV_EXCL_LINE
+    chain_idx = self%buckets(idx)%next
+    do while (chain_idx /= 0)
+      overflow_idx = -chain_idx
+      if (allocated(self%overflow(overflow_idx)%key)) then
+        if (self%overflow(overflow_idx)%key == key) then
+          if (allocated(self%overflow(overflow_idx)%key)) &
+            deallocate(self%overflow(overflow_idx)%key)
+          if (allocated(self%overflow(overflow_idx)%key_lower)) &
+            deallocate(self%overflow(overflow_idx)%key_lower)
+          self%overflow(overflow_idx)%occupied = .false.
+          self%num_entries = self%num_entries - 1
+          return
+        end if
+      end if
+      chain_idx = self%overflow(overflow_idx)%next
+    end do
 
   end subroutine name_index_remove
 
@@ -460,8 +460,8 @@ contains
           overflow_idx = -chain_idx
           if (old_overflow(overflow_idx)%occupied) then
             if (allocated(old_overflow(overflow_idx)%key)) then
-              call self%insert(old_overflow(overflow_idx)%key, &  ! LCOV_EXCL_LINE
-                               old_overflow(overflow_idx)%value)  ! LCOV_EXCL_LINE
+              call self%insert(old_overflow(overflow_idx)%key, &
+                               old_overflow(overflow_idx)%value)
             end if
           end if
           chain_idx = old_overflow(overflow_idx)%next

@@ -16,7 +16,7 @@ module test_full_coverage_suite
       & HSD_STAT_INCLUDE_CYCLE, HSD_STAT_INCLUDE_DEPTH, HSD_STAT_IO_ERROR, &
       & dp, sp
   use hsd_error, only: make_syntax_error, make_type_error, make_error, &
-      & error_message, hsd_stat
+      & error_message
   use hsd_token, only: token_name, TOKEN_WHITESPACE, TOKEN_NEWLINE, TOKEN_COMMENT, &
       & TOKEN_LBRACKET, TOKEN_RBRACKET, TOKEN_SEMICOLON, TOKEN_INCLUDE_TXT, &
       & TOKEN_INCLUDE_HSD, TOKEN_EOF, hsd_token_t

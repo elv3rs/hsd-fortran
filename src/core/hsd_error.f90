@@ -7,7 +7,7 @@ module hsd_error
   implicit none (type, external)
   private
 
-  public :: hsd_error_t, hsd_stat
+  public :: hsd_error_t
   public :: HSD_STAT_OK, HSD_STAT_SYNTAX_ERROR, HSD_STAT_UNCLOSED_TAG
   public :: HSD_STAT_UNCLOSED_ATTRIB, HSD_STAT_UNCLOSED_QUOTE
   public :: HSD_STAT_ORPHAN_TEXT, HSD_STAT_INCLUDE_CYCLE, HSD_STAT_INCLUDE_DEPTH
@@ -30,11 +30,6 @@ module hsd_error
   integer, parameter :: HSD_STAT_TYPE_ERROR = 10
   integer, parameter :: HSD_STAT_NOT_FOUND = 11
   integer, parameter :: HSD_STAT_SCHEMA_ERROR = 20
-
-  !> Status type for simpler error handling
-  type :: hsd_stat
-    integer :: code = HSD_STAT_OK
-  end type hsd_stat
 
   !> Error type with detailed information
   type :: hsd_error_t

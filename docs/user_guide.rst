@@ -187,8 +187,8 @@ Access attributes in Fortran:
      print *, "Temperature has a unit specified"
    end if
 
-   ! Get value with unit conversion (custom helper)
-   call hsd_get_with_unit(root, "Temperature", temperature, "Kelvin", stat)
+   ! Get value with unit conversion (requires a converter function)
+   ! call hsd_get_with_unit(root, "Temperature", temperature, "Kelvin", my_converter, stat)
 
 Modifying Trees
 ---------------
@@ -268,31 +268,33 @@ Define and validate input schemas:
    implicit none
 
    type(hsd_schema_t) :: schema
-   type(hsd_error_t), allocatable :: error
+   type(hsd_error_t), allocatable :: errors(:)
 
    ! Initialize schema
    call schema_init(schema)
 
-   ! Add required fields
+   ! Add required fields (note: requirement comes before field_type)
    call schema_add_field(schema, "Driver/MaxSteps", &
-     field_type=FIELD_TYPE_INTEGER, required=FIELD_REQUIRED)
+     FIELD_REQUIRED, field_type=FIELD_TYPE_INTEGER)
 
    call schema_add_field(schema, "Hamiltonian/DFTB/SCC", &
-     field_type=FIELD_TYPE_LOGICAL, required=FIELD_REQUIRED)
+     FIELD_REQUIRED, field_type=FIELD_TYPE_LOGICAL)
 
    ! Add optional field with allowed values
    call schema_add_field_enum(schema, "Driver/Method", &
-     allowed_values=["ConjugateGradient", "SteepestDescent", "FIRE"], &
+     allowed_values=[character(len=20) :: &
+       "ConjugateGradient", "SteepestDescent", "FIRE"], &
      required=FIELD_OPTIONAL)
 
-   ! Validate
-   call schema_validate(schema, root, error)
-   if (allocated(error)) then
-     print *, "Validation failed:", error%message
+   ! Validate (returns array of errors)
+   call schema_validate(schema, root, errors)
+   if (size(errors) > 0) then
+     print *, "Validation failed:", errors(1)%message
    end if
 
    ! Strict validation (fails on unknown fields)
-   call schema_validate_strict(schema, root, error)
+   ! Note: currently equivalent to schema_validate
+   call schema_validate_strict(schema, root, errors)
 
    ! Cleanup
    call schema_destroy(schema)
@@ -304,19 +306,20 @@ Additional validation utilities:
 
 .. code-block:: fortran
 
-   integer :: max_steps
-   real(dp) :: tolerance
-   character(len=:), allocatable :: method
+   type(hsd_error_t), allocatable :: error
 
-   ! Require a value (error if missing)
-   call hsd_require(root, "Driver/MaxSteps", max_steps, error)
+   ! Require a field to exist (optionally check type)
+   call hsd_require(root, "Driver/MaxSteps", error, &
+     expected_type=FIELD_TYPE_INTEGER)
    if (allocated(error)) stop 1
 
-   ! Validate numeric range
-   call hsd_validate_range(max_steps, min_val=1, max_val=10000, error)
+   ! Validate numeric range (reads value from tree)
+   call hsd_validate_range(root, "Driver/MaxSteps", &
+     min_val=1.0_dp, max_val=10000.0_dp, error=error)
 
-   ! Validate against allowed values
-   call hsd_validate_one_of(method, ["option1", "option2", "option3"], error)
+   ! Validate against allowed values (reads value from tree)
+   call hsd_validate_one_of(root, "Driver/Method", &
+     [character(len=10) :: "option1", "option2", "option3"], error)
 
 Visitor Pattern
 ---------------
@@ -381,29 +384,33 @@ Example: Complete Configuration Parser
 
      type(hsd_table) :: root
      type(hsd_schema_t) :: schema
+     type(hsd_error_t), allocatable :: errors(:)
      integer :: stat
 
      ! Load file
      call hsd_load(filename, root, error)
      if (allocated(error)) return
 
-     ! Setup schema
+     ! Setup schema (requirement before field_type)
      call schema_init(schema)
-     call schema_add_field(schema, "MaxIterations", FIELD_TYPE_INTEGER, FIELD_REQUIRED)
-     call schema_add_field(schema, "Tolerance", FIELD_TYPE_REAL, FIELD_OPTIONAL)
-     call schema_add_field(schema, "Method", FIELD_TYPE_STRING, FIELD_OPTIONAL)
+     call schema_add_field(schema, "MaxIterations", FIELD_REQUIRED, FIELD_TYPE_INTEGER)
+     call schema_add_field(schema, "Tolerance", FIELD_OPTIONAL, FIELD_TYPE_REAL)
+     call schema_add_field(schema, "Method", FIELD_OPTIONAL, FIELD_TYPE_STRING)
 
-     ! Validate
-     call schema_validate(schema, root, error)
+     ! Validate (returns errors array)
+     call schema_validate(schema, root, errors)
      call schema_destroy(schema)
-     if (allocated(error)) return
+     if (size(errors) > 0) then
+       allocate(error, source=errors(1))
+       return
+     end if
 
      ! Extract values
      call hsd_get(root, "MaxIterations", config%max_iter, stat)
      call hsd_get_or(root, "Tolerance", config%tolerance, default=1.0e-6_dp, stat=stat)
      call hsd_get_or(root, "Method", config%method, default="default", stat=stat)
 
-     ! Validate ranges
-     call hsd_validate_range(config%max_iter, 1, 100000, error)
+     ! Validate ranges (takes table + path)
+     call hsd_validate_range(root, "MaxIterations", 1.0_dp, 100000.0_dp, error)
 
    end subroutine

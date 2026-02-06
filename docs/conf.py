@@ -12,16 +12,13 @@ import sys
 project = 'HSD-Fortran'
 copyright = '2026, DFTB+ developers group'
 author = 'DFTB+ developers group'
-release = '0.1.0'
-version = '0.1.0'
+release = '1.0.0'
+version = '1.0.0'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [
-    'sphinx.ext.autodoc',
-    'sphinx.ext.intersphinx',
-    'sphinx.ext.viewcode',
     'myst_parser',  # For Markdown support
 ]
 
@@ -68,12 +65,6 @@ html_sidebars = {
         'sourcelink.html',
         'searchbox.html',
     ]
-}
-
-# -- Options for intersphinx extension ---------------------------------------
-
-intersphinx_mapping = {
-    'python': ('https://docs.python.org/3', None),
 }
 
 # -- Options for MyST parser -------------------------------------------------

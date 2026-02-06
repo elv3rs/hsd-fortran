@@ -397,10 +397,10 @@ contains
         ! Child doesn't exist in base - clone and add it
         select type (overlay_child)
         type is (hsd_table)
-          call clone_table(overlay_child, cloned_table)  ! LCOV_EXCL_LINE
+          call clone_table(overlay_child, cloned_table)
           call base%add_child(cloned_table)
         type is (hsd_value)
-          call clone_value(overlay_child, cloned_value)  ! LCOV_EXCL_LINE
+          call clone_value(overlay_child, cloned_value)
           call base%add_child(cloned_value)
         end select
       else
@@ -419,7 +419,7 @@ contains
           ! Overlay value replaces base value
           select type (base_child)
           type is (hsd_value)
-            call clone_value(overlay_child, cloned_value)  ! LCOV_EXCL_LINE
+            call clone_value(overlay_child, cloned_value)
             ! Replace the value content
             base_child%value_type = cloned_value%value_type
             if (allocated(cloned_value%string_value)) then
@@ -491,10 +491,10 @@ contains
 
       select type (child)
       type is (hsd_table)
-        call clone_table(child, cloned_subtable)  ! LCOV_EXCL_LINE
+        call clone_table(child, cloned_subtable)
         call dest%add_child(cloned_subtable)
       type is (hsd_value)
-        call clone_value(child, cloned_value)  ! LCOV_EXCL_LINE
+        call clone_value(child, cloned_value)
         call dest%add_child(cloned_value)
       end select
     end do

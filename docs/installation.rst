@@ -85,7 +85,7 @@ Or using ``FetchContent``:
    include(FetchContent)
    FetchContent_Declare(
      hsd
-     GIT_REPOSITORY https://github.com/dftbplus/hsd-fortran.git
+     GIT_REPOSITORY https://github.com/elv3rs/hsd-fortran.git
      GIT_TAG main
    )
    FetchContent_MakeAvailable(hsd)
@@ -115,7 +115,7 @@ Add to your ``fpm.toml``:
 .. code-block:: toml
 
    [dependencies]
-   hsd.git = "https://github.com/dftbplus/hsd-fortran.git"
+   hsd.git = "https://github.com/elv3rs/hsd-fortran.git"
 
 Verifying Installation
 ----------------------
