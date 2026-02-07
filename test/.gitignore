@@ -1,5 +1,0 @@
-# Symlinks created for fpm test discovery (fpm doesn't scan subdirectories)
-# These point to the real files in suites/{api,core,io,coverage}/
-test_*_suite.f90
-count_visitor_mod.f90
-test_fuzz_suite.f90
