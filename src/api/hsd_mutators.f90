@@ -27,6 +27,9 @@ module hsd_mutators
     module procedure :: hsd_set_real_sp_array
     module procedure :: hsd_set_logical_array
     module procedure :: hsd_set_complex_dp_array
+    module procedure :: hsd_set_string_array
+    module procedure :: hsd_set_integer_matrix
+    module procedure :: hsd_set_real_dp_matrix
   end interface hsd_set
 
 contains
@@ -355,6 +358,128 @@ contains
     if (present(stat)) stat = HSD_STAT_OK
 
   end subroutine hsd_set_complex_dp_array
+
+  !> Set string array by path
+  subroutine hsd_set_string_array(table, path, val, stat)
+    type(hsd_table), intent(inout) :: table
+    character(len=*), intent(in) :: path
+    character(len=*), intent(in) :: val(:)
+    integer, intent(out), optional :: stat
+
+    class(hsd_node), pointer :: child
+    integer :: local_stat, i
+    type(string_buffer_t) :: buf
+
+    call get_or_create_child(table, path, child, local_stat)
+
+    if (local_stat /= 0) then
+      if (present(stat)) stat = local_stat
+      return
+    end if
+
+    select type (child)
+    type is (hsd_value)
+      call buf%init(size(val) * 32)
+      do i = 1, size(val)
+        if (i > 1) call buf%append_char(' ')
+        ! Quote strings containing spaces
+        if (index(val(i), ' ') > 0) then
+          call buf%append_char('"')
+          call buf%append_str(trim(val(i)))
+          call buf%append_char('"')
+        else
+          call buf%append_str(trim(val(i)))
+        end if
+      end do
+      call child%set_raw(buf%get_string())
+    class default
+      if (present(stat)) stat = HSD_STAT_TYPE_ERROR
+      return
+    end select
+
+    if (present(stat)) stat = HSD_STAT_OK
+
+  end subroutine hsd_set_string_array
+
+  !> Set integer matrix by path
+  subroutine hsd_set_integer_matrix(table, path, val, stat)
+    type(hsd_table), intent(inout) :: table
+    character(len=*), intent(in) :: path
+    integer, intent(in) :: val(:,:)
+    integer, intent(out), optional :: stat
+
+    class(hsd_node), pointer :: child
+    integer :: local_stat, ir, ic
+    character(len=32) :: buffer
+    type(string_buffer_t) :: buf
+
+    call get_or_create_child(table, path, child, local_stat)
+
+    if (local_stat /= 0) then
+      if (present(stat)) stat = local_stat
+      return
+    end if
+
+    select type (child)
+    type is (hsd_value)
+      call buf%init(size(val) * 12)
+      do ir = 1, size(val, 1)
+        if (ir > 1) call buf%append_str(new_line('a'))
+        do ic = 1, size(val, 2)
+          write(buffer, '(I0)') val(ir, ic)
+          if (ic > 1) call buf%append_char(' ')
+          call buf%append_str(trim(adjustl(buffer)))
+        end do
+      end do
+      call child%set_raw(buf%get_string())
+    class default
+      if (present(stat)) stat = HSD_STAT_TYPE_ERROR
+      return
+    end select
+
+    if (present(stat)) stat = HSD_STAT_OK
+
+  end subroutine hsd_set_integer_matrix
+
+  !> Set double precision real matrix by path
+  subroutine hsd_set_real_dp_matrix(table, path, val, stat)
+    type(hsd_table), intent(inout) :: table
+    character(len=*), intent(in) :: path
+    real(dp), intent(in) :: val(:,:)
+    integer, intent(out), optional :: stat
+
+    class(hsd_node), pointer :: child
+    integer :: local_stat, ir, ic
+    character(len=32) :: buffer
+    type(string_buffer_t) :: buf
+
+    call get_or_create_child(table, path, child, local_stat)
+
+    if (local_stat /= 0) then
+      if (present(stat)) stat = local_stat
+      return
+    end if
+
+    select type (child)
+    type is (hsd_value)
+      call buf%init(size(val) * 16)
+      do ir = 1, size(val, 1)
+        if (ir > 1) call buf%append_str(new_line('a'))
+        do ic = 1, size(val, 2)
+          write(buffer, '(G0)') val(ir, ic)
+          if (ic > 1) call buf%append_char(' ')
+          call buf%append_str(trim(adjustl(buffer)))
+        end do
+      end do
+      call child%set_raw(buf%get_string())
+    class default
+      if (present(stat)) stat = HSD_STAT_TYPE_ERROR
+      return
+    end select
+
+    if (present(stat)) stat = HSD_STAT_OK
+
+  end subroutine hsd_set_real_dp_matrix
 
   !> Get or create a child node by path, creating intermediate tables as needed
   subroutine get_or_create_child(table, path, child, stat)

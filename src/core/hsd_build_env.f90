@@ -14,6 +14,8 @@
 !> input_file = source_dir // "/test/inputs/sample.hsd"
 !> ```
 module build_env
+  use, intrinsic :: iso_c_binding, only: c_char, c_ptr, c_null_char, c_size_t, c_associated, &
+      & c_null_ptr
   implicit none (type, external)
   private
 
@@ -25,17 +27,37 @@ module build_env
   !> Path to the build directory for temporary test outputs
   character(len=:), allocatable :: build_dir
 
+  !> Buffer size for getcwd
+  integer, parameter :: PATH_BUF_LEN = 4096
+
+  interface
+    !> C standard library getcwd (portable, standard Fortran C binding)
+    type(c_ptr) function c_getcwd(buf, size) bind(c, name="getcwd")
+      import :: c_ptr, c_char, c_size_t
+      implicit none (type, external)
+      character(kind=c_char), intent(inout) :: buf(*)
+      integer(c_size_t), value :: size
+    end function c_getcwd
+  end interface
+
 contains
 
-  !> Initialize paths using getcwd (call once from test main program)
+  !> Initialize paths using getcwd via C binding (call once from test main program)
   subroutine build_env_init()
-    character(len=4096) :: cwd
-    integer :: ierr
+    character(kind=c_char) :: c_buf(PATH_BUF_LEN)
+    type(c_ptr) :: ret
+    character(len=PATH_BUF_LEN) :: cwd
+    integer :: ii
 
     if (allocated(source_dir)) return
 
-    call getcwd(cwd, ierr)
-    if (ierr == 0) then
+    ret = c_getcwd(c_buf, int(PATH_BUF_LEN, c_size_t))
+    if (c_associated(ret)) then
+      cwd = " "
+      do ii = 1, PATH_BUF_LEN
+        if (c_buf(ii) == c_null_char) exit
+        cwd(ii:ii) = c_buf(ii)
+      end do
       source_dir = trim(cwd)
       build_dir = trim(cwd) // "/build"
     else

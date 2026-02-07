@@ -8,11 +8,12 @@ module hsd_accessors
   use hsd_error, only: HSD_STAT_OK, HSD_STAT_NOT_FOUND, HSD_STAT_TYPE_ERROR
   use hsd_types, only: hsd_node, hsd_table, hsd_value, new_value, VALUE_TYPE_ARRAY
   use hsd_query, only: hsd_get_child
+  use hsd_mutators, only: hsd_set
   implicit none (type, external)
   private
 
   ! Public interfaces
-  public :: hsd_get, hsd_get_or, hsd_get_matrix
+  public :: hsd_get, hsd_get_or, hsd_get_or_set, hsd_get_matrix
 
   !> Generic interface for getting values
   !>
@@ -45,6 +46,21 @@ module hsd_accessors
     module procedure :: hsd_get_logical_default
     module procedure :: hsd_get_complex_dp_default
   end interface hsd_get_or
+
+  !> Generic interface for getting values with default, writing default back to tree if absent
+  !>
+  !> Like `hsd_get_or`, but if the key is not found, the default value is also
+  !> written back into the tree. This is critical for generating processed output
+  !> (e.g., dftb_pin.hsd) that contains all defaults.
+  !> stat is HSD_STAT_NOT_FOUND when default is used, HSD_STAT_OK when key existed.
+  interface hsd_get_or_set
+    module procedure :: hsd_get_or_set_string
+    module procedure :: hsd_get_or_set_integer
+    module procedure :: hsd_get_or_set_real_dp
+    module procedure :: hsd_get_or_set_real_sp
+    module procedure :: hsd_get_or_set_logical
+    module procedure :: hsd_get_or_set_complex_dp
+  end interface hsd_get_or_set
 
   !> Generic interface for getting 2D matrices
   interface hsd_get_matrix
@@ -689,5 +705,139 @@ contains
     end block
 
   end subroutine get_real_matrix_from_table
+
+  ! ===== hsd_get_or_set implementations =====
+
+  !> Get string value with default, writing default back to tree if absent
+  subroutine hsd_get_or_set_string(table, path, val, default, stat)
+    type(hsd_table), intent(inout), target :: table
+    character(len=*), intent(in) :: path
+    character(len=:), allocatable, intent(out) :: val
+    character(len=*), intent(in) :: default
+    integer, intent(out), optional :: stat
+
+    integer :: local_stat
+
+    call hsd_get_string(table, path, val, local_stat)
+
+    if (local_stat /= 0) then
+      val = default
+      call hsd_set(table, path, default)
+      if (present(stat)) stat = local_stat
+    else
+      if (present(stat)) stat = HSD_STAT_OK
+    end if
+
+  end subroutine hsd_get_or_set_string
+
+  !> Get integer value with default, writing default back to tree if absent
+  subroutine hsd_get_or_set_integer(table, path, val, default, stat)
+    type(hsd_table), intent(inout), target :: table
+    character(len=*), intent(in) :: path
+    integer, intent(out) :: val
+    integer, intent(in) :: default
+    integer, intent(out), optional :: stat
+
+    integer :: local_stat
+
+    call hsd_get_integer(table, path, val, local_stat)
+
+    if (local_stat /= 0) then
+      val = default
+      call hsd_set(table, path, default)
+      if (present(stat)) stat = local_stat
+    else
+      if (present(stat)) stat = HSD_STAT_OK
+    end if
+
+  end subroutine hsd_get_or_set_integer
+
+  !> Get double precision real value with default, writing default back to tree if absent
+  subroutine hsd_get_or_set_real_dp(table, path, val, default, stat)
+    type(hsd_table), intent(inout), target :: table
+    character(len=*), intent(in) :: path
+    real(dp), intent(out) :: val
+    real(dp), intent(in) :: default
+    integer, intent(out), optional :: stat
+
+    integer :: local_stat
+
+    call hsd_get_real_dp(table, path, val, local_stat)
+
+    if (local_stat /= 0) then
+      val = default
+      call hsd_set(table, path, default)
+      if (present(stat)) stat = local_stat
+    else
+      if (present(stat)) stat = HSD_STAT_OK
+    end if
+
+  end subroutine hsd_get_or_set_real_dp
+
+  !> Get single precision real value with default, writing default back to tree if absent
+  subroutine hsd_get_or_set_real_sp(table, path, val, default, stat)
+    type(hsd_table), intent(inout), target :: table
+    character(len=*), intent(in) :: path
+    real(sp), intent(out) :: val
+    real(sp), intent(in) :: default
+    integer, intent(out), optional :: stat
+
+    integer :: local_stat
+
+    call hsd_get_real_sp(table, path, val, local_stat)
+
+    if (local_stat /= 0) then
+      val = default
+      call hsd_set(table, path, real(default, dp))
+      if (present(stat)) stat = local_stat
+    else
+      if (present(stat)) stat = HSD_STAT_OK
+    end if
+
+  end subroutine hsd_get_or_set_real_sp
+
+  !> Get logical value with default, writing default back to tree if absent
+  subroutine hsd_get_or_set_logical(table, path, val, default, stat)
+    type(hsd_table), intent(inout), target :: table
+    character(len=*), intent(in) :: path
+    logical, intent(out) :: val
+    logical, intent(in) :: default
+    integer, intent(out), optional :: stat
+
+    integer :: local_stat
+
+    call hsd_get_logical(table, path, val, local_stat)
+
+    if (local_stat /= 0) then
+      val = default
+      call hsd_set(table, path, default)
+      if (present(stat)) stat = local_stat
+    else
+      if (present(stat)) stat = HSD_STAT_OK
+    end if
+
+  end subroutine hsd_get_or_set_logical
+
+  !> Get complex value with default, writing default back to tree if absent
+  subroutine hsd_get_or_set_complex_dp(table, path, val, default, stat)
+    type(hsd_table), intent(inout), target :: table
+    character(len=*), intent(in) :: path
+    complex(dp), intent(out) :: val
+    complex(dp), intent(in) :: default
+    integer, intent(out), optional :: stat
+
+    integer :: local_stat
+
+    call hsd_get_complex_dp(table, path, val, local_stat)
+
+    if (local_stat /= 0) then
+      val = default
+      call hsd_set(table, path, default)
+      if (present(stat)) stat = local_stat
+    else
+      if (present(stat)) stat = HSD_STAT_OK
+    end if
+
+  end subroutine hsd_get_or_set_complex_dp
 
 end module hsd_accessors

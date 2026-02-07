@@ -82,7 +82,15 @@ contains
             test("merge_clears_stale", test_merge_clears_stale), &
             test("parse_empty_string", test_parse_empty_string), &
             test("load_missing_noerr", test_load_missing_noerr), &
-            test("table_equal_unnamed", test_table_equal_unnamed) &
+            test("table_equal_unnamed", test_table_equal_unnamed), &
+            test("get_or_set_missing", test_get_or_set_missing), &
+            test("get_or_set_existing", test_get_or_set_existing), &
+            test("set_attrib", test_set_attrib), &
+            test("rename_child", test_rename_child), &
+            test("get_choice", test_get_choice), &
+            test("set_string_array", test_set_string_array), &
+            test("set_integer_matrix", test_set_integer_matrix), &
+            test("set_real_matrix", test_set_real_matrix) &
         ])) &
     ])
 
@@ -1349,5 +1357,216 @@ contains
     walk_value_count = walk_value_count + 1
     if (present(stat)) stat = 1  ! Stop traversal
   end subroutine walk_stop_after_one
+
+  !> Test hsd_get_or_set writes default back to tree when key is missing
+  subroutine test_get_or_set_missing()
+    type(hsd_table) :: root
+    integer :: ival, stat
+    real(dp) :: rval
+    logical :: lval
+    character(len=:), allocatable :: sval
+
+    call new_table(root, "root")
+
+    ! Integer: key missing -> should set default and write it back
+    call hsd_get_or_set(root, "missing_int", ival, 42, stat=stat)
+    call check(ival == 42, msg="get_or_set should return default")
+    call check(stat == HSD_STAT_NOT_FOUND, msg="stat should be NOT_FOUND")
+    ! Verify it was written back
+    call hsd_get(root, "missing_int", ival, stat=stat)
+    call check(ival == 42, msg="default should be written to tree")
+    call check(stat == HSD_STAT_OK, msg="stat should be OK after write-back")
+
+    ! Real
+    call hsd_get_or_set(root, "missing_real", rval, 3.14_dp, stat=stat)
+    call check(abs(rval - 3.14_dp) < 1.0e-10_dp, msg="real default returned")
+    call hsd_get(root, "missing_real", rval, stat=stat)
+    call check(abs(rval - 3.14_dp) < 1.0e-10_dp, msg="real default written")
+
+    ! Logical
+    call hsd_get_or_set(root, "missing_log", lval, .true., stat=stat)
+    call check(lval, msg="logical default returned")
+    call hsd_get(root, "missing_log", lval, stat=stat)
+    call check(lval, msg="logical default written")
+
+    ! String
+    call hsd_get_or_set(root, "missing_str", sval, "hello", stat=stat)
+    call check(sval == "hello", msg="string default returned")
+    call hsd_get(root, "missing_str", sval, stat=stat)
+    call check(sval == "hello", msg="string default written")
+
+    call root%destroy()
+  end subroutine test_get_or_set_missing
+
+  !> Test hsd_get_or_set returns existing value without overwriting
+  subroutine test_get_or_set_existing()
+    type(hsd_table) :: root
+    type(hsd_error_t), allocatable :: error
+    integer :: ival, stat
+
+    call hsd_load_string("existing = 99" // char(10), root, error)
+    call check(.not. allocated(error), msg="parse should succeed")
+
+    call hsd_get_or_set(root, "existing", ival, 0, stat=stat)
+    call check(ival == 99, msg="should return existing value, not default")
+    call check(stat == HSD_STAT_OK, msg="stat should be OK for existing key")
+
+    call root%destroy()
+  end subroutine test_get_or_set_existing
+
+  !> Test hsd_set_attrib
+  subroutine test_set_attrib()
+    type(hsd_table) :: root
+    type(hsd_error_t), allocatable :: error
+    character(len=:), allocatable :: attrib
+    integer :: stat
+
+    call hsd_load_string("LatticeConstant = 5.4" // char(10), root, error)
+    call check(.not. allocated(error), msg="parse should succeed")
+
+    ! Set attribute
+    call hsd_set_attrib(root, "LatticeConstant", "Angstrom", stat=stat)
+    call check(stat == HSD_STAT_OK, msg="set_attrib should succeed")
+
+    ! Read it back
+    call hsd_get_attrib(root, "LatticeConstant", attrib, stat=stat)
+    call check(stat == HSD_STAT_OK, msg="get_attrib should succeed")
+    call check(attrib == "Angstrom", msg="attribute should match")
+
+    ! Set attribute on non-existent path
+    call hsd_set_attrib(root, "nonexistent", "foo", stat=stat)
+    call check(stat == HSD_STAT_NOT_FOUND, msg="set_attrib on missing should be NOT_FOUND")
+
+    call root%destroy()
+  end subroutine test_set_attrib
+
+  !> Test hsd_rename_child
+  subroutine test_rename_child()
+    type(hsd_table) :: root
+    type(hsd_error_t), allocatable :: error
+    integer :: ival, stat
+
+    call hsd_load_string("OldName = 42" // char(10), root, error)
+    call check(.not. allocated(error), msg="parse should succeed")
+
+    call hsd_rename_child(root, "OldName", "NewName", stat=stat)
+    call check(stat == HSD_STAT_OK, msg="rename should succeed")
+
+    ! Old name should be gone
+    call check(.not. hsd_has_child(root, "OldName"), msg="old name should not exist")
+
+    ! New name should work
+    call hsd_get(root, "NewName", ival, stat=stat)
+    call check(stat == HSD_STAT_OK, msg="new name should be findable")
+    call check(ival == 42, msg="value should be preserved after rename")
+
+    ! Rename non-existent
+    call hsd_rename_child(root, "ghost", "phantom", stat=stat)
+    call check(stat == HSD_STAT_NOT_FOUND, msg="rename missing should fail")
+
+    call root%destroy()
+  end subroutine test_rename_child
+
+  !> Test hsd_get_choice for polymorphic dispatch
+  subroutine test_get_choice()
+    type(hsd_table) :: root
+    type(hsd_error_t), allocatable :: error
+    character(len=:), allocatable :: choice_name
+    type(hsd_table), pointer :: choice_table
+    integer :: stat, max_steps
+
+    call hsd_load_string( &
+        "Driver = ConjugateGradient {" // char(10) // &
+        "  MaxSteps = 100" // char(10) // &
+        "}" // char(10), root, error)
+    call check(.not. allocated(error), msg="parse should succeed")
+
+    call hsd_get_choice(root, "Driver", choice_name, choice_table, stat=stat)
+    call check(stat == HSD_STAT_OK, msg="get_choice should succeed")
+    call check(choice_name == "ConjugateGradient", msg="choice name should match")
+    call check(associated(choice_table), msg="choice_table should be associated")
+
+    ! Read from the choice table
+    call hsd_get(choice_table, "MaxSteps", max_steps, stat=stat)
+    call check(stat == HSD_STAT_OK, msg="should read from choice table")
+    call check(max_steps == 100, msg="MaxSteps should be 100")
+
+    ! Non-existent path
+    call hsd_get_choice(root, "missing", choice_name, choice_table, stat=stat)
+    call check(stat == HSD_STAT_NOT_FOUND, msg="missing path should fail")
+
+    call root%destroy()
+  end subroutine test_get_choice
+
+  !> Test hsd_set with string array
+  subroutine test_set_string_array()
+    type(hsd_table) :: root
+    character(len=10) :: names(3)
+    character(len=:), allocatable :: result_str
+    integer :: stat
+
+    call new_table(root, "root")
+
+    names(1) = "C"
+    names(2) = "H"
+    names(3) = "O"
+    call hsd_set(root, "TypeNames", names, stat=stat)
+    call check(stat == HSD_STAT_OK, msg="set string array should succeed")
+
+    ! Read back as raw string
+    call hsd_get(root, "TypeNames", result_str, stat=stat)
+    call check(stat == HSD_STAT_OK, msg="get string should succeed")
+    call check(index(result_str, "C") > 0, msg="should contain C")
+    call check(index(result_str, "H") > 0, msg="should contain H")
+    call check(index(result_str, "O") > 0, msg="should contain O")
+
+    call root%destroy()
+  end subroutine test_set_string_array
+
+  !> Test hsd_set with integer matrix
+  subroutine test_set_integer_matrix()
+    type(hsd_table) :: root
+    integer :: mat(2,3), nrows, ncols, stat
+    integer, allocatable :: mat_out(:,:)
+
+    call new_table(root, "root")
+
+    mat(1,:) = [1, 2, 3]
+    mat(2,:) = [4, 5, 6]
+    call hsd_set(root, "IntMatrix", mat, stat=stat)
+    call check(stat == HSD_STAT_OK, msg="set integer matrix should succeed")
+
+    ! Read it back
+    call hsd_get_matrix(root, "IntMatrix", mat_out, nrows, ncols, stat=stat)
+    call check(stat == HSD_STAT_OK, msg="get integer matrix should succeed")
+    call check(nrows == 2, msg="nrows should be 2")
+    call check(ncols == 3, msg="ncols should be 3")
+    call check(all(mat_out == mat), msg="matrix values should match")
+
+    call root%destroy()
+  end subroutine test_set_integer_matrix
+
+  !> Test hsd_set with real matrix
+  subroutine test_set_real_matrix()
+    type(hsd_table) :: root
+    real(dp) :: mat(2,2)
+    real(dp), allocatable :: mat_out(:,:)
+    integer :: nrows, ncols, stat
+
+    call new_table(root, "root")
+
+    mat(1,:) = [1.0_dp, 2.0_dp]
+    mat(2,:) = [3.0_dp, 4.0_dp]
+    call hsd_set(root, "RealMatrix", mat, stat=stat)
+    call check(stat == HSD_STAT_OK, msg="set real matrix should succeed")
+
+    call hsd_get_matrix(root, "RealMatrix", mat_out, nrows, ncols, stat=stat)
+    call check(stat == HSD_STAT_OK, msg="get real matrix should succeed")
+    call check(nrows == 2, msg="nrows should be 2")
+    call check(ncols == 2, msg="ncols should be 2")
+    call check(all(abs(mat_out - mat) < 1.0e-10_dp), msg="real matrix values should match")
+
+    call root%destroy()
+  end subroutine test_set_real_matrix
 
 end module test_api_suite

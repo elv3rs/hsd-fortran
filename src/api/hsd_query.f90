@@ -18,7 +18,9 @@ module hsd_query
   public :: hsd_remove_child
   public :: hsd_get_type, hsd_is_table, hsd_is_value, hsd_is_array
   public :: hsd_child_count, hsd_get_keys
-  public :: hsd_get_attrib, hsd_has_attrib
+  public :: hsd_get_attrib, hsd_has_attrib, hsd_set_attrib
+  public :: hsd_rename_child
+  public :: hsd_get_choice
   public :: hsd_merge, hsd_clone
   public :: hsd_table_equal
 
@@ -368,6 +370,172 @@ contains
     has = allocated(child%attrib)
 
   end function hsd_has_attrib
+
+  !> Set an attribute on a node at the given path
+  !>
+  !> Example: Setting "Angstrom" on `LatticeConstant` makes it render as
+  !> `LatticeConstant [Angstrom] = 5.4`
+  subroutine hsd_set_attrib(table, path, attrib, stat)
+    type(hsd_table), intent(inout), target :: table
+    character(len=*), intent(in) :: path
+    character(len=*), intent(in) :: attrib
+    integer, intent(out), optional :: stat
+
+    class(hsd_node), pointer :: child
+    integer :: local_stat
+
+    call hsd_get_child(table, path, child, local_stat)
+
+    if (local_stat /= 0 .or. .not. associated(child)) then
+      if (present(stat)) stat = HSD_STAT_NOT_FOUND
+      return
+    end if
+
+    child%attrib = attrib
+    if (present(stat)) stat = HSD_STAT_OK
+
+  end subroutine hsd_set_attrib
+
+  !> Rename a child of a table
+  !>
+  !> Finds the child with `old_name` and changes its name to `new_name`.
+  !> The child's position in the table is preserved. The name index is
+  !> invalidated and rebuilt on next lookup.
+  subroutine hsd_rename_child(table, old_name, new_name, stat, case_insensitive)
+    type(hsd_table), intent(inout), target :: table
+    character(len=*), intent(in) :: old_name
+    character(len=*), intent(in) :: new_name
+    integer, intent(out), optional :: stat
+    logical, intent(in), optional :: case_insensitive
+
+    class(hsd_node), pointer :: child
+    integer :: last_slash, local_stat
+    type(hsd_table), pointer :: parent_table
+    class(hsd_node), pointer :: parent_node
+    character(len=:), allocatable :: parent_path, child_old_name
+    logical :: ci
+
+    ci = .true.
+    if (present(case_insensitive)) ci = case_insensitive
+
+    ! Support path-based navigation: parent/old_name -> parent/new_name
+    last_slash = index(old_name, "/", back=.true.)
+
+    if (last_slash > 0) then
+      parent_path = old_name(1:last_slash-1)
+      child_old_name = old_name(last_slash+1:)
+
+      call hsd_get_child(table, parent_path, parent_node, local_stat)
+      if (local_stat /= 0 .or. .not. associated(parent_node)) then
+        if (present(stat)) stat = HSD_STAT_NOT_FOUND
+        return
+      end if
+
+      select type (parent_node)
+      type is (hsd_table)
+        parent_table => parent_node
+      class default
+        if (present(stat)) stat = HSD_STAT_TYPE_ERROR
+        return
+      end select
+    else
+      parent_table => table
+      child_old_name = old_name
+    end if
+
+    ! Find the child by name
+    call parent_table%get_child_by_name(child_old_name, child, case_insensitive=ci)
+
+    if (.not. associated(child)) then
+      if (present(stat)) stat = HSD_STAT_NOT_FOUND
+      return
+    end if
+
+    ! Rename it
+    child%name = new_name
+    ! Invalidate the hash index so next lookup rebuilds it
+    call parent_table%invalidate_index()
+
+    if (present(stat)) stat = HSD_STAT_OK
+
+  end subroutine hsd_rename_child
+
+  !> Get a polymorphic child for dispatch (choice pattern)
+  !>
+  !> This is a convenience for the common HSD pattern where a table has a single
+  !> child whose name is the selector. For example:
+  !>   Driver = ConjugateGradient { ... }
+  !> Here the child's name ("ConjugateGradient") determines the variant and its
+  !> contents are the variant's parameters.
+  !>
+  !> If `path` is empty, looks at the direct children of `table`.
+  !> Returns the name and typed table pointer of the first table child found.
+  subroutine hsd_get_choice(table, path, choice_name, choice_table, stat)
+    type(hsd_table), intent(in), target :: table
+    character(len=*), intent(in) :: path
+    character(len=:), allocatable, intent(out) :: choice_name
+    type(hsd_table), pointer, intent(out) :: choice_table
+    integer, intent(out), optional :: stat
+
+    class(hsd_node), pointer :: parent_node, child
+    type(hsd_table), pointer :: parent_table
+    integer :: ii, local_stat
+
+    choice_name = ""
+    choice_table => null()
+
+    ! Navigate to parent
+    if (len_trim(path) > 0) then
+      call hsd_get_child(table, path, parent_node, local_stat)
+      if (local_stat /= 0 .or. .not. associated(parent_node)) then
+        if (present(stat)) stat = HSD_STAT_NOT_FOUND
+        return
+      end if
+      select type (parent_node)
+      type is (hsd_table)
+        parent_table => parent_node
+      class default
+        if (present(stat)) stat = HSD_STAT_TYPE_ERROR
+        return
+      end select
+    else
+      parent_table => table
+    end if
+
+    ! Find first table child
+    do ii = 1, parent_table%num_children
+      call parent_table%get_child(ii, child)
+      if (.not. associated(child)) cycle
+      select type (child)
+      type is (hsd_table)
+        if (allocated(child%name)) then
+          choice_name = child%name
+        end if
+        choice_table => child
+        if (present(stat)) stat = HSD_STAT_OK
+        return
+      end select
+    end do
+
+    ! No table child found - check if there's a value child (leaf dispatch)
+    do ii = 1, parent_table%num_children
+      call parent_table%get_child(ii, child)
+      if (.not. associated(child)) cycle
+      select type (child)
+      type is (hsd_value)
+        if (allocated(child%string_value)) then
+          choice_name = child%string_value
+        else if (allocated(child%name)) then
+          choice_name = child%name
+        end if
+        if (present(stat)) stat = HSD_STAT_OK
+        return
+      end select
+    end do
+
+    if (present(stat)) stat = HSD_STAT_NOT_FOUND
+
+  end subroutine hsd_get_choice
 
   !> Merge two HSD tables (overlay pattern)
   !>
