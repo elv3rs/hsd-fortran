@@ -314,61 +314,69 @@ contains
 
   end function format_value
 
-  !> Quote a string if it contains special characters
+  !> Quote a string if it contains special characters.
+  !>
+  !> Newlines, backslashes, tabs, and quote characters are escaped so that
+  !> the result is always a single-line quoted token that round-trips cleanly.
   function quote_if_needed(str) result(quoted)
     character(len=*), intent(in) :: str
     character(len=:), allocatable :: quoted
 
-    logical :: needs_quote, has_dquote, has_squote
+    logical :: needs_quote
     integer :: i
+    character(len=1) :: ch
 
     needs_quote = .false.
-    has_dquote = .false.
-    has_squote = .false.
-
-    ! Check for special characters
     do i = 1, len(str)
-      if (index(QUOTE_TRIGGER_CHARS, str(i:i)) > 0) then
+      ch = str(i:i)
+      if (index(QUOTE_TRIGGER_CHARS, ch) > 0 &
+          & .or. ch == CHAR_NEWLINE &
+          & .or. ch == CHAR_BACKSLASH &
+          & .or. ch == CHAR_DQUOTE &
+          & .or. ch == CHAR_SQUOTE) then
         needs_quote = .true.
+        exit
       end if
-      if (str(i:i) == CHAR_DQUOTE) has_dquote = .true.
-      if (str(i:i) == CHAR_SQUOTE) has_squote = .true.
     end do
 
     if (.not. needs_quote) then
       quoted = str
-    else if (.not. has_dquote) then
-      quoted = CHAR_DQUOTE // str // CHAR_DQUOTE
-    else if (.not. has_squote) then
-      quoted = CHAR_SQUOTE // str // CHAR_SQUOTE
     else
-      ! Both quote types present - escape double quotes
-      quoted = CHAR_DQUOTE // escape_quotes(str) // CHAR_DQUOTE
+      quoted = CHAR_DQUOTE // escape_string(str) // CHAR_DQUOTE
     end if
 
   end function quote_if_needed
 
-  !> Escape double quotes in a string
+  !> Escape special characters in a string for HSD quoted output.
   !>
-  !> Uses string_buffer_t to avoid O(n²) concatenation.
-  function escape_quotes(str) result(escaped)
+  !> Handles: backslash, double-quote, newline, tab.
+  !> Uses string_buffer_t to avoid O(n^2) concatenation.
+  function escape_string(str) result(escaped)
     character(len=*), intent(in) :: str
     character(len=:), allocatable :: escaped
 
     type(string_buffer_t) :: buf
     integer :: i
+    character(len=1) :: ch
 
     call buf%init(len(str) + 16)
     do i = 1, len(str)
-      if (str(i:i) == CHAR_DQUOTE) then
+      ch = str(i:i)
+      if (ch == CHAR_BACKSLASH) then
+        call buf%append_str(CHAR_BACKSLASH // CHAR_BACKSLASH)
+      else if (ch == CHAR_DQUOTE) then
         call buf%append_str(CHAR_BACKSLASH // CHAR_DQUOTE)
+      else if (ch == CHAR_NEWLINE) then
+        call buf%append_str(CHAR_BACKSLASH // "n")
+      else if (ch == char(9)) then
+        call buf%append_str(CHAR_BACKSLASH // "t")
       else
-        call buf%append_char(str(i:i))
+        call buf%append_char(ch)
       end if
     end do
     escaped = buf%get_string()
 
-  end function escape_quotes
+  end function escape_string
 
   !> Write table to string_buffer_t (for string output, avoids O(n²) concatenation)
   !>

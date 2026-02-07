@@ -3,7 +3,7 @@ hsd-fortran:
 ## Bugs
 - Fix `collect_unknown_fields` hardcoded 256-error limit in hsd_schema.f90
 - Fix `schema_add_field_enum` silent truncation at 64 chars — use allocatable strings
-- Fix `hsd_build_env.f90` nonstandard `getcwd` — add portable fallback for Intel
+- Fix `hsd_build_env.f90` nonstandard `getcwd` — add portable fallback for Intel. Dont use c bindings.
 
 ## Missing features
 - Add `hsd_set_string_array` to hsd_mutators.f90 for API symmetry
@@ -22,5 +22,5 @@ hsd-fortran:
 - Add `string_buffer_t` usage docs or remove from public exports
 - Document `hsd_get_type` returning `VALUE_TYPE_NONE` for table nodes
 
-## Deferred
+## Finally
 - Head over to ../hsd-data and tackle ../hsd-data/TODO.md
