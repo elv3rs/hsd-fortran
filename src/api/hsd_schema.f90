@@ -82,6 +82,11 @@ module hsd_schema
   integer, parameter :: FIELD_TYPE_COMPLEX = VALUE_TYPE_COMPLEX
   integer, parameter :: FIELD_TYPE_TABLE = 100  ! Special marker for table
 
+  !> Wrapper type for allocatable-length strings in arrays
+  type :: alloc_string_t
+    character(len=:), allocatable :: val
+  end type alloc_string_t
+
   !> Field definition
   type :: hsd_field_def_t
     !> Path to the field (e.g., "Geometry/Periodic")
@@ -98,8 +103,8 @@ module hsd_schema
     real(dp) :: min_real = -huge(1.0_dp)
     !> Maximum real value (if applicable)
     real(dp) :: max_real = huge(1.0_dp)
-    !> Allowed string values (for enum validation)
-    character(len=64), allocatable :: allowed_values(:)
+    !> Allowed string values (for enum validation) — no length limit
+    type(alloc_string_t), allocatable :: allowed_values(:)
     !> Number of allowed values
     integer :: num_allowed = 0
     !> Whether range constraints are active
@@ -170,6 +175,7 @@ contains
       do i = 1, self%num_fields
         if (allocated(self%fields(i)%path)) deallocate(self%fields(i)%path)
         if (allocated(self%fields(i)%description)) deallocate(self%fields(i)%description)
+        if (allocated(self%fields(i)%allowed_values)) deallocate(self%fields(i)%allowed_values)
       end do
       deallocate(self%fields)
     end if
@@ -254,7 +260,7 @@ contains
     n = size(allowed_values)
     allocate(schema%fields(schema%num_fields)%allowed_values(n))
     do i = 1, n
-      schema%fields(schema%num_fields)%allowed_values(i) = trim(allowed_values(i))
+      schema%fields(schema%num_fields)%allowed_values(i)%val = trim(allowed_values(i))
     end do
     schema%fields(schema%num_fields)%num_allowed = n
 
@@ -324,15 +330,16 @@ contains
     type(hsd_error_t), allocatable :: base_errors(:)
     type(hsd_error_t), allocatable :: unknown_errors(:)
     type(hsd_error_t), allocatable :: combined(:)
-    integer :: num_unknown
+    integer :: num_unknown, cap_unknown
 
     ! Run standard validation first
     call schema_validate(schema, root, base_errors)
 
-    ! Walk the tree to find unknown fields
-    allocate(unknown_errors(256))   ! generous pre-allocation
+    ! Walk the tree to find unknown fields (dynamically growable)
+    cap_unknown = 32
+    allocate(unknown_errors(cap_unknown))
     num_unknown = 0
-    call collect_unknown_fields(schema, root, "", unknown_errors, num_unknown)
+    call collect_unknown_fields(schema, root, "", unknown_errors, num_unknown, cap_unknown)
 
     ! Combine both error lists
     if (num_unknown > 0) then
@@ -348,17 +355,19 @@ contains
 
   !> Recursively collect children not declared in the schema
   recursive subroutine collect_unknown_fields(schema, table, prefix, &
-      errors, num_errors)
+      errors, num_errors, capacity)
     type(hsd_schema_t), intent(in) :: schema
     type(hsd_table), intent(in) :: table
     character(len=*), intent(in) :: prefix
-    type(hsd_error_t), intent(inout) :: errors(:)
+    type(hsd_error_t), intent(inout), allocatable :: errors(:)
     integer, intent(inout) :: num_errors
+    integer, intent(inout) :: capacity
 
     class(hsd_node), pointer :: child
     character(len=:), allocatable :: child_path
     type(hsd_error_t), allocatable :: tmp_error
-    integer :: i
+    type(hsd_error_t), allocatable :: tmp_arr(:)
+    integer :: i, new_cap
     logical :: found
 
     do i = 1, table%num_children
@@ -378,19 +387,25 @@ contains
       found = path_in_schema(schema, child_path)
 
       if (.not. found) then
-        if (num_errors < size(errors)) then
-          num_errors = num_errors + 1
-          call make_error(tmp_error, HSD_STAT_SCHEMA_ERROR, &
-            "Unknown field '" // child_path // "' not declared in schema")
-          errors(num_errors) = tmp_error
-          deallocate(tmp_error)
+        ! Grow array if needed
+        if (num_errors >= capacity) then
+          new_cap = capacity * 2
+          allocate(tmp_arr(new_cap))
+          tmp_arr(1:num_errors) = errors(1:num_errors)
+          call move_alloc(tmp_arr, errors)
+          capacity = new_cap
         end if
+        num_errors = num_errors + 1
+        call make_error(tmp_error, HSD_STAT_SCHEMA_ERROR, &
+          "Unknown field '" // child_path // "' not declared in schema")
+        errors(num_errors) = tmp_error
+        deallocate(tmp_error)
       end if
 
       ! Recurse into sub-tables
       select type (child)
       type is (hsd_table)
-        call collect_unknown_fields(schema, child, child_path, errors, num_errors)
+        call collect_unknown_fields(schema, child, child_path, errors, num_errors, capacity)
       end select
     end do
 
@@ -585,7 +600,7 @@ contains
     val_lower = to_lower(trim(val))
 
     do i = 1, field_def%num_allowed
-      if (to_lower(trim(field_def%allowed_values(i))) == val_lower) then
+      if (to_lower(trim(field_def%allowed_values(i)%val)) == val_lower) then
         allowed = .true.
         return
       end if
@@ -669,7 +684,7 @@ contains
     allowed_list = ""
     do i = 1, field_def%num_allowed
       if (i > 1) allowed_list = trim(allowed_list) // ", "
-      allowed_list = trim(allowed_list) // "'" // trim(field_def%allowed_values(i)) // "'"
+      allowed_list = trim(allowed_list) // "'" // trim(field_def%allowed_values(i)%val) // "'"
     end do
 
     call make_error(error, HSD_STAT_SCHEMA_ERROR, &
