@@ -9,6 +9,10 @@ module test_api_suite
   private
   public :: tests
 
+  ! Module-level counters for hsd_walk tests
+  integer :: walk_table_count = 0
+  integer :: walk_value_count = 0
+
   ! Helper visitor type that counts nodes
   type, extends(hsd_visitor_t) :: counting_visitor
     integer :: table_count = 0
@@ -66,7 +70,11 @@ contains
             test("table_equal_identical", test_table_equal_identical), &
             test("table_equal_different", test_table_equal_different), &
             test("table_equal_nested", test_table_equal_nested), &
-            test("table_equal_empty", test_table_equal_empty) &
+            test("table_equal_empty", test_table_equal_empty), &
+            test("walk_tables_only", test_walk_tables_only), &
+            test("walk_values_only", test_walk_values_only), &
+            test("walk_both", test_walk_both), &
+            test("walk_early_stop", test_walk_early_stop) &
         ])) &
     ])
 
@@ -1033,7 +1041,7 @@ contains
     call root2%destroy()
   end subroutine test_table_equal_nested
 
-  !> Test hsd_table_equal with empty tables
+  !> Test hsd_walk with empty tables
   subroutine test_table_equal_empty()
     type(hsd_table) :: root1, root2
 
@@ -1046,5 +1054,118 @@ contains
     call root1%destroy()
     call root2%destroy()
   end subroutine test_table_equal_empty
+
+  !> Test hsd_walk with on_table callback only
+  subroutine test_walk_tables_only()
+    type(hsd_table) :: root
+    type(hsd_error_t), allocatable :: error
+    integer :: stat
+
+    walk_table_count = 0
+    walk_value_count = 0
+
+    call hsd_load_string("a { b = 1 }" // char(10) // "c { d = 2 }", root, error)
+    call check(.not. allocated(error), msg="parse ok")
+
+    call hsd_walk(root, on_table=walk_count_table, stat=stat)
+    call check(stat == 0, msg="walk ok")
+    ! Root + a + c = 3 tables
+    call check(walk_table_count == 3, msg="should visit 3 tables")
+    call check(walk_value_count == 0, msg="no values visited")
+
+    call root%destroy()
+  end subroutine test_walk_tables_only
+
+  !> Test hsd_walk with on_value callback only
+  subroutine test_walk_values_only()
+    type(hsd_table) :: root
+    type(hsd_error_t), allocatable :: error
+    integer :: stat
+
+    walk_table_count = 0
+    walk_value_count = 0
+
+    call hsd_load_string("x = 1" // char(10) // "y = 2" // char(10) // "z = 3", &
+        & root, error)
+    call check(.not. allocated(error), msg="parse ok")
+
+    call hsd_walk(root, on_value=walk_count_value, stat=stat)
+    call check(stat == 0, msg="walk ok")
+    call check(walk_table_count == 0, msg="no tables visited")
+    call check(walk_value_count == 3, msg="should visit 3 values")
+
+    call root%destroy()
+  end subroutine test_walk_values_only
+
+  !> Test hsd_walk with both callbacks
+  subroutine test_walk_both()
+    type(hsd_table) :: root
+    type(hsd_error_t), allocatable :: error
+    integer :: stat
+
+    walk_table_count = 0
+    walk_value_count = 0
+
+    call hsd_load_string("a = 1" // char(10) // "b { c = 2 }", root, error)
+    call check(.not. allocated(error), msg="parse ok")
+
+    call hsd_walk(root, on_table=walk_count_table, &
+        & on_value=walk_count_value, stat=stat)
+    call check(stat == 0, msg="walk ok")
+    ! Root + b = 2 tables
+    call check(walk_table_count == 2, msg="should visit 2 tables")
+    ! a + c = 2 values
+    call check(walk_value_count == 2, msg="should visit 2 values")
+
+    call root%destroy()
+  end subroutine test_walk_both
+
+  !> Test hsd_walk early stop via non-zero stat
+  subroutine test_walk_early_stop()
+    type(hsd_table) :: root
+    type(hsd_error_t), allocatable :: error
+    integer :: stat
+
+    walk_value_count = 0
+
+    call hsd_load_string("a = 1" // char(10) // "b = 2" // char(10) // "c = 3", &
+        & root, error)
+    call check(.not. allocated(error), msg="parse ok")
+
+    call hsd_walk(root, on_value=walk_stop_after_one, stat=stat)
+    call check(stat /= 0, msg="walk should have stopped early")
+    call check(walk_value_count == 1, msg="should visit only 1 value")
+
+    call root%destroy()
+  end subroutine test_walk_early_stop
+
+  ! --- Walk test helper callbacks (module-level counters) ---
+
+  subroutine walk_count_table(table, path, depth, stat)
+    type(hsd_table), intent(in), target :: table
+    character(len=*), intent(in) :: path
+    integer, intent(in) :: depth
+    integer, intent(out), optional :: stat
+    walk_table_count = walk_table_count + 1
+    if (present(stat)) stat = 0
+  end subroutine walk_count_table
+
+  subroutine walk_count_value(val, path, depth, stat)
+    type(hsd_value), intent(in) :: val
+    character(len=*), intent(in) :: path
+    integer, intent(in) :: depth
+    integer, intent(out), optional :: stat
+    walk_value_count = walk_value_count + 1
+    if (present(stat)) stat = 0
+  end subroutine walk_count_value
+
+  subroutine walk_stop_after_one(val, path, depth, stat)
+    type(hsd_value), intent(in) :: val
+    character(len=*), intent(in) :: path
+    integer, intent(in) :: depth
+    integer, intent(out), optional :: stat
+    walk_value_count = walk_value_count + 1
+    if (present(stat)) stat = 1  ! Stop traversal
+  end subroutine walk_stop_after_one
 
 end module test_api_suite

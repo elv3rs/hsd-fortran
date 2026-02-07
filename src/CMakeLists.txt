@@ -18,6 +18,7 @@ set(HSD_IO_SOURCES
 # API modules (public operations)
 set(HSD_API_SOURCES
   api/hsd_visitor.f90
+  api/hsd_walk.f90
   api/hsd_query.f90
   api/hsd_accessors.f90
   api/hsd_mutators.f90
