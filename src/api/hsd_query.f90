@@ -42,35 +42,44 @@ contains
     character(len=:), allocatable :: normalized
 
     integer :: i, n, out_len
-    character(len=len(path)) :: buf
     logical :: prev_was_slash
 
     n = len_trim(path)
-    out_len = 0
-    prev_was_slash = .true.  ! treat start as after slash to skip leading "/"
-
-    do i = 1, n
-      if (path(i:i) == '/') then
-        if (.not. prev_was_slash) then
-          out_len = out_len + 1
-          buf(out_len:out_len) = '/'
-        end if
-        prev_was_slash = .true.
-      else
-        out_len = out_len + 1
-        buf(out_len:out_len) = path(i:i)
-        prev_was_slash = .false.
-      end if
-    end do
-
-    ! Remove trailing slash
-    if (out_len > 0 .and. buf(out_len:out_len) == '/') out_len = out_len - 1
-
-    if (out_len > 0) then
-      normalized = buf(1:out_len)
-    else
+    if (n == 0) then
       normalized = ""
+      return
     end if
+
+    block
+      character(len=n) :: buf
+      out_len = 0
+      prev_was_slash = .true.  ! treat start as after slash to skip leading "/"
+
+      do i = 1, n
+        if (path(i:i) == '/') then
+          if (.not. prev_was_slash) then
+            out_len = out_len + 1
+            buf(out_len:out_len) = '/'
+          end if
+          prev_was_slash = .true.
+        else
+          out_len = out_len + 1
+          buf(out_len:out_len) = path(i:i)
+          prev_was_slash = .false.
+        end if
+      end do
+
+      ! Remove trailing slash
+      if (out_len > 0) then
+        if (buf(out_len:out_len) == '/') out_len = out_len - 1
+      end if
+
+      if (out_len > 0) then
+        normalized = buf(1:out_len)
+      else
+        normalized = ""
+      end if
+    end block
 
   end function normalize_path
 

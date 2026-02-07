@@ -19,6 +19,7 @@ program testapp
   use count_visitor_mod, only: count_visitor
   use test_full_coverage_suite, only: full_coverage_tests => tests
   use test_dftb_integration_suite, only: dftb_integration_tests => tests
+  use test_new_apis_suite, only: new_apis_tests => tests
   implicit none (type, external)
 
   ! Initialize build environment paths (no-op for CMake, sets getcwd for fpm)
@@ -39,7 +40,8 @@ program testapp
       schema_tests(), &
       fuzz_tests(), &
       full_coverage_tests(), &
-      dftb_integration_tests() &
+      dftb_integration_tests(), &
+      new_apis_tests() &
   ]))
 
 end program testapp
