@@ -1,4 +1,5 @@
 # Generate build_env module with absolute paths for reliable file I/O
+# This overrides the runtime-detection version in src/core/hsd_build_env.f90
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/build_env.f90.in
   ${CMAKE_CURRENT_BINARY_DIR}/build_env.f90
