@@ -74,7 +74,15 @@ contains
             test("walk_tables_only", test_walk_tables_only), &
             test("walk_values_only", test_walk_values_only), &
             test("walk_both", test_walk_both), &
-            test("walk_early_stop", test_walk_early_stop) &
+            test("walk_early_stop", test_walk_early_stop), &
+            test("walk_no_callbacks", test_walk_no_callbacks), &
+            test("remove_child_no_index", test_remove_child_no_index), &
+            test("add_child_uninit", test_add_child_uninit), &
+            test("merge_attrib", test_merge_attrib), &
+            test("merge_clears_stale", test_merge_clears_stale), &
+            test("parse_empty_string", test_parse_empty_string), &
+            test("load_missing_noerr", test_load_missing_noerr), &
+            test("table_equal_unnamed", test_table_equal_unnamed) &
         ])) &
     ])
 
@@ -1138,6 +1146,180 @@ contains
 
     call root%destroy()
   end subroutine test_walk_early_stop
+
+  !> Test hsd_walk with no callbacks (should be a no-op)
+  subroutine test_walk_no_callbacks()
+    type(hsd_table) :: root
+    type(hsd_error_t), allocatable :: error
+    integer :: stat
+
+    call hsd_load_string("a = 1" // char(10) // "b { c = 2 }", root, error)
+    call check(.not. allocated(error), msg="Parse OK")
+
+    ! Walk with neither callback should succeed without error
+    call hsd_walk(root, stat=stat)
+    call check(is_equal(stat, 0), msg="walk with no callbacks succeeds")
+
+    call root%destroy()
+  end subroutine test_walk_no_callbacks
+
+  !> Test remove_child_by_name when hash index is not active (linear fallback)
+  subroutine test_remove_child_no_index()
+    type(hsd_table) :: root
+    type(hsd_error_t), allocatable :: error
+    integer :: stat, count
+
+    call hsd_load_string("a = 1" // char(10) // "b = 2" // char(10) // "c = 3", root, error)
+    call check(.not. allocated(error), msg="Parse OK")
+
+    ! Invalidate the hash index to force linear fallback path
+    call root%invalidate_index()
+
+    ! Remove by name using linear scan
+    call hsd_remove_child(root, "b", stat)
+    call check(is_equal(stat, 0), msg="remove b via linear scan succeeds")
+
+    count = hsd_child_count(root, "")
+    call check(is_equal(count, 2), msg="2 children remain after remove")
+    call check(.not. hsd_has_child(root, "b"), msg="b is gone")
+    call check(hsd_has_child(root, "a"), msg="a still present")
+    call check(hsd_has_child(root, "c"), msg="c still present")
+
+    call root%destroy()
+  end subroutine test_remove_child_no_index
+
+  !> Test add_child on an uninitialized (zero-capacity) table
+  subroutine test_add_child_uninit()
+    type(hsd_table) :: root
+    type(hsd_value) :: val
+    integer :: count
+
+    ! root is default-initialized (capacity=0, num_children=0)
+    val%name = "x"
+    val%value_type = VALUE_TYPE_INTEGER
+    val%int_value = 42
+
+    ! add_child should auto-initialize the table
+    call root%add_child(val)
+
+    count = root%num_children
+    call check(is_equal(count, 1), msg="uninit table has 1 child after add")
+    call check(root%has_child("x"), msg="child x exists")
+
+    call root%destroy()
+  end subroutine test_add_child_uninit
+
+  !> Test that hsd_merge propagates attributes from overlay values
+  subroutine test_merge_attrib()
+    type(hsd_table) :: base, overlay
+    type(hsd_error_t), allocatable :: error
+    character(len=:), allocatable :: attrib
+    integer :: stat
+
+    call hsd_load_string("Temperature = 100.0", base, error)
+    call check(.not. allocated(error), msg="Base parse OK")
+
+    call hsd_load_string("Temperature [Kelvin] = 300.0", overlay, error)
+    call check(.not. allocated(error), msg="Overlay parse OK")
+
+    call hsd_merge(base, overlay, stat)
+    call check(is_equal(stat, HSD_STAT_OK), msg="merge OK")
+
+    ! After merge, the attribute from overlay should be present
+    call hsd_get_attrib(base, "Temperature", attrib, stat)
+    call check(is_equal(stat, HSD_STAT_OK), msg="attrib stat OK")
+    call check(attrib == "Kelvin", msg="attribute propagated from overlay")
+
+    call base%destroy()
+    call overlay%destroy()
+  end subroutine test_merge_attrib
+
+  !> Test that hsd_merge clears stale fields when overwriting a value
+  subroutine test_merge_clears_stale()
+    type(hsd_table) :: base, overlay
+    type(hsd_error_t), allocatable :: error
+    integer :: stat, ival
+    character(len=:), allocatable :: sval
+
+    ! Base has a string value
+    call hsd_load_string('label = "hello"', base, error)
+    call check(.not. allocated(error), msg="Base parse OK")
+
+    ! Overlay replaces it with an integer
+    call hsd_load_string("label = 42", overlay, error)
+    call check(.not. allocated(error), msg="Overlay parse OK")
+
+    call hsd_merge(base, overlay, stat)
+    call check(is_equal(stat, HSD_STAT_OK), msg="merge OK")
+
+    ! After merge, the integer value should be accessible
+    call hsd_get(base, "label", ival, stat)
+    call check(is_equal(stat, 0), msg="can get integer after merge")
+    call check(is_equal(ival, 42), msg="value is 42")
+
+    call base%destroy()
+    call overlay%destroy()
+  end subroutine test_merge_clears_stale
+
+  !> Test parsing an empty string
+  subroutine test_parse_empty_string()
+    type(hsd_table) :: root
+    type(hsd_error_t), allocatable :: error
+    integer :: count
+
+    call hsd_load_string("", root, error)
+    call check(.not. allocated(error), msg="Empty string parses without error")
+
+    count = hsd_child_count(root, "")
+    call check(is_equal(count, 0), msg="Empty input has 0 children")
+
+    call root%destroy()
+  end subroutine test_parse_empty_string
+
+  !> Test hsd_load with a missing file when error argument is present
+  subroutine test_load_missing_noerr()
+    type(hsd_table) :: root
+    type(hsd_error_t), allocatable :: error
+
+    ! Load a nonexistent file — should set the error argument, not crash
+    call hsd_load("/tmp/nonexistent_hsd_file_12345.hsd", root, error)
+    call check(allocated(error), msg="error is set for missing file")
+
+    call root%destroy()
+  end subroutine test_load_missing_noerr
+
+  !> Test hsd_table_equal with children that have no names (unnamed nodes)
+  subroutine test_table_equal_unnamed()
+    type(hsd_table) :: a, b
+    type(hsd_value) :: val_a, val_b
+
+    call new_table(a, "root")
+    call new_table(b, "root")
+
+    ! Add a named child to both
+    val_a%name = "x"
+    val_a%value_type = VALUE_TYPE_INTEGER
+    val_a%int_value = 1
+    call a%add_child(val_a)
+
+    val_b%name = "x"
+    val_b%value_type = VALUE_TYPE_INTEGER
+    val_b%int_value = 1
+    call b%add_child(val_b)
+
+    ! Tables with identical named children are equal
+    call check(hsd_table_equal(a, b), msg="identical named children are equal")
+
+    ! Now test with different children count
+    val_a%name = "y"
+    val_a%int_value = 2
+    call a%add_child(val_a)
+
+    call check(.not. hsd_table_equal(a, b), msg="different child counts not equal")
+
+    call a%destroy()
+    call b%destroy()
+  end subroutine test_table_equal_unnamed
 
   ! --- Walk test helper callbacks (module-level counters) ---
 

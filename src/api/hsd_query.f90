@@ -424,44 +424,59 @@ contains
             call clone_value(overlay_child, cloned_value)
             ! Replace the value content
             base_child%value_type = cloned_value%value_type
-            if (allocated(cloned_value%string_value)) then
-              base_child%string_value = cloned_value%string_value
+            ! Copy attribute from overlay
+            if (allocated(cloned_value%attrib)) then
+              base_child%attrib = cloned_value%attrib
+            else
+              if (allocated(base_child%attrib)) deallocate(base_child%attrib)
             end if
+            ! Clear stale fields before overwriting
+            if (allocated(base_child%string_value)) &
+                & deallocate(base_child%string_value)
+            if (allocated(base_child%raw_text)) &
+                & deallocate(base_child%raw_text)
+            if (allocated(base_child%int_array)) &
+                & deallocate(base_child%int_array)
+            if (allocated(base_child%real_array)) &
+                & deallocate(base_child%real_array)
+            if (allocated(base_child%logical_array)) &
+                & deallocate(base_child%logical_array)
+            if (allocated(base_child%string_array)) &
+                & deallocate(base_child%string_array)
+            if (allocated(base_child%complex_array)) &
+                & deallocate(base_child%complex_array)
+            if (allocated(base_child%int_matrix)) &
+                & deallocate(base_child%int_matrix)
+            if (allocated(base_child%real_matrix)) &
+                & deallocate(base_child%real_matrix)
+            ! Copy new values from clone
+            if (allocated(cloned_value%string_value)) &
+                & base_child%string_value = cloned_value%string_value
             base_child%int_value = cloned_value%int_value
             base_child%real_value = cloned_value%real_value
             base_child%logical_value = cloned_value%logical_value
             base_child%complex_value = cloned_value%complex_value
-            if (allocated(cloned_value%raw_text)) then
-              base_child%raw_text = cloned_value%raw_text
-            end if
-            if (allocated(cloned_value%int_array)) then
-              if (allocated(base_child%int_array)) deallocate(base_child%int_array)
-              allocate(base_child%int_array, source=cloned_value%int_array)
-            end if
-            if (allocated(cloned_value%real_array)) then
-              if (allocated(base_child%real_array)) deallocate(base_child%real_array)
-              allocate(base_child%real_array, source=cloned_value%real_array)
-            end if
-            if (allocated(cloned_value%logical_array)) then
-              if (allocated(base_child%logical_array)) deallocate(base_child%logical_array)
-              allocate(base_child%logical_array, source=cloned_value%logical_array)
-            end if
-            if (allocated(cloned_value%string_array)) then
-              if (allocated(base_child%string_array)) deallocate(base_child%string_array)
-              allocate(base_child%string_array, source=cloned_value%string_array)
-            end if
-            if (allocated(cloned_value%complex_array)) then
-              if (allocated(base_child%complex_array)) deallocate(base_child%complex_array)
-              allocate(base_child%complex_array, source=cloned_value%complex_array)
-            end if
-            if (allocated(cloned_value%int_matrix)) then
-              if (allocated(base_child%int_matrix)) deallocate(base_child%int_matrix)
-              allocate(base_child%int_matrix, source=cloned_value%int_matrix)
-            end if
-            if (allocated(cloned_value%real_matrix)) then
-              if (allocated(base_child%real_matrix)) deallocate(base_child%real_matrix)
-              allocate(base_child%real_matrix, source=cloned_value%real_matrix)
-            end if
+            if (allocated(cloned_value%raw_text)) &
+                & base_child%raw_text = cloned_value%raw_text
+            if (allocated(cloned_value%int_array)) &
+                & allocate(base_child%int_array, source=cloned_value%int_array)
+            if (allocated(cloned_value%real_array)) &
+                & allocate(base_child%real_array, source=cloned_value%real_array)
+            if (allocated(cloned_value%logical_array)) &
+                & allocate( &
+                & base_child%logical_array, source=cloned_value%logical_array)
+            if (allocated(cloned_value%string_array)) &
+                & allocate( &
+                & base_child%string_array, source=cloned_value%string_array)
+            if (allocated(cloned_value%complex_array)) &
+                & allocate( &
+                & base_child%complex_array, source=cloned_value%complex_array)
+            if (allocated(cloned_value%int_matrix)) &
+                & allocate( &
+                & base_child%int_matrix, source=cloned_value%int_matrix)
+            if (allocated(cloned_value%real_matrix)) &
+                & allocate( &
+                & base_child%real_matrix, source=cloned_value%real_matrix)
             base_child%nrows = cloned_value%nrows
             base_child%ncols = cloned_value%ncols
           class default
@@ -652,7 +667,7 @@ contains
       case (VALUE_TYPE_NONE)
         equal = .true.
 
-      case (1)  ! VALUE_TYPE_STRING
+      case (VALUE_TYPE_STRING)
         if (allocated(a%string_value) .and. allocated(b%string_value)) then
           equal = (a%string_value == b%string_value)
         else
@@ -660,22 +675,22 @@ contains
               & (.not. allocated(b%string_value))
         end if
 
-      case (2)  ! VALUE_TYPE_INTEGER
+      case (VALUE_TYPE_INTEGER)
         equal = (a%int_value == b%int_value)
 
-      case (3)  ! VALUE_TYPE_REAL
+      case (VALUE_TYPE_REAL)
         equal = (a%real_value == b%real_value)
 
-      case (4)  ! VALUE_TYPE_LOGICAL
+      case (VALUE_TYPE_LOGICAL)
         equal = (a%logical_value .eqv. b%logical_value)
 
-      case (5)  ! VALUE_TYPE_ARRAY
+      case (VALUE_TYPE_ARRAY)
         ! Arrays: compare raw_text if available
         if (allocated(a%raw_text) .and. allocated(b%raw_text)) then
           equal = (a%raw_text == b%raw_text)
         end if
 
-      case (6)  ! VALUE_TYPE_COMPLEX
+      case (VALUE_TYPE_COMPLEX)
         equal = (a%complex_value == b%complex_value)
 
       case default

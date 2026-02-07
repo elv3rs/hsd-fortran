@@ -28,7 +28,7 @@
 !>   if (present(stat)) stat = 0
 !> end subroutine
 !> ```
-module hsd_walk_mod
+module hsd_walk_api
   use hsd_types, only: hsd_node, hsd_table, hsd_value
   implicit none (type, external)
   private
@@ -149,4 +149,4 @@ contains
 
   end subroutine walk_table_recursive
 
-end module hsd_walk_mod
+end module hsd_walk_api

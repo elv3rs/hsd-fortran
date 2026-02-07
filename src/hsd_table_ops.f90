@@ -61,6 +61,13 @@ contains
     type(hsd_node_ptr), allocatable :: tmp(:)
     integer :: new_capacity
 
+    ! Initialize if table was never set up via new_table
+    if (self%capacity == 0) then
+      self%capacity = 4
+      allocate(self%children(self%capacity))
+      self%num_children = 0
+    end if
+
     ! Grow array if needed
     if (self%num_children >= self%capacity) then
       new_capacity = self%capacity * 2
@@ -263,6 +270,22 @@ contains
         call self%remove_child(idx, stat)
         return
       end if
+    else
+      ! Linear fallback when hash index is not active
+      do idx = 1, self%num_children
+        if (.not. allocated(self%children(idx)%node)) cycle
+        if (.not. allocated(self%children(idx)%node%name)) cycle
+        if (ignore_case) then
+          found = to_lower(self%children(idx)%node%name) &
+              & == to_lower(name)
+        else
+          found = self%children(idx)%node%name == name
+        end if
+        if (found) then
+          call self%remove_child(idx, stat)
+          return
+        end if
+      end do
     end if
 
     if (present(stat)) stat = HSD_STAT_NOT_FOUND

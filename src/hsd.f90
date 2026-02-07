@@ -57,7 +57,7 @@ module hsd
   use hsd_parser, only: hsd_parse, hsd_parse_string
   use hsd_formatter, only: hsd_dump, hsd_dump_to_string
   use hsd_visitor, only: hsd_visitor_t, hsd_accept
-  use hsd_walk_mod, only: hsd_walk
+  use hsd_walk_api, only: hsd_walk
 
   ! Specialized API modules
   use hsd_accessors, only: hsd_get, hsd_get_or, hsd_get_matrix
