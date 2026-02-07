@@ -44,6 +44,7 @@
 module hsd
   ! Core infrastructure
   use hsd_constants, only: dp, sp
+  use hsd_utils, only: string_buffer_t
   use hsd_error, only: hsd_error_t, &
     HSD_STAT_OK, HSD_STAT_SYNTAX_ERROR, HSD_STAT_UNCLOSED_TAG, &
     HSD_STAT_UNCLOSED_ATTRIB, HSD_STAT_UNCLOSED_QUOTE, HSD_STAT_ORPHAN_TEXT, &
@@ -79,6 +80,7 @@ module hsd
 
   ! Re-export public types and constants
   public :: dp, sp
+  public :: string_buffer_t
   public :: hsd_error_t
   public :: HSD_STAT_OK, HSD_STAT_SYNTAX_ERROR, HSD_STAT_UNCLOSED_TAG
   public :: HSD_STAT_UNCLOSED_ATTRIB, HSD_STAT_UNCLOSED_QUOTE, HSD_STAT_ORPHAN_TEXT
