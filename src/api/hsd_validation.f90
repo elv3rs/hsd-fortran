@@ -19,6 +19,8 @@ module hsd_validation
   public :: hsd_validate_range
   public :: hsd_validate_one_of
   public :: hsd_get_with_unit
+  public :: hsd_get_array_with_unit
+  public :: hsd_get_matrix_with_unit
 
 contains
 
@@ -274,5 +276,130 @@ contains
     end select
 
   end subroutine hsd_get_with_unit
+
+  !> Get a real array with unit conversion
+  !>
+  !> Reads a real(:) array from the node at `path`, extracts the unit from
+  !> the node's `attrib` field, and applies the `converter` function to each
+  !> element. If no unit attribute is present, assumes `target_unit`.
+  subroutine hsd_get_array_with_unit(table, path, val, target_unit, converter, stat)
+    type(hsd_table), intent(in), target :: table
+    character(len=*), intent(in) :: path
+    real(dp), allocatable, intent(out) :: val(:)
+    character(len=*), intent(in) :: target_unit
+    interface
+      pure function converter(value, from_unit, to_unit) result(converted)
+        import :: dp
+        implicit none (type, external)
+        real(dp), intent(in) :: value
+        character(len=*), intent(in) :: from_unit, to_unit
+        real(dp) :: converted
+      end function converter
+    end interface
+    integer, intent(out), optional :: stat
+
+    class(hsd_node), pointer :: child
+    character(len=:), allocatable :: source_unit
+    integer :: local_stat, i
+
+    call hsd_get_child(table, path, child, local_stat)
+    if (local_stat /= 0 .or. .not. associated(child)) then
+      if (present(stat)) stat = HSD_STAT_NOT_FOUND
+      allocate(val(0))
+      return
+    end if
+
+    select type (child)
+    type is (hsd_value)
+      call child%get_real_array(val, local_stat)
+      if (local_stat /= HSD_STAT_OK) then
+        if (present(stat)) stat = local_stat
+        return
+      end if
+
+      if (allocated(child%attrib)) then
+        source_unit = child%attrib
+      else
+        source_unit = target_unit
+      end if
+
+      do i = 1, size(val)
+        val(i) = converter(val(i), source_unit, target_unit)
+      end do
+
+      if (present(stat)) stat = HSD_STAT_OK
+
+    class default
+      if (present(stat)) stat = HSD_STAT_TYPE_ERROR
+      allocate(val(0))
+    end select
+
+  end subroutine hsd_get_array_with_unit
+
+  !> Get a real matrix with unit conversion
+  !>
+  !> Reads a real(:,:) matrix from the node at `path`, extracts the unit from
+  !> the node's `attrib` field, and applies the `converter` function to each
+  !> element. If no unit attribute is present, assumes `target_unit`.
+  subroutine hsd_get_matrix_with_unit(table, path, val, nrows, ncols, &
+      target_unit, converter, stat)
+    type(hsd_table), intent(in), target :: table
+    character(len=*), intent(in) :: path
+    real(dp), allocatable, intent(out) :: val(:,:)
+    integer, intent(out) :: nrows, ncols
+    character(len=*), intent(in) :: target_unit
+    interface
+      pure function converter(value, from_unit, to_unit) result(converted)
+        import :: dp
+        implicit none (type, external)
+        real(dp), intent(in) :: value
+        character(len=*), intent(in) :: from_unit, to_unit
+        real(dp) :: converted
+      end function converter
+    end interface
+    integer, intent(out), optional :: stat
+
+    class(hsd_node), pointer :: child
+    character(len=:), allocatable :: source_unit
+    integer :: local_stat, i, j
+
+    nrows = 0
+    ncols = 0
+
+    call hsd_get_child(table, path, child, local_stat)
+    if (local_stat /= 0 .or. .not. associated(child)) then
+      if (present(stat)) stat = HSD_STAT_NOT_FOUND
+      allocate(val(0, 0))
+      return
+    end if
+
+    select type (child)
+    type is (hsd_value)
+      call child%get_real_matrix(val, nrows, ncols, local_stat)
+      if (local_stat /= HSD_STAT_OK) then
+        if (present(stat)) stat = local_stat
+        return
+      end if
+
+      if (allocated(child%attrib)) then
+        source_unit = child%attrib
+      else
+        source_unit = target_unit
+      end if
+
+      do j = 1, ncols
+        do i = 1, nrows
+          val(i, j) = converter(val(i, j), source_unit, target_unit)
+        end do
+      end do
+
+      if (present(stat)) stat = HSD_STAT_OK
+
+    class default
+      if (present(stat)) stat = HSD_STAT_TYPE_ERROR
+      allocate(val(0, 0))
+    end select
+
+  end subroutine hsd_get_matrix_with_unit
 
 end module hsd_validation

@@ -68,7 +68,7 @@ module hsd
     hsd_rename_child, hsd_get_choice, hsd_get_children, hsd_child_ptr, &
     hsd_merge, hsd_clone, hsd_table_equal
   use hsd_validation, only: hsd_require, hsd_validate_range, hsd_validate_one_of, &
-    hsd_get_with_unit
+    hsd_get_with_unit, hsd_get_array_with_unit, hsd_get_matrix_with_unit
   use hsd_schema, only: hsd_schema_t, hsd_field_def_t, &
     FIELD_REQUIRED, FIELD_OPTIONAL, &
     FIELD_TYPE_ANY, FIELD_TYPE_STRING, FIELD_TYPE_INTEGER, &
@@ -118,6 +118,7 @@ module hsd
   ! Re-export validation (from hsd_validation)
   public :: hsd_require, hsd_validate_range, hsd_validate_one_of
   public :: hsd_get_with_unit
+  public :: hsd_get_array_with_unit, hsd_get_matrix_with_unit
 
   ! Re-export schema validation (from hsd_schema)
   public :: hsd_schema_t, hsd_field_def_t
