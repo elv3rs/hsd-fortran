@@ -18,7 +18,7 @@ module hsd_formatter
   character(len=*), parameter :: INDENT_STR = "  "
 
   !> Characters that require quoting
-  character(len=*), parameter :: QUOTE_TRIGGER_CHARS = "{}[]= " // char(9)
+  character(len=*), parameter :: QUOTE_TRIGGER_CHARS = "{}[]= <>" // char(9)
 
 contains
 
