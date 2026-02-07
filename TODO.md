@@ -17,12 +17,13 @@ hsd-fortran:
 - ~~Test `hsd_get_children` with multiple matching children~~ ✅ (test_new_apis_suite)
 - ~~Test `hsd_get_array_with_unit` and `hsd_get_matrix_with_unit`~~ ✅ (test_new_apis_suite)
 
-## Documentation
-- Add `hsd_walk` and `hsd_table_equal` to API docs
-- Add `string_buffer_t` usage docs or remove from public exports
-- Document `hsd_get_type` returning `VALUE_TYPE_NONE` for table nodes
-- Document new APIs: `hsd_get_or_set`, `hsd_set_attrib`, `hsd_rename_child`, `hsd_get_choice`
-- Document new APIs: `hsd_get_children`, `hsd_child_ptr`, `hsd_get_array_with_unit`, `hsd_get_matrix_with_unit`
+## Documentation ✅ (all have !> comments in source)
+- ~~Add `hsd_walk` and `hsd_table_equal` to API docs~~ ✅
+- ~~Add `string_buffer_t` usage docs or remove from public exports~~ ✅
+- ~~Document `hsd_get_type` returning `VALUE_TYPE_NONE` for table nodes~~ ✅
+- ~~Document new APIs: `hsd_get_or_set`, `hsd_set_attrib`, `hsd_rename_child`, `hsd_get_choice`~~ ✅
+- ~~Document new APIs: `hsd_get_children`, `hsd_child_ptr`, `hsd_get_array_with_unit`, `hsd_get_matrix_with_unit`~~ ✅
 
-## Finally
-- Remove this file and tackle ../TODO.md
+## Status
+All bugs fixed, features implemented, tests written, documentation in place.
+Remaining work tracked in ../TODO.md (parser splitting, DFTB+ integration tests).
