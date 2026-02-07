@@ -678,6 +678,9 @@ contains
       case (6)  ! VALUE_TYPE_COMPLEX
         equal = (a%complex_value == b%complex_value)
 
+      case default
+        equal = .false.
+
       end select
 
     end function scalars_equal

@@ -939,11 +939,11 @@ contains
 
     allocate(vis)
     call hsd_accept(root, vis, stat)
-    
+
     call check(vis%depth_check == 0, msg="Depth returned to 0")
     ! Root, t1, t2, t3 = 4 tables
     call check(vis%tables_visited == 4, msg="Visited 4 tables")
-    
+
     call root%destroy()
   end subroutine test_visitor_leave_table
 
@@ -953,11 +953,11 @@ contains
     character(len=*), intent(in) :: path
     integer, intent(in) :: depth
     integer, intent(out), optional :: stat
-    
+
     self%depth_check = self%depth_check + 1
     self%tables_visited = self%tables_visited + 1
     if (present(stat)) stat = 0
-  end subroutine
+  end subroutine nesting_visit_table
 
   subroutine nesting_visit_value(self, val, path, depth, stat)
     class(nesting_visitor), intent(inout) :: self
@@ -966,7 +966,7 @@ contains
     integer, intent(in) :: depth
     integer, intent(out), optional :: stat
     if (present(stat)) stat = 0
-  end subroutine
+  end subroutine nesting_visit_value
 
   subroutine nesting_leave_table(self, table, path, depth, stat)
     class(nesting_visitor), intent(inout) :: self
@@ -974,10 +974,10 @@ contains
     character(len=*), intent(in) :: path
     integer, intent(in) :: depth
     integer, intent(out), optional :: stat
-    
+
     self%depth_check = self%depth_check - 1
     if (present(stat)) stat = 0
-  end subroutine
+  end subroutine nesting_leave_table
 
   !> Test hsd_table_equal with identical tables
   subroutine test_table_equal_identical()
