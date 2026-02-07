@@ -26,6 +26,45 @@ module hsd_query
 
 contains
 
+  !> Normalize a path string by removing leading/trailing slashes and collapsing
+  !> consecutive slashes. E.g. "/Geometry//Periodic/" → "Geometry/Periodic"
+  pure function normalize_path(path) result(normalized)
+    character(len=*), intent(in) :: path
+    character(len=:), allocatable :: normalized
+
+    integer :: i, n, out_len
+    character(len=len(path)) :: buf
+    logical :: prev_was_slash
+
+    n = len_trim(path)
+    out_len = 0
+    prev_was_slash = .true.  ! treat start as after slash to skip leading "/"
+
+    do i = 1, n
+      if (path(i:i) == '/') then
+        if (.not. prev_was_slash) then
+          out_len = out_len + 1
+          buf(out_len:out_len) = '/'
+        end if
+        prev_was_slash = .true.
+      else
+        out_len = out_len + 1
+        buf(out_len:out_len) = path(i:i)
+        prev_was_slash = .false.
+      end if
+    end do
+
+    ! Remove trailing slash
+    if (out_len > 0 .and. buf(out_len:out_len) == '/') out_len = out_len - 1
+
+    if (out_len > 0) then
+      normalized = buf(1:out_len)
+    else
+      normalized = ""
+    end if
+
+  end function normalize_path
+
   !> Check if a table has a child with given name
   function hsd_has_child(table, name, case_insensitive) result(has)
     type(hsd_table), intent(in), target :: table
@@ -58,15 +97,21 @@ contains
 
     class(hsd_node), pointer :: parent_node
     type(hsd_table), pointer :: parent_table
-    character(len=:), allocatable :: child_name, parent_path
+    character(len=:), allocatable :: child_name, parent_path, norm
     integer :: last_slash, local_stat
 
+    norm = normalize_path(path)
+    if (len(norm) == 0) then
+      if (present(stat)) stat = HSD_STAT_NOT_FOUND
+      return
+    end if
+
     ! Find the last slash to separate parent path from child name
-    last_slash = index(path, "/", back=.true.)
+    last_slash = index(norm, "/", back=.true.)
 
     if (last_slash > 0) then
-      parent_path = path(1:last_slash-1)
-      child_name = path(last_slash+1:)
+      parent_path = norm(1:last_slash-1)
+      child_name = norm(last_slash+1:)
 
       ! Get the parent table
       call hsd_get_child(table, parent_path, parent_node, local_stat)
@@ -85,7 +130,7 @@ contains
       end select
     else
       ! No path separator - remove directly from the root table
-      child_name = path
+      child_name = norm
       call table%remove_child_by_name(child_name, local_stat, case_insensitive)
       if (present(stat)) stat = local_stat
     end if
@@ -242,12 +287,20 @@ contains
     class(hsd_node), pointer, intent(out) :: child
     integer, intent(out), optional :: stat
 
+    character(len=:), allocatable :: norm
+
     child => null()
     ! stat will be overriden by subroutine below.
     if (present(stat)) stat = HSD_STAT_OK
 
+    norm = normalize_path(path)
+    if (len(norm) == 0) then
+      if (present(stat)) stat = HSD_STAT_NOT_FOUND
+      return
+    end if
+
     ! Delegate to recursive helper
-    call get_first_child_table(table, path, child, stat)
+    call get_first_child_table(table, norm, child, stat)
 
   end subroutine hsd_get_child
 
@@ -412,18 +465,24 @@ contains
     integer :: last_slash, local_stat
     type(hsd_table), pointer :: parent_table
     class(hsd_node), pointer :: parent_node
-    character(len=:), allocatable :: parent_path, child_old_name
+    character(len=:), allocatable :: parent_path, child_old_name, norm
     logical :: ci
 
     ci = .true.
     if (present(case_insensitive)) ci = case_insensitive
 
+    norm = normalize_path(old_name)
+    if (len(norm) == 0) then
+      if (present(stat)) stat = HSD_STAT_NOT_FOUND
+      return
+    end if
+
     ! Support path-based navigation: parent/old_name -> parent/new_name
-    last_slash = index(old_name, "/", back=.true.)
+    last_slash = index(norm, "/", back=.true.)
 
     if (last_slash > 0) then
-      parent_path = old_name(1:last_slash-1)
-      child_old_name = old_name(last_slash+1:)
+      parent_path = norm(1:last_slash-1)
+      child_old_name = norm(last_slash+1:)
 
       call hsd_get_child(table, parent_path, parent_node, local_stat)
       if (local_stat /= 0 .or. .not. associated(parent_node)) then
@@ -440,7 +499,7 @@ contains
       end select
     else
       parent_table => table
-      child_old_name = old_name
+      child_old_name = norm
     end if
 
     ! Find the child by name
