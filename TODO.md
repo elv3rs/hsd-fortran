@@ -9,13 +9,13 @@ hsd-fortran:
 - ~~Add `hsd_get_array_with_unit` and `hsd_get_matrix_with_unit`~~ → in hsd_validation
 - ~~Add `hsd_get_children` name-filtered iterator~~ → returns `hsd_child_ptr` array
 
-## Missing tests
-- Test empty path, trailing slash, double slash in path-based APIs
+## Missing tests (partially done)
+- ~~Test empty path, trailing slash, double slash in path-based APIs~~ ✅ (test_new_apis_suite)
 - Test `hsd_load` when error argument is omitted and file doesn't exist
 - Test unclosed quotes and malformed complex numbers
 - Test hash table rehash under high load (>100 entries)
-- Test `hsd_get_children` with multiple matching children
-- Test `hsd_get_array_with_unit` and `hsd_get_matrix_with_unit`
+- ~~Test `hsd_get_children` with multiple matching children~~ ✅ (test_new_apis_suite)
+- ~~Test `hsd_get_array_with_unit` and `hsd_get_matrix_with_unit`~~ ✅ (test_new_apis_suite)
 
 ## Documentation
 - Add `hsd_walk` and `hsd_table_equal` to API docs

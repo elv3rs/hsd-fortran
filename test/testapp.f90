@@ -20,6 +20,7 @@ program testapp
   use test_full_coverage_suite, only: full_coverage_tests => tests
   use test_dftb_integration_suite, only: dftb_integration_tests => tests
   use test_new_apis_suite, only: new_apis_tests => tests
+  use test_edge_cases_io_suite, only: io_edge_cases_tests => tests
   implicit none (type, external)
 
   ! Initialize build environment paths (no-op for CMake, sets getcwd for fpm)
@@ -41,7 +42,8 @@ program testapp
       fuzz_tests(), &
       full_coverage_tests(), &
       dftb_integration_tests(), &
-      new_apis_tests() &
+      new_apis_tests(), &
+      io_edge_cases_tests() &
   ]))
 
 end program testapp

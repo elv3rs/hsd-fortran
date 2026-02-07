@@ -26,6 +26,7 @@ set(TEST_IO_SUITES
   suites/io/test_formatter_extended_suite.f90
   suites/io/test_file_ops_suite.f90
   suites/io/test_dftb_integration_suite.f90
+  suites/io/test_edge_cases_io_suite.f90
 )
 
 set(TEST_API_SUITES
