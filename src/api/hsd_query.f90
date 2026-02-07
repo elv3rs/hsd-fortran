@@ -7,7 +7,8 @@ module hsd_query
   use hsd_utils, only: to_lower
   use hsd_error, only: HSD_STAT_OK, HSD_STAT_NOT_FOUND, HSD_STAT_TYPE_ERROR
   use hsd_types, only: hsd_node, hsd_table, hsd_value, new_table, new_value, &
-    VALUE_TYPE_NONE, VALUE_TYPE_ARRAY
+    VALUE_TYPE_NONE, VALUE_TYPE_STRING, VALUE_TYPE_INTEGER, VALUE_TYPE_REAL, &
+    VALUE_TYPE_LOGICAL, VALUE_TYPE_ARRAY, VALUE_TYPE_COMPLEX
   implicit none (type, external)
   private
 
@@ -19,6 +20,7 @@ module hsd_query
   public :: hsd_child_count, hsd_get_keys
   public :: hsd_get_attrib, hsd_has_attrib
   public :: hsd_merge, hsd_clone
+  public :: hsd_table_equal
 
 contains
 
@@ -541,4 +543,144 @@ contains
 
   end subroutine hsd_clone
 
+    !> Compare two HSD tables for structural and value equality
+    !>
+    !> Returns .true. if both tables have the same children (by name),
+    !> the same structure (tables vs values), and the same values.
+    !> Comparison is recursive for nested tables.
+    !> Child order does not matter — children are matched by name.
+    !> Name comparison is case-insensitive to match HSD conventions.
+    recursive function hsd_table_equal(a, b) result(equal)
+      type(hsd_table), intent(in), target :: a
+      type(hsd_table), intent(in), target :: b
+      logical :: equal
+
+      class(hsd_node), pointer :: child_a, child_b
+      integer :: i
+
+      equal = .false.
+
+      ! Quick check: same number of children
+      if (a%num_children /= b%num_children) return
+
+      ! Check that every child in a has a matching child in b
+      do i = 1, a%num_children
+        call a%get_child(i, child_a)
+        if (.not. associated(child_a)) return
+        if (.not. allocated(child_a%name)) return
+
+        ! Look for matching child in b
+        call b%get_child_by_name(child_a%name, child_b, case_insensitive=.true.)
+        if (.not. associated(child_b)) return
+
+        ! Compare node types and values
+        if (.not. nodes_equal(child_a, child_b)) return
+      end do
+
+      equal = .true.
+
+    end function hsd_table_equal
+
+    !> Compare two nodes for equality (recursive for tables)
+    recursive function nodes_equal(a, b) result(equal)
+      class(hsd_node), intent(in), target :: a
+      class(hsd_node), intent(in), target :: b
+      logical :: equal
+
+      equal = .false.
+
+      ! Both must be the same dynamic type
+      select type (a)
+      type is (hsd_table)
+        select type (b)
+        type is (hsd_table)
+          equal = hsd_table_equal(a, b)
+        end select
+
+      type is (hsd_value)
+        select type (b)
+        type is (hsd_value)
+          equal = values_equal(a, b)
+        end select
+      end select
+
+    end function nodes_equal
+
+    !> Compare two value nodes for equality
+    function values_equal(a, b) result(equal)
+      type(hsd_value), intent(in) :: a
+      type(hsd_value), intent(in) :: b
+      logical :: equal
+
+      equal = .false.
+
+      ! Must have the same value type
+      if (a%value_type /= b%value_type) return
+
+      ! Compare based on value type
+      select case (a%value_type)
+      case (VALUE_TYPE_NONE)
+        equal = .true.
+
+      case default
+        ! For all typed values, compare the raw_text or string_value
+        ! as canonical representation. This avoids needing to compare
+        ! every possible cached field.
+        if (allocated(a%raw_text) .and. allocated(b%raw_text)) then
+          equal = (a%raw_text == b%raw_text)
+          return
+        end if
+        if (allocated(a%string_value) .and. allocated(b%string_value)) then
+          equal = (a%string_value == b%string_value)
+          return
+        end if
+        ! Compare scalar fields for typed values set programmatically
+        equal = scalars_equal(a, b)
+      end select
+
+    end function values_equal
+
+    !> Compare scalar fields of two value nodes
+    function scalars_equal(a, b) result(equal)
+      type(hsd_value), intent(in) :: a
+      type(hsd_value), intent(in) :: b
+      logical :: equal
+
+      equal = .false.
+
+      select case (a%value_type)
+      case (VALUE_TYPE_NONE)
+        equal = .true.
+
+      case (1)  ! VALUE_TYPE_STRING
+        if (allocated(a%string_value) .and. allocated(b%string_value)) then
+          equal = (a%string_value == b%string_value)
+        else
+          equal = (.not. allocated(a%string_value)) .and. &
+              & (.not. allocated(b%string_value))
+        end if
+
+      case (2)  ! VALUE_TYPE_INTEGER
+        equal = (a%int_value == b%int_value)
+
+      case (3)  ! VALUE_TYPE_REAL
+        equal = (a%real_value == b%real_value)
+
+      case (4)  ! VALUE_TYPE_LOGICAL
+        equal = (a%logical_value .eqv. b%logical_value)
+
+      case (5)  ! VALUE_TYPE_ARRAY
+        ! Arrays: compare raw_text if available
+        if (allocated(a%raw_text) .and. allocated(b%raw_text)) then
+          equal = (a%raw_text == b%raw_text)
+        end if
+
+      case (6)  ! VALUE_TYPE_COMPLEX
+        equal = (a%complex_value == b%complex_value)
+
+      end select
+
+    end function scalars_equal
+
 end module hsd_query
+

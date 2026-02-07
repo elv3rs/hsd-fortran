@@ -257,6 +257,33 @@ Combine two trees (source overwrites target for conflicts):
    call hsd_clone(defaults, merged)
    call hsd_merge(merged, user_config)  ! User settings override defaults
 
+Iterating Children
+------------------
+
+To process all children of a table, including duplicate keys, use the ``hsd_iterator``:
+
+.. code-block:: fortran
+
+   type(hsd_iterator) :: it
+   class(hsd_node), pointer :: node
+   integer :: val, stat
+
+   call it%init(root)
+   do while (it%next(node))
+     print *, "Found node: ", node%name
+
+     ! Check node type and extract value
+     select type (node)
+     type is (hsd_value)
+       if (node%name == "MyKey") then
+          call node%get_integer(val, stat)
+          print *, "Value:", val
+       end if
+     end select
+   end do
+
+This is particularly useful when handling duplicate keys, as ``hsd_get`` only returns the last occurrence.
+
 Schema Validation
 -----------------
 

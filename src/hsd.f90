@@ -63,7 +63,7 @@ module hsd
   use hsd_query, only: hsd_get_child, hsd_get_table, hsd_has_child, &
     hsd_remove_child, hsd_get_type, hsd_is_table, hsd_is_value, hsd_is_array, &
     hsd_child_count, hsd_get_keys, hsd_get_attrib, hsd_has_attrib, &
-    hsd_merge, hsd_clone
+    hsd_merge, hsd_clone, hsd_table_equal
   use hsd_validation, only: hsd_require, hsd_validate_range, hsd_validate_one_of, &
     hsd_get_with_unit
   use hsd_schema, only: hsd_schema_t, hsd_field_def_t, &
@@ -107,6 +107,7 @@ module hsd
   public :: hsd_child_count, hsd_get_keys
   public :: hsd_get_attrib, hsd_has_attrib
   public :: hsd_merge, hsd_clone
+  public :: hsd_table_equal
 
   ! Re-export validation (from hsd_validation)
   public :: hsd_require, hsd_validate_range, hsd_validate_one_of

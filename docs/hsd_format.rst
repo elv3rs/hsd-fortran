@@ -269,6 +269,20 @@ Tag names (identifiers) must:
    Temperature = 300
    temperature = 300  # Different from Temperature
 
+Duplicate Keys
+~~~~~~~~~~~~~~
+
+Duplicate keys are allowed within the same block.
+
+.. code-block:: text
+
+   Key = 100
+   Key = 200
+
+- All occurrences are preserved in the parsed tree.
+- When querying a value by name (e.g., using accessors like ``hsd_get``), the **last** occurrence is returned.
+- To access all values, one must iterate through the children of the block.
+
 Grammar Summary
 ---------------
 

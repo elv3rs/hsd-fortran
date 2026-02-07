@@ -62,7 +62,11 @@ contains
             test("get_table", test_get_table), &
             test("is_array", test_is_array), &
             test("set_arrays", test_set_arrays), &
-            test("default_complex", test_default_complex) &
+            test("default_complex", test_default_complex), &
+            test("table_equal_identical", test_table_equal_identical), &
+            test("table_equal_different", test_table_equal_different), &
+            test("table_equal_nested", test_table_equal_nested), &
+            test("table_equal_empty", test_table_equal_empty) &
         ])) &
     ])
 
@@ -966,5 +970,81 @@ contains
     self%depth_check = self%depth_check - 1
     if (present(stat)) stat = 0
   end subroutine
+
+  !> Test hsd_table_equal with identical tables
+  subroutine test_table_equal_identical()
+    type(hsd_table) :: root1, root2
+    type(hsd_error_t), allocatable :: error
+    character(len=:), allocatable :: hsd_input
+
+    hsd_input = &
+      "alpha = 42" // char(10) // &
+      "beta = 3.14" // char(10) // &
+      "gamma = ""hello""" // char(10) // &
+      "nested { x = 1; y = 2 }"
+
+    call hsd_load_string(hsd_input, root1, error)
+    call check(.not. allocated(error), msg="parse root1")
+    call hsd_load_string(hsd_input, root2, error)
+    call check(.not. allocated(error), msg="parse root2")
+
+    call check(hsd_table_equal(root1, root2), &
+        & msg="identical tables should be equal")
+
+    call root1%destroy()
+    call root2%destroy()
+  end subroutine test_table_equal_identical
+
+  !> Test hsd_table_equal with different tables
+  subroutine test_table_equal_different()
+    type(hsd_table) :: root1, root2
+    type(hsd_error_t), allocatable :: error
+
+    call hsd_load_string("a = 1" // char(10) // "b = 2", root1, error)
+    call check(.not. allocated(error), msg="parse root1")
+    call hsd_load_string("a = 1" // char(10) // "b = 999", root2, error)
+    call check(.not. allocated(error), msg="parse root2")
+
+    call check(.not. hsd_table_equal(root1, root2), &
+        & msg="different values should not be equal")
+
+    call root1%destroy()
+    call root2%destroy()
+  end subroutine test_table_equal_different
+
+  !> Test hsd_table_equal with nested tables
+  subroutine test_table_equal_nested()
+    type(hsd_table) :: root1, root2
+    type(hsd_error_t), allocatable :: error
+    character(len=:), allocatable :: input1, input2
+
+    input1 = "outer { inner { val = 42 } }"
+    input2 = "outer { inner { val = 99 } }"
+
+    call hsd_load_string(input1, root1, error)
+    call check(.not. allocated(error), msg="parse root1")
+    call hsd_load_string(input2, root2, error)
+    call check(.not. allocated(error), msg="parse root2")
+
+    call check(.not. hsd_table_equal(root1, root2), &
+        & msg="nested difference should not be equal")
+
+    call root1%destroy()
+    call root2%destroy()
+  end subroutine test_table_equal_nested
+
+  !> Test hsd_table_equal with empty tables
+  subroutine test_table_equal_empty()
+    type(hsd_table) :: root1, root2
+
+    call new_table(root1, name="root")
+    call new_table(root2, name="root")
+
+    call check(hsd_table_equal(root1, root2), &
+        & msg="empty tables should be equal")
+
+    call root1%destroy()
+    call root2%destroy()
+  end subroutine test_table_equal_empty
 
 end module test_api_suite

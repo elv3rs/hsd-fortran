@@ -38,17 +38,10 @@ sphinx-build -b html docs public 2>&1 | tail -5
 cmake -B build -DCMAKE_BUILD_TYPE=Debug -DHSD_COVERAGE=ON
 cmake --build build && ctest --test-dir build 2>&1 | tail -5
 lcov --capture --directory build/src --output-file build/coverage.info --ignore-errors inconsistent 2>&1 | tail -3
-python3 utils/filter_coverage.py build/coverage.info build/coverage_filtered.info
-lcov --summary build/coverage_filtered.info 2>&1 | grep "lines"
-genhtml build/coverage_filtered.info --output-directory build/coverage_html 2>&1 | tail -3
+lcov --summary build/coverage.info 2>&1 | grep "lines"
 ```
 
-> **Note:** lcov 2.0 does not apply `LCOV_EXCL_LINE` / `LCOV_EXCL_START` / `LCOV_EXCL_STOP`
-> markers in Fortran files. The `utils/filter_coverage.py` script post-processes
-> the `.info` file to strip excluded lines. Always use the filtered file for reporting.
-
-> **Token-saving tip:** Commands above pipe through `tail` to show only the summary.
-> Drop the `| tail` suffix when you need full output for debugging.
+> **Token-saving tip:** Pipe commands through `tail` to show only the summary.
 
 ## Code Quality
 
@@ -225,6 +218,7 @@ This ensures tests work regardless of where CTest runs from.
 - **Formatting**: Dumps use consistent 2-space indent and `{}` block syntax
 - **Hash Table**: O(1) child lookup for all tables using persistent hash indexing
 - **Thread Safety**: NOT fully thread-safe for concurrent reads — `hsd_value` getters mutate internal caches on first access (see `hsd_types.f90` header). Safe after all caches are populated; modifications always require external synchronization
+- **Duplicate Keys**: Are preserved in the tree; `hsd_get` returns the **last** occurrence (override behavior); iteration sees all
 - **Status Parameters**: Optional `stat` parameters use `intent(out)` and must be set on ALL code paths (see `docs/error_handling.md`)
 
 ## CMake Options
