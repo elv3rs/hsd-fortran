@@ -12,6 +12,14 @@ module hsd_query
   implicit none (type, external)
   private
 
+  !> Pointer wrapper for returning references to existing child nodes
+  type :: hsd_child_ptr
+    class(hsd_node), pointer :: ptr => null()
+  end type hsd_child_ptr
+
+  ! Public types
+  public :: hsd_child_ptr
+
   ! Public procedures
   public :: hsd_get_child, hsd_get_table
   public :: hsd_has_child
@@ -21,6 +29,7 @@ module hsd_query
   public :: hsd_get_attrib, hsd_has_attrib, hsd_set_attrib
   public :: hsd_rename_child
   public :: hsd_get_choice
+  public :: hsd_get_children
   public :: hsd_merge, hsd_clone
   public :: hsd_table_equal
 
@@ -595,6 +604,88 @@ contains
     if (present(stat)) stat = HSD_STAT_NOT_FOUND
 
   end subroutine hsd_get_choice
+
+  !> Get all children of a table that match a given name (case-insensitive)
+  !>
+  !> Supports path-based lookup: "Geometry/Atom" will navigate to the
+  !> "Geometry" table then collect all children named "Atom".
+  !> Returns an array of hsd_child_ptr pointing to the matching children.
+  !> If no children match, an empty (size-0) array is returned and stat is OK.
+  subroutine hsd_get_children(table, path, children, stat)
+    type(hsd_table), intent(in), target :: table
+    character(len=*), intent(in) :: path
+    type(hsd_child_ptr), allocatable, intent(out) :: children(:)
+    integer, intent(out), optional :: stat
+
+    character(len=:), allocatable :: norm, parent_path, child_name
+    class(hsd_node), pointer :: parent_node, child
+    type(hsd_table), pointer :: parent_table
+    integer :: last_slash, local_stat, i, count
+    character(len=:), allocatable :: lower_name
+
+    norm = normalize_path(path)
+    if (len(norm) == 0) then
+      allocate(children(0))
+      if (present(stat)) stat = HSD_STAT_NOT_FOUND
+      return
+    end if
+
+    ! Split into parent path + leaf name
+    last_slash = index(norm, "/", back=.true.)
+
+    if (last_slash > 0) then
+      parent_path = norm(1:last_slash-1)
+      child_name = norm(last_slash+1:)
+
+      call hsd_get_child(table, parent_path, parent_node, local_stat)
+      if (local_stat /= HSD_STAT_OK .or. .not. associated(parent_node)) then
+        allocate(children(0))
+        if (present(stat)) stat = HSD_STAT_NOT_FOUND
+        return
+      end if
+
+      select type (parent_node)
+      type is (hsd_table)
+        parent_table => parent_node
+      class default
+        allocate(children(0))
+        if (present(stat)) stat = HSD_STAT_TYPE_ERROR
+        return
+      end select
+    else
+      parent_table => table
+      child_name = norm
+    end if
+
+    lower_name = to_lower(child_name)
+
+    ! First pass: count matches
+    count = 0
+    do i = 1, parent_table%num_children
+      call parent_table%get_child(i, child)
+      if (.not. associated(child)) cycle
+      if (.not. allocated(child%name)) cycle
+      if (to_lower(child%name) == lower_name) count = count + 1
+    end do
+
+    ! Allocate result
+    allocate(children(count))
+
+    ! Second pass: fill pointers
+    count = 0
+    do i = 1, parent_table%num_children
+      call parent_table%get_child(i, child)
+      if (.not. associated(child)) cycle
+      if (.not. allocated(child%name)) cycle
+      if (to_lower(child%name) == lower_name) then
+        count = count + 1
+        children(count)%ptr => child
+      end if
+    end do
+
+    if (present(stat)) stat = HSD_STAT_OK
+
+  end subroutine hsd_get_children
 
   !> Merge two HSD tables (overlay pattern)
   !>
