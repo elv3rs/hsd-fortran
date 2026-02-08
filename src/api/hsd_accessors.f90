@@ -938,6 +938,23 @@ contains
 
   end subroutine get_real_matrix_from_table
 
+  ! ===== helpers =====
+
+  !> Mark a named child node as processed
+  subroutine mark_child_processed_(table, path)
+    type(hsd_table), intent(inout), target :: table
+    character(len=*), intent(in) :: path
+
+    class(hsd_node), pointer :: child
+    integer :: local_stat
+
+    call hsd_get_child(table, path, child, local_stat)
+    if (local_stat == 0 .and. associated(child)) then
+      child%processed = .true.
+    end if
+
+  end subroutine mark_child_processed_
+
   ! ===== hsd_get_or_set implementations =====
 
   !> Get string value with default, writing default back to tree if absent
@@ -955,6 +972,7 @@ contains
     if (local_stat /= 0) then
       val = default
       call hsd_set(table, path, default)
+      call mark_child_processed_(table, path)
       if (present(stat)) stat = local_stat
     else
       if (present(stat)) stat = HSD_STAT_OK
@@ -977,6 +995,7 @@ contains
     if (local_stat /= 0) then
       val = default
       call hsd_set(table, path, default)
+      call mark_child_processed_(table, path)
       if (present(stat)) stat = local_stat
     else
       if (present(stat)) stat = HSD_STAT_OK
@@ -999,6 +1018,7 @@ contains
     if (local_stat /= 0) then
       val = default
       call hsd_set(table, path, default)
+      call mark_child_processed_(table, path)
       if (present(stat)) stat = local_stat
     else
       if (present(stat)) stat = HSD_STAT_OK
@@ -1021,6 +1041,7 @@ contains
     if (local_stat /= 0) then
       val = default
       call hsd_set(table, path, real(default, dp))
+      call mark_child_processed_(table, path)
       if (present(stat)) stat = local_stat
     else
       if (present(stat)) stat = HSD_STAT_OK
@@ -1043,6 +1064,7 @@ contains
     if (local_stat /= 0) then
       val = default
       call hsd_set(table, path, default)
+      call mark_child_processed_(table, path)
       if (present(stat)) stat = local_stat
     else
       if (present(stat)) stat = HSD_STAT_OK
@@ -1065,6 +1087,7 @@ contains
     if (local_stat /= 0) then
       val = default
       call hsd_set(table, path, default)
+      call mark_child_processed_(table, path)
       if (present(stat)) stat = local_stat
     else
       if (present(stat)) stat = HSD_STAT_OK

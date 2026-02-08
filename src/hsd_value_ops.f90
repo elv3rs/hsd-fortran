@@ -83,7 +83,13 @@ contains
   ! ===================================================================
 
   !> Get string value
+  !>
+  !> Returns the string representation of any typed value.
+  !> For natively-typed values (integer, real, logical, complex), the
+  !> value is serialized to a string on the fly.
   module procedure value_get_string
+
+    character(len=40) :: buf
 
     if (allocated(self%string_value)) then
       val = self%string_value
@@ -92,8 +98,32 @@ contains
       val = self%raw_text
       if (present(stat)) stat = HSD_STAT_OK
     else
-      val = ""
-      if (present(stat)) stat = HSD_STAT_NOT_FOUND
+      ! Serialize natively-typed values to string
+      select case (self%value_type)
+      case (VALUE_TYPE_INTEGER)
+        write(buf, '(i0)') self%int_value
+        val = trim(buf)
+        if (present(stat)) stat = HSD_STAT_OK
+      case (VALUE_TYPE_REAL)
+        write(buf, '(es23.15)') self%real_value
+        val = trim(adjustl(buf))
+        if (present(stat)) stat = HSD_STAT_OK
+      case (VALUE_TYPE_LOGICAL)
+        if (self%logical_value) then
+          val = "Yes"
+        else
+          val = "No"
+        end if
+        if (present(stat)) stat = HSD_STAT_OK
+      case (VALUE_TYPE_COMPLEX)
+        write(buf, '(es23.15,sp,es23.15,"i")') &
+            & real(self%complex_value), aimag(self%complex_value)
+        val = trim(adjustl(buf))
+        if (present(stat)) stat = HSD_STAT_OK
+      case default
+        val = ""
+        if (present(stat)) stat = HSD_STAT_NOT_FOUND
+      end select
     end if
 
   end procedure value_get_string
