@@ -21,6 +21,14 @@ module hsd_validation
   public :: hsd_get_with_unit
   public :: hsd_get_array_with_unit
   public :: hsd_get_matrix_with_unit
+  public :: hsd_node_context
+  public :: hsd_format_error
+  public :: hsd_format_warning
+  public :: hsd_warn_unprocessed
+  public :: MAX_WARNING_LEN
+
+  !> Maximum length for warning message strings
+  integer, parameter :: MAX_WARNING_LEN = 256
 
 contains
 
@@ -401,5 +409,146 @@ contains
     end select
 
   end subroutine hsd_get_matrix_with_unit
+
+
+  !> Get context string for an HSD node (for error messages)
+  !>
+  !> Returns "NodeName (line N)" if line info is available, or just "NodeName".
+  !> Returns "" if the node has no name.
+  function hsd_node_context(node) result(ctx)
+    class(hsd_node), intent(in) :: node
+    character(len=:), allocatable :: ctx
+
+    character(len=20) :: linebuf
+
+    if (allocated(node%name) .and. node%line > 0) then
+      write(linebuf, '(i0)') node%line
+      ctx = "'" // node%name // "' (line " // trim(linebuf) // ")"
+    else if (allocated(node%name)) then
+      ctx = "'" // node%name // "'"
+    else
+      ctx = ""
+    end if
+
+  end function hsd_node_context
+
+
+  !> Format an error message with node context
+  !>
+  !> Returns "Error in 'NodeName' (line N): <msg>" or just <msg> if no context.
+  !> This is a general-purpose utility for producing user-friendly error messages
+  !> that include the location in the input file where the error occurred.
+  subroutine hsd_format_error(node, msg, formatted)
+    class(hsd_node), intent(in) :: node
+    character(len=*), intent(in) :: msg
+    character(len=:), allocatable, intent(out) :: formatted
+
+    character(len=:), allocatable :: ctx
+
+    ctx = hsd_node_context(node)
+    if (len(ctx) > 0) then
+      formatted = "Error in " // ctx // ": " // msg
+    else
+      formatted = msg
+    end if
+
+  end subroutine hsd_format_error
+
+
+  !> Format a warning message with node context
+  !>
+  !> Returns "Warning in 'NodeName' (line N): <msg>" or just <msg> if no context.
+  subroutine hsd_format_warning(node, msg, formatted)
+    class(hsd_node), intent(in) :: node
+    character(len=*), intent(in) :: msg
+    character(len=:), allocatable, intent(out) :: formatted
+
+    character(len=:), allocatable :: ctx
+
+    ctx = hsd_node_context(node)
+    if (len(ctx) > 0) then
+      formatted = "Warning in " // ctx // ": " // msg
+    else
+      formatted = msg
+    end if
+
+  end subroutine hsd_format_warning
+
+
+  !> Walk a table's children and collect warnings for unprocessed nodes.
+  !>
+  !> Any non-"#text" child that has `processed == .false.` and `line > 0`
+  !> (i.e., it came from the parsed input, not programmatic defaults) is
+  !> reported. Processed table children are recursed into so that deeply
+  !> nested unprocessed nodes are also caught.
+  !>
+  !> Usage:
+  !> ```fortran
+  !> character(len=MAX_WARNING_LEN), allocatable :: warnings(:)
+  !> call hsd_warn_unprocessed(root, warnings)
+  !> do i = 1, size(warnings)
+  !>   write(*, '(A)') trim(warnings(i))
+  !> end do
+  !> ```
+  subroutine hsd_warn_unprocessed(root, warnings)
+    type(hsd_table), intent(in) :: root
+    character(len=MAX_WARNING_LEN), allocatable, intent(out) :: warnings(:)
+
+    character(len=MAX_WARNING_LEN), allocatable :: tmp(:)
+    integer :: nwarn
+
+    allocate(tmp(32))
+    nwarn = 0
+    call collect_unprocessed_(root, tmp, nwarn)
+    allocate(warnings(nwarn))
+    if (nwarn > 0) warnings(:) = tmp(1:nwarn)
+
+  end subroutine hsd_warn_unprocessed
+
+
+  !> Recursive helper: collect unprocessed node warnings into a growable array.
+  recursive subroutine collect_unprocessed_(node, buf, nwarn)
+    type(hsd_table), intent(in) :: node
+    character(len=MAX_WARNING_LEN), allocatable, intent(inout) :: buf(:)
+    integer, intent(inout) :: nwarn
+
+    integer :: ii
+    class(hsd_node), pointer :: child
+    character(len=MAX_WARNING_LEN), allocatable :: tmp(:)
+    character(len=20) :: linebuf
+
+    do ii = 1, node%num_children
+      call node%get_child(ii, child)
+      if (.not. associated(child)) cycle
+
+      ! Skip anonymous or #text value nodes
+      if (.not. allocated(child%name)) cycle
+      if (child%name == "#text") cycle
+
+      if (.not. child%processed .and. child%line > 0) then
+        ! Grow buffer if needed
+        if (nwarn >= size(buf)) then
+          allocate(tmp(size(buf) * 2))
+          tmp(1:nwarn) = buf(1:nwarn)
+          call move_alloc(tmp, buf)
+        end if
+        nwarn = nwarn + 1
+        if (child%line > 0) then
+          write(linebuf, '(i0)') child%line
+          buf(nwarn) = "Unprocessed input: '" // trim(child%name) &
+              & // "' (line " // trim(linebuf) // ")"
+        else
+          buf(nwarn) = "Unprocessed input: '" // trim(child%name) // "'"
+        end if
+      end if
+
+      ! Recurse into processed table children
+      select type (t => child)
+      type is (hsd_table)
+        if (t%processed) call collect_unprocessed_(t, buf, nwarn)
+      end select
+    end do
+
+  end subroutine collect_unprocessed_
 
 end module hsd_validation

@@ -13,6 +13,7 @@ module hsd_mutators
 
   ! Public interface
   public :: hsd_set
+  public :: hsd_clear_children
 
   !> Generic interface for setting values by path
   interface hsd_set
@@ -567,5 +568,33 @@ contains
     if (present(stat)) stat = HSD_STAT_NOT_FOUND
 
   end subroutine get_or_create_child
+
+
+  !> Remove all children from a table node.
+  !>
+  !> After this call, the table has zero children. The children array and hash
+  !> index are fully deallocated so subsequent add_child calls re-initialize
+  !> correctly.
+  subroutine hsd_clear_children(table)
+    type(hsd_table), intent(inout) :: table
+
+    integer :: ii
+    class(hsd_node), pointer :: child
+
+    ! Destroy each child node
+    do ii = 1, table%num_children
+      call table%get_child(ii, child)
+      if (associated(child)) then
+        call child%destroy()
+        deallocate(table%children(ii)%node)
+      end if
+    end do
+
+    table%num_children = 0
+    table%capacity = 0
+    if (allocated(table%children)) deallocate(table%children)
+    call table%invalidate_index()
+
+  end subroutine hsd_clear_children
 
 end module hsd_mutators

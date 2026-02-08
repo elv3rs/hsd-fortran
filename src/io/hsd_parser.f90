@@ -324,7 +324,11 @@ contains
       case (TOKEN_STRING)
         ! String data
         if (len(text_buffer) > 0) then
-          text_buffer = text_buffer // " " // state%current_token%value
+          if (text_buffer(len(text_buffer):len(text_buffer)) == char(10)) then
+            text_buffer = text_buffer // state%current_token%value
+          else
+            text_buffer = text_buffer // " " // state%current_token%value
+          end if
         else
           text_buffer = state%current_token%value
           text_start_line = state%current_token%line
@@ -682,7 +686,11 @@ contains
     case (TOKEN_NEWLINE, TOKEN_EOF, TOKEN_RBRACE, TOKEN_SEMICOLON)
       ! Just a tag name on its own - treat as text
       if (len(text_buffer) > 0) then
-        text_buffer = text_buffer // " " // tag_name
+        if (text_buffer(len(text_buffer):len(text_buffer)) == char(10)) then
+          text_buffer = text_buffer // tag_name
+        else
+          text_buffer = text_buffer // " " // tag_name
+        end if
       else
         text_buffer = tag_name
         text_start_line = tag_line
@@ -691,7 +699,11 @@ contains
     case default
       ! Treat as part of text
       if (len(text_buffer) > 0) then
-        text_buffer = text_buffer // " " // tag_name
+        if (text_buffer(len(text_buffer):len(text_buffer)) == char(10)) then
+          text_buffer = text_buffer // tag_name
+        else
+          text_buffer = text_buffer // " " // tag_name
+        end if
       else
         text_buffer = tag_name
         text_start_line = tag_line

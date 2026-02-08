@@ -1,16 +1,18 @@
 # AGENTS.md - HSD-Fortran Development Guide
 
 ## Main directive
-Work through the `TODO.md` step by step. Do not stop before finishing all tasks, defer outputting a summary of changes until the todo is complete.
 
+The project has reached **v1.0.0 release** status.  All specification phases
+(parser, accessors, mutators, schema validation, visitor pattern, unit-aware
+accessors, documentation) are complete.
 
-Take your time in order to do things properly. Use git -- Whenever an atomic task is complete, remove it from the README and commit it. If a task changed anything important with regard to the project, update `AGENTS.md` correspondingly. 
-The project is currently under development / undergoing major refactoring, thus breaking changes are allowed with no further consideration required, as long as the new behaviour is documented accordingly.
-If during a task it becomes apparent that some hsd-fortran behaviour is suboptimal, instead of working around it prefer to either fix it on the spot or tack it onto the `TODO.md` to resolve it later on.
+When making changes: ensure builds pass, `fortitude check` is clean, all tests
+pass, and Sphinx docs build without warnings.  Commit atomically with clear
+messages.
 
 ## Project Overview
 
-HSD-Fortran is a Human-friendly Structured Data parser for Fortran, designed as a standalone library originating from DFTB+. Licensed under BSD-2-Clause-Patent.
+HSD-Fortran is a Human-friendly Structured Data parser for Fortran, designed as a standalone library originating from DFTB+. Licensed under BSD-2-Clause-Patent. It is the core tree engine used by [hsd-data](../hsd-data/) and [DFTB+](../dftbplus/).
 
 ## Quick Reference
 

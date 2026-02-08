@@ -754,10 +754,17 @@ contains
 
     call count_matrix_dims(text, rows, nrows, ncols, stat)
 
-    if (stat /= 0 .or. nrows == 0 .or. ncols == 0) then
+    if (nrows == 0 .or. ncols == 0) then
       allocate(mat(0,0))
       nrows = 0
       ncols = 0
+      stat = 0
+      return
+    end if
+
+    if (stat /= 0) then
+      ! Ragged matrix: return error but preserve dimension info
+      allocate(mat(0,0))
       return
     end if
 
@@ -797,6 +804,20 @@ contains
     integer :: i, j
 
     call count_matrix_dims(text, rows, nrows, ncols, stat)
+
+    if (nrows == 0 .or. ncols == 0) then
+      allocate(mat(0,0))
+      nrows = 0
+      ncols = 0
+      stat = 0
+      return
+    end if
+
+    if (stat /= 0) then
+      ! Ragged matrix: return error but preserve dimension info
+      allocate(mat(0,0))
+      return
+    end if
 
     if (stat /= 0 .or. nrows == 0 .or. ncols == 0) then
       allocate(mat(0,0))
@@ -867,10 +888,9 @@ contains
             first_cols = col_count
             ncols = col_count
           else if (col_count /= first_cols) then
+            ! Ragged matrix: flag error but preserve dimension info
+            ncols = max(ncols, col_count)
             stat = HSD_STAT_TYPE_ERROR
-            nrows = 0
-            ncols = 0
-            return
           end if
         end if
       end if

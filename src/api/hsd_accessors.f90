@@ -138,6 +138,8 @@ contains
       return
     end if
 
+    child%processed = .true.
+
     select type (child)
     type is (hsd_value)
       call child%get_string(val, local_stat)
@@ -145,6 +147,8 @@ contains
     type is (hsd_table)
       ! Table node: try to read inline text content (#text child)
       call get_inline_text_(child, val, local_stat)
+      ! If no inline text found, this is a type error (node is a table, not a value)
+      if (local_stat == HSD_STAT_NOT_FOUND) local_stat = HSD_STAT_TYPE_ERROR
       if (present(stat)) stat = local_stat
     class default
       if (present(stat)) stat = HSD_STAT_TYPE_ERROR
@@ -191,6 +195,8 @@ contains
       val = 0
       return
     end if
+
+    child%processed = .true.
 
     select type (child)
     type is (hsd_value)
@@ -253,6 +259,8 @@ contains
       val = 0.0_dp
       return
     end if
+
+    child%processed = .true.
 
     select type (child)
     type is (hsd_value)
@@ -353,6 +361,8 @@ contains
       return
     end if
 
+    child%processed = .true.
+
     select type (child)
     type is (hsd_value)
       call child%get_logical(val, local_stat)
@@ -414,6 +424,8 @@ contains
       val = (0.0_dp, 0.0_dp)
       return
     end if
+
+    child%processed = .true.
 
     select type (child)
     type is (hsd_value)
@@ -477,6 +489,8 @@ contains
       return
     end if
 
+    child%processed = .true.
+
     select type (child)
     type is (hsd_value)
       call child%get_int_array(val, local_stat)
@@ -517,6 +531,8 @@ contains
       allocate(val(0))
       return
     end if
+
+    child%processed = .true.
 
     select type (child)
     type is (hsd_value)
@@ -583,6 +599,8 @@ contains
       return
     end if
 
+    child%processed = .true.
+
     select type (child)
     type is (hsd_value)
       call child%get_logical_array(val, local_stat)
@@ -623,6 +641,8 @@ contains
       allocate(character(len=1) :: val(0))
       return
     end if
+
+    child%processed = .true.
 
     select type (child)
     type is (hsd_value)
@@ -665,6 +685,8 @@ contains
       return
     end if
 
+    child%processed = .true.
+
     select type (child)
     type is (hsd_value)
       call child%get_complex_array(val, local_stat)
@@ -690,12 +712,17 @@ contains
 
   !> Get 2D integer matrix by path (rows separated by newlines or semicolons)
   !> Handles both value nodes and table nodes (where content is in unnamed children)
-  subroutine hsd_get_integer_matrix(table, path, val, nrows, ncols, stat)
+  !>
+  !> If `order` is present and set to "column-major", the returned matrix is
+  !> transposed so that text rows map to Fortran columns (column-major layout).
+  !> Default is text-layout (row-major).
+  subroutine hsd_get_integer_matrix(table, path, val, nrows, ncols, stat, order)
     type(hsd_table), intent(in), target :: table
     character(len=*), intent(in) :: path
     integer, allocatable, intent(out) :: val(:,:)
     integer, intent(out) :: nrows, ncols
     integer, intent(out), optional :: stat
+    character(len=*), intent(in), optional :: order
 
     class(hsd_node), pointer :: child
     integer :: local_stat
@@ -709,6 +736,8 @@ contains
       ncols = 0
       return
     end if
+
+    child%processed = .true.
 
     select type (child)
     type is (hsd_value)
@@ -725,16 +754,37 @@ contains
       ncols = 0
     end select
 
+    ! Transpose if column-major order requested
+    if (present(order)) then
+      if (order == "column-major" .and. nrows > 0 .and. ncols > 0) then
+        block
+          integer, allocatable :: tmp(:,:)
+          integer :: swap
+          allocate(tmp(ncols, nrows))
+          tmp = transpose(val)
+          call move_alloc(tmp, val)
+          swap = nrows
+          nrows = ncols
+          ncols = swap
+        end block
+      end if
+    end if
+
   end subroutine hsd_get_integer_matrix
 
   !> Get 2D real matrix by path
   !> Handles both value nodes and table nodes (where content is in unnamed children)
-  subroutine hsd_get_real_dp_matrix(table, path, val, nrows, ncols, stat)
+  !>
+  !> If `order` is present and set to "column-major", the returned matrix is
+  !> transposed so that text rows map to Fortran columns (column-major layout).
+  !> Default is text-layout (row-major).
+  subroutine hsd_get_real_dp_matrix(table, path, val, nrows, ncols, stat, order)
     type(hsd_table), intent(in), target :: table
     character(len=*), intent(in) :: path
     real(dp), allocatable, intent(out) :: val(:,:)
     integer, intent(out) :: nrows, ncols
     integer, intent(out), optional :: stat
+    character(len=*), intent(in), optional :: order
 
     class(hsd_node), pointer :: child
     integer :: local_stat
@@ -748,6 +798,8 @@ contains
       ncols = 0
       return
     end if
+
+    child%processed = .true.
 
     select type (child)
     type is (hsd_value)
@@ -763,6 +815,22 @@ contains
       nrows = 0
       ncols = 0
     end select
+
+    ! Transpose if column-major order requested
+    if (present(order)) then
+      if (order == "column-major" .and. nrows > 0 .and. ncols > 0) then
+        block
+          real(dp), allocatable :: tmp(:,:)
+          integer :: swap
+          allocate(tmp(ncols, nrows))
+          tmp = transpose(val)
+          call move_alloc(tmp, val)
+          swap = nrows
+          nrows = ncols
+          ncols = swap
+        end block
+      end if
+    end if
 
   end subroutine hsd_get_real_dp_matrix
 

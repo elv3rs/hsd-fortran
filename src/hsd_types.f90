@@ -96,6 +96,11 @@ module hsd_types
     character(len=:), allocatable :: attrib
     !> Line number where this node was defined (for error messages)
     integer :: line = 0
+    !> Whether this node has been accessed/processed by the application.
+    !> Used by the host application to detect misspelled or unknown keywords
+    !> in the input. Accessor functions mark nodes as processed, and after
+    !> parsing, any unprocessed children can be flagged as warnings.
+    logical :: processed = .false.
   contains
     procedure :: has_attrib => node_has_attrib
     procedure :: get_attrib => node_get_attrib

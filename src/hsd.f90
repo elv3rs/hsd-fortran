@@ -61,14 +61,16 @@ module hsd
 
   ! Specialized API modules
   use hsd_accessors, only: hsd_get, hsd_get_or, hsd_get_or_set, hsd_get_matrix
-  use hsd_mutators, only: hsd_set
+  use hsd_mutators, only: hsd_set, hsd_clear_children
   use hsd_query, only: hsd_get_child, hsd_get_table, hsd_has_child, &
     hsd_remove_child, hsd_get_type, hsd_is_table, hsd_is_value, hsd_is_array, &
     hsd_child_count, hsd_get_keys, hsd_get_attrib, hsd_has_attrib, hsd_set_attrib, &
     hsd_rename_child, hsd_get_choice, hsd_get_children, hsd_child_ptr, &
     hsd_merge, hsd_clone, hsd_table_equal
   use hsd_validation, only: hsd_require, hsd_validate_range, hsd_validate_one_of, &
-    hsd_get_with_unit, hsd_get_array_with_unit, hsd_get_matrix_with_unit
+    hsd_get_with_unit, hsd_get_array_with_unit, hsd_get_matrix_with_unit, &
+    hsd_node_context, hsd_format_error, hsd_format_warning, &
+    hsd_warn_unprocessed, MAX_WARNING_LEN
   use hsd_schema, only: hsd_schema_t, hsd_field_def_t, &
     FIELD_REQUIRED, FIELD_OPTIONAL, &
     FIELD_TYPE_ANY, FIELD_TYPE_STRING, FIELD_TYPE_INTEGER, &
@@ -102,7 +104,7 @@ module hsd
   public :: hsd_get, hsd_get_or, hsd_get_or_set, hsd_get_matrix
 
   ! Re-export data mutators (from hsd_mutators)
-  public :: hsd_set
+  public :: hsd_set, hsd_clear_children
 
   ! Re-export query operations (from hsd_query)
   public :: hsd_get_child, hsd_get_table, hsd_has_child
@@ -119,6 +121,8 @@ module hsd
   public :: hsd_require, hsd_validate_range, hsd_validate_one_of
   public :: hsd_get_with_unit
   public :: hsd_get_array_with_unit, hsd_get_matrix_with_unit
+  public :: hsd_node_context, hsd_format_error, hsd_format_warning
+  public :: hsd_warn_unprocessed, MAX_WARNING_LEN
 
   ! Re-export schema validation (from hsd_schema)
   public :: hsd_schema_t, hsd_field_def_t

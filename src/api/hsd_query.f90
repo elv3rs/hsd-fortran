@@ -372,24 +372,47 @@ contains
   end subroutine get_first_child_table
 
   !> Get a table child by path
-  subroutine hsd_get_table(table, path, child_table, stat)
-    type(hsd_table), intent(in), target :: table
+  !>
+  !> If `auto_wrap` is `.true.` and the named child is an `hsd_value`, replaces
+  !> it in-tree with an `hsd_table` of the same name containing a `#text` value
+  !> child, and returns the new table. This handles the common HSD pattern where
+  !> bare values appear where the parser expects a table.
+  subroutine hsd_get_table(table, path, child_table, stat, auto_wrap)
+    type(hsd_table), intent(inout), target :: table
     character(len=*), intent(in) :: path
     type(hsd_table), pointer, intent(out) :: child_table
     integer, intent(out), optional :: stat
+    logical, intent(in), optional :: auto_wrap
 
     class(hsd_node), pointer :: child
+    logical :: do_wrap
+    integer :: local_stat
+
+    do_wrap = .false.
+    if (present(auto_wrap)) do_wrap = auto_wrap
 
     child_table => null()
-    call hsd_get_child(table, path, child, stat)
+    call hsd_get_child(table, path, child, local_stat)
 
     if (associated(child)) then
       select type (child)
       type is (hsd_table)
         child_table => child
+        child_table%processed = .true.
+        if (present(stat)) stat = HSD_STAT_OK
+      type is (hsd_value)
+        if (do_wrap) then
+          call wrap_value_to_table_(table, path, child, child_table, local_stat)
+          if (associated(child_table)) child_table%processed = .true.
+          if (present(stat)) stat = local_stat
+        else
+          if (present(stat)) stat = HSD_STAT_NOT_FOUND
+        end if
       class default
         if (present(stat)) stat = HSD_STAT_NOT_FOUND
       end select
+    else
+      if (present(stat)) stat = local_stat
     end if
 
   end subroutine hsd_get_table
@@ -589,6 +612,7 @@ contains
           choice_name = child%name
         end if
         choice_table => child
+        choice_table%processed = .true.
         if (present(stat)) stat = HSD_STAT_OK
         return
       end select
@@ -689,6 +713,7 @@ contains
       if (to_lower(child%name) == lower_name) then
         count = count + 1
         children(count)%ptr => child
+        child%processed = .true.
       end if
     end do
 
@@ -1026,6 +1051,66 @@ contains
       end select
 
     end function scalars_equal
+
+
+  !> Replace a value child with a table containing a #text child.
+  !>
+  !> This is the internal helper for the auto_wrap feature of hsd_get_table.
+  !> Given a value child at `path`, it:
+  !> 1. Extracts the raw string from the value
+  !> 2. Creates a new table with the same name/attrib/line
+  !> 3. Adds a #text value child with the original content
+  !> 4. Removes the old value and adds the new table
+  !> 5. Returns a pointer to the newly added table
+  subroutine wrap_value_to_table_(parent, path, val_node, new_tbl_ptr, stat)
+    type(hsd_table), intent(inout), target :: parent
+    character(len=*), intent(in) :: path
+    type(hsd_value), intent(inout) :: val_node
+    type(hsd_table), pointer, intent(out) :: new_tbl_ptr
+    integer, intent(out) :: stat
+
+    type(hsd_table) :: wrap_tbl
+    type(hsd_value) :: txt
+    character(len=:), allocatable :: raw_str
+    integer :: getStat, ii
+    class(hsd_node), pointer :: child
+
+    ! Extract raw text from the value node
+    call val_node%get_string(raw_str, getStat)
+    if (getStat /= 0) raw_str = ""
+
+    ! Build replacement table
+    call new_table(wrap_tbl, name=val_node%name, attrib=val_node%attrib, &
+        & line=val_node%line)
+    call new_value(txt, name="#text", line=val_node%line)
+    call txt%set_string(raw_str)
+    call wrap_tbl%add_child(txt)
+
+    ! Remove the old value and add the new table
+    call hsd_remove_child(parent, path, stat, case_insensitive=.true.)
+    call parent%add_child(wrap_tbl)
+
+    ! Get a pointer to the newly added table child
+    new_tbl_ptr => null()
+    do ii = parent%num_children, 1, -1
+      call parent%get_child(ii, child)
+      if (associated(child)) then
+        select type (child)
+        type is (hsd_table)
+          if (allocated(child%name) .and. allocated(val_node%name)) then
+            if (to_lower(child%name) == to_lower(val_node%name)) then
+              new_tbl_ptr => child
+              stat = HSD_STAT_OK
+              return
+            end if
+          end if
+        end select
+      end if
+    end do
+
+    stat = HSD_STAT_NOT_FOUND
+
+  end subroutine wrap_value_to_table_
 
 end module hsd_query
 
