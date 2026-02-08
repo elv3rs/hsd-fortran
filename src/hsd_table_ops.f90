@@ -19,7 +19,7 @@ contains
     call self%name_index%init(self%num_children * 2)
 
     do i = 1, self%num_children
-      if (allocated(self%children(i)%node)) then
+      if (associated(self%children(i)%node)) then
         if (allocated(self%children(i)%node%name)) then
           call self%name_index%insert(self%children(i)%node%name, i)
         end if
@@ -59,7 +59,7 @@ contains
   module procedure table_add_child
 
     type(hsd_node_ptr), allocatable :: tmp(:)
-    integer :: new_capacity
+    integer :: new_capacity, ii
 
     ! Initialize if table was never set up via new_table
     if (self%capacity == 0) then
@@ -72,12 +72,17 @@ contains
     if (self%num_children >= self%capacity) then
       new_capacity = self%capacity * 2
       allocate(tmp(new_capacity))
-      tmp(1:self%num_children) = self%children(1:self%num_children)
+      ! Move pointers (shallow copy) — node objects stay at same address
+      do ii = 1, self%num_children
+        tmp(ii)%node => self%children(ii)%node
+        self%children(ii)%node => null()
+      end do
+      deallocate(self%children)
       call move_alloc(tmp, self%children)
       self%capacity = new_capacity
     end if
 
-    ! Add child
+    ! Add child (allocate a copy on the heap, store pointer)
     self%num_children = self%num_children + 1
     allocate(self%children(self%num_children)%node, source=child)
 
@@ -103,7 +108,7 @@ contains
 
     child => null()
     if (index >= 1 .and. index <= self%num_children) then
-      if (allocated(self%children(index)%node)) then
+      if (associated(self%children(index)%node)) then
         child => self%children(index)%node
       end if
     end if
@@ -137,14 +142,14 @@ contains
       end if
 
       if (found .and. idx >= 1 .and. idx <= self%num_children) then
-        if (allocated(self%children(idx)%node)) then
+        if (associated(self%children(idx)%node)) then
           child => self%children(idx)%node
         end if
       end if
     else
       ! Linear fallback when hash index is not active
       do idx = 1, self%num_children
-        if (.not. allocated(self%children(idx)%node)) cycle
+        if (.not. associated(self%children(idx)%node)) cycle
         if (.not. allocated(self%children(idx)%node%name)) cycle
         if (ignore_case) then
           found = to_lower(self%children(idx)%node%name) &
@@ -184,7 +189,7 @@ contains
     ! Find maximum key length
     max_len = 0
     do i = 1, self%num_children
-      if (allocated(self%children(i)%node)) then
+      if (associated(self%children(i)%node)) then
         if (allocated(self%children(i)%node%name)) then
           max_len = max(max_len, len(self%children(i)%node%name))
         end if
@@ -195,7 +200,7 @@ contains
     if (max_len > 0) then
       allocate(character(len=max_len) :: keys(self%num_children))
       do i = 1, self%num_children
-        if (allocated(self%children(i)%node)) then
+        if (associated(self%children(i)%node)) then
           if (allocated(self%children(i)%node%name)) then
             keys(i) = self%children(i)%node%name
           else
@@ -228,15 +233,16 @@ contains
     end if
 
     ! Destroy the child node
-    if (allocated(self%children(index)%node)) then
+    if (associated(self%children(index)%node)) then
       call self%children(index)%node%destroy()
       deallocate(self%children(index)%node)
     end if
 
-    ! Shift remaining children down
+    ! Shift remaining children down (move pointers)
     do i = index, self%num_children - 1
-      call move_alloc(self%children(i + 1)%node, self%children(i)%node)
+      self%children(i)%node => self%children(i + 1)%node
     end do
+    self%children(self%num_children)%node => null()
 
     self%num_children = self%num_children - 1
 
@@ -273,7 +279,7 @@ contains
     else
       ! Linear fallback when hash index is not active
       do idx = 1, self%num_children
-        if (.not. allocated(self%children(idx)%node)) cycle
+        if (.not. associated(self%children(idx)%node)) cycle
         if (.not. allocated(self%children(idx)%node%name)) cycle
         if (ignore_case) then
           found = to_lower(self%children(idx)%node%name) &
@@ -305,7 +311,7 @@ contains
     self%index_active = .false.
 
     do i = 1, self%num_children
-      if (allocated(self%children(i)%node)) then
+      if (associated(self%children(i)%node)) then
         call self%children(i)%node%destroy()
         deallocate(self%children(i)%node)
       end if
@@ -339,7 +345,7 @@ contains
 
     self%pos = self%pos + 1
     if (self%pos <= self%table%num_children) then
-      if (allocated(self%table%children(self%pos)%node)) then
+      if (associated(self%table%children(self%pos)%node)) then
         child => self%table%children(self%pos)%node
         has_more = .true.
       end if

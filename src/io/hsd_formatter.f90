@@ -126,9 +126,11 @@ contains
           return
 
         type is (hsd_value)
-          ! Tag = value (only for unnamed/anonymous children)
+          ! Tag = value (for unnamed/anonymous or #text-named children)
           if (.not. (allocated(single_child%name) .and. &
-              len_trim(single_child%name) > 0)) then
+              len_trim(single_child%name) > 0) &
+              .or. (allocated(single_child%name) .and. &
+              single_child%name == "#text")) then
             if (allocated(table%name) .and. len_trim(table%name) > 0) then
               call write_tag_value(unit_num, table%name, attrib_str, &
                                    single_child, indent_level)
@@ -160,7 +162,8 @@ contains
     type(hsd_value), intent(in) :: val
     integer, intent(in) :: indent_level
 
-    character(len=:), allocatable :: indent, attrib_str, value_str
+    character(len=:), allocatable :: indent, attrib_str, value_str, raw_text
+    logical :: is_anonymous
 
     indent = repeat(INDENT_STR, indent_level)
 
@@ -171,11 +174,25 @@ contains
       attrib_str = ""
     end if
 
-    ! Get value string
+    ! Treat #text-named values as anonymous (inline content)
+    is_anonymous = .not. (allocated(val%name) .and. len_trim(val%name) > 0) &
+        .or. (allocated(val%name) .and. val%name == "#text")
+
+    ! For anonymous values with multiline raw text, use unquoted format
+    if (is_anonymous) then
+      ! Check for raw text with newlines (block content like GenFormat data)
+      raw_text = get_raw_text_(val)
+      if (index(raw_text, CHAR_NEWLINE) > 0) then
+        call write_multiline(unit_num, raw_text, indent_level)
+        return
+      end if
+    end if
+
+    ! Get value string (may quote/escape)
     value_str = format_value(val)
 
     ! Write
-    if (allocated(val%name) .and. len_trim(val%name) > 0) then
+    if (.not. is_anonymous) then
       if (index(value_str, CHAR_NEWLINE) > 0) then
         ! Multi-line value
         write(unit_num, '(A)') indent // trim(val%name) // attrib_str // " {"
@@ -204,10 +221,9 @@ contains
     type(hsd_value), intent(in) :: val
     integer, intent(in) :: indent_level
 
-    character(len=:), allocatable :: indent, value_str, val_attrib
+    character(len=:), allocatable :: indent, value_str, val_attrib, raw_text
 
     indent = repeat(INDENT_STR, indent_level)
-    value_str = format_value(val)
 
     ! Combine attributes
     if (val%has_attrib()) then
@@ -215,6 +231,17 @@ contains
     else
       val_attrib = attrib_str
     end if
+
+    ! Check for multiline raw text first (e.g. GenFormat data) — use unquoted format
+    raw_text = get_raw_text_(val)
+    if (index(raw_text, CHAR_NEWLINE) > 0) then
+      write(unit_num, '(A)') indent // trim(name) // val_attrib // " {"
+      call write_multiline(unit_num, raw_text, indent_level + 1)
+      write(unit_num, '(A)') indent // "}"
+      return
+    end if
+
+    value_str = format_value(val)
 
     if (index(value_str, CHAR_NEWLINE) > 0) then
       ! Multi-line value
@@ -257,6 +284,21 @@ contains
     end do
 
   end subroutine write_multiline
+
+  !> Get raw text content from a value node (unquoted, with real newlines)
+  function get_raw_text_(val) result(text)
+    type(hsd_value), intent(in) :: val
+    character(len=:), allocatable :: text
+
+    if (allocated(val%string_value)) then
+      text = val%string_value
+    else if (allocated(val%raw_text)) then
+      text = val%raw_text
+    else
+      text = ""
+    end if
+
+  end function get_raw_text_
 
   !> Format a value for output
   function format_value(val) result(str)
@@ -402,36 +444,50 @@ contains
         call write_table_node_to_buf(child, indent_level, buf)
 
       type is (hsd_value)
-        if (child%has_attrib()) then
-          attrib_str = " [" // child%get_attrib() // "]"
-        else
-          attrib_str = ""
-        end if
+        block
+          logical :: is_anon
+          character(len=:), allocatable :: raw_text
 
-        value_str = format_value(child)
+          if (child%has_attrib()) then
+            attrib_str = " [" // child%get_attrib() // "]"
+          else
+            attrib_str = ""
+          end if
 
-        if (allocated(child%name) .and. len_trim(child%name) > 0) then
-          if (index(value_str, CHAR_NEWLINE) > 0) then
-            ! Multi-line value: Tag { \n content \n }
-            call buf%append_str(indent // trim(child%name) // attrib_str // " {")
-            call buf%append_str(CHAR_NEWLINE)
-            call write_multiline_to_buf(value_str, indent_level + 1, buf)
-            call buf%append_str(indent // "}")
-            call buf%append_str(CHAR_NEWLINE)
+          ! Treat #text-named values as anonymous
+          is_anon = .not. (allocated(child%name) .and. len_trim(child%name) > 0) &
+              .or. (allocated(child%name) .and. child%name == "#text")
+
+          if (is_anon) then
+            ! Anonymous/inline content — check for multiline raw text first
+            raw_text = get_raw_text_(child)
+            if (index(raw_text, CHAR_NEWLINE) > 0) then
+              call write_multiline_to_buf(raw_text, indent_level, buf)
+            else
+              value_str = format_value(child)
+              if (index(value_str, CHAR_NEWLINE) > 0) then
+                call write_multiline_to_buf(value_str, indent_level, buf)
+              else
+                line = indent // value_str
+                call buf%append_str(line)
+                call buf%append_str(CHAR_NEWLINE)
+              end if
+            end if
           else
-            line = indent // trim(child%name) // attrib_str // " = " // value_str
-            call buf%append_str(line)
-            call buf%append_str(CHAR_NEWLINE)
+            value_str = format_value(child)
+            if (index(value_str, CHAR_NEWLINE) > 0) then
+              call buf%append_str(indent // trim(child%name) // attrib_str // " {")
+              call buf%append_str(CHAR_NEWLINE)
+              call write_multiline_to_buf(value_str, indent_level + 1, buf)
+              call buf%append_str(indent // "}")
+              call buf%append_str(CHAR_NEWLINE)
+            else
+              line = indent // trim(child%name) // attrib_str // " = " // value_str
+              call buf%append_str(line)
+              call buf%append_str(CHAR_NEWLINE)
+            end if
           end if
-        else
-          if (index(value_str, CHAR_NEWLINE) > 0) then
-            call write_multiline_to_buf(value_str, indent_level, buf)
-          else
-            line = indent // value_str
-            call buf%append_str(line)
-            call buf%append_str(CHAR_NEWLINE)
-          end if
-        end if
+        end block
       end select
     end do
 
@@ -476,27 +532,35 @@ contains
           return
 
         type is (hsd_value)
-          ! Tag = value (only for unnamed/anonymous children)
+          ! Tag = value (for unnamed/anonymous or #text-named children)
           if (.not. (allocated(single_child%name) .and. &
-              len_trim(single_child%name) > 0)) then
+              len_trim(single_child%name) > 0) &
+              .or. (allocated(single_child%name) .and. &
+              single_child%name == "#text")) then
             if (allocated(table%name) .and. len_trim(table%name) > 0) then
-              value_str = format_value(single_child)
-              if (single_child%has_attrib()) then
-                val_attrib = " [" // single_child%get_attrib() // "]"
-              else
-                val_attrib = attrib_str
-              end if
-              if (index(value_str, CHAR_NEWLINE) > 0) then
-                call buf%append_str(indent // trim(table%name) // val_attrib // " {")
-                call buf%append_str(CHAR_NEWLINE)
-                call write_multiline_to_buf(value_str, indent_level + 1, buf)
-                call buf%append_str(indent // "}")
-                call buf%append_str(CHAR_NEWLINE)
-              else
-                call buf%append_str(indent // trim(table%name) // val_attrib // &
-                  " = " // value_str)
-                call buf%append_str(CHAR_NEWLINE)
-              end if
+              block
+                character(len=:), allocatable :: raw_text
+                ! Check for multiline raw text (e.g. GenFormat data)
+                raw_text = get_raw_text_(single_child)
+                if (single_child%has_attrib()) then
+                  val_attrib = " [" // single_child%get_attrib() // "]"
+                else
+                  val_attrib = attrib_str
+                end if
+                if (index(raw_text, CHAR_NEWLINE) > 0) then
+                  ! Multiline content — write as block
+                  call buf%append_str(indent // trim(table%name) // val_attrib // " {")
+                  call buf%append_str(CHAR_NEWLINE)
+                  call write_multiline_to_buf(raw_text, indent_level + 1, buf)
+                  call buf%append_str(indent // "}")
+                  call buf%append_str(CHAR_NEWLINE)
+                else
+                  value_str = format_value(single_child)
+                  call buf%append_str(indent // trim(table%name) // val_attrib // &
+                    " = " // value_str)
+                  call buf%append_str(CHAR_NEWLINE)
+                end if
+              end block
             else
               value_str = format_value(single_child)
               call buf%append_str(indent // value_str)

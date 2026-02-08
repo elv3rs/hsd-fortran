@@ -70,6 +70,56 @@ module hsd_accessors
 
 contains
 
+  !> Get inline text content from a table node.
+  !>
+  !> Looks for a child named "#text" (the convention for inline text).
+  !> If found, extracts the string value; otherwise returns NOT_FOUND.
+  subroutine get_inline_text_(table, val, stat)
+    type(hsd_table), intent(in), target :: table
+    character(len=:), allocatable, intent(out) :: val
+    integer, intent(out) :: stat
+
+    class(hsd_node), pointer :: child
+
+    call table%get_child_by_name("#text", child, case_insensitive=.true.)
+    if (associated(child)) then
+      select type (child)
+      type is (hsd_value)
+        call child%get_string(val, stat)
+        return
+      end select
+    end if
+
+    val = ""
+    stat = HSD_STAT_NOT_FOUND
+
+  end subroutine get_inline_text_
+
+  !> Get the inline text VALUE node from a table node.
+  !>
+  !> Looks for a child named "#text" and returns the hsd_value pointer.
+  subroutine get_inline_value_(table, val_node, stat)
+    type(hsd_table), intent(in), target :: table
+    type(hsd_value), pointer, intent(out) :: val_node
+    integer, intent(out) :: stat
+
+    class(hsd_node), pointer :: child
+
+    nullify(val_node)
+    call table%get_child_by_name("#text", child, case_insensitive=.true.)
+    if (associated(child)) then
+      select type (child)
+      type is (hsd_value)
+        val_node => child
+        stat = HSD_STAT_OK
+        return
+      end select
+    end if
+
+    stat = HSD_STAT_NOT_FOUND
+
+  end subroutine get_inline_value_
+
   !> Get string value by path
   subroutine hsd_get_string(table, path, val, stat)
     type(hsd_table), intent(in), target :: table
@@ -91,6 +141,10 @@ contains
     select type (child)
     type is (hsd_value)
       call child%get_string(val, local_stat)
+      if (present(stat)) stat = local_stat
+    type is (hsd_table)
+      ! Table node: try to read inline text content (#text child)
+      call get_inline_text_(child, val, local_stat)
       if (present(stat)) stat = local_stat
     class default
       if (present(stat)) stat = HSD_STAT_TYPE_ERROR
@@ -142,6 +196,18 @@ contains
     type is (hsd_value)
       call child%get_integer(val, local_stat)
       if (present(stat)) stat = local_stat
+    type is (hsd_table)
+      block
+        type(hsd_value), pointer :: vnode
+        call get_inline_value_(child, vnode, local_stat)
+        if (local_stat == 0) then
+          call vnode%get_integer(val, local_stat)
+          if (present(stat)) stat = local_stat
+        else
+          if (present(stat)) stat = HSD_STAT_TYPE_ERROR
+          val = 0
+        end if
+      end block
     class default
       if (present(stat)) stat = HSD_STAT_TYPE_ERROR
       val = 0
@@ -192,6 +258,18 @@ contains
     type is (hsd_value)
       call child%get_real(val, local_stat)
       if (present(stat)) stat = local_stat
+    type is (hsd_table)
+      block
+        type(hsd_value), pointer :: vnode
+        call get_inline_value_(child, vnode, local_stat)
+        if (local_stat == 0) then
+          call vnode%get_real(val, local_stat)
+          if (present(stat)) stat = local_stat
+        else
+          if (present(stat)) stat = HSD_STAT_TYPE_ERROR
+          val = 0.0_dp
+        end if
+      end block
     class default
       if (present(stat)) stat = HSD_STAT_TYPE_ERROR
       val = 0.0_dp
@@ -279,6 +357,18 @@ contains
     type is (hsd_value)
       call child%get_logical(val, local_stat)
       if (present(stat)) stat = local_stat
+    type is (hsd_table)
+      block
+        type(hsd_value), pointer :: vnode
+        call get_inline_value_(child, vnode, local_stat)
+        if (local_stat == 0) then
+          call vnode%get_logical(val, local_stat)
+          if (present(stat)) stat = local_stat
+        else
+          if (present(stat)) stat = HSD_STAT_TYPE_ERROR
+          val = .false.
+        end if
+      end block
     class default
       if (present(stat)) stat = HSD_STAT_TYPE_ERROR
       val = .false.
@@ -329,6 +419,18 @@ contains
     type is (hsd_value)
       call child%get_complex(val, local_stat)
       if (present(stat)) stat = local_stat
+    type is (hsd_table)
+      block
+        type(hsd_value), pointer :: vnode
+        call get_inline_value_(child, vnode, local_stat)
+        if (local_stat == 0) then
+          call vnode%get_complex(val, local_stat)
+          if (present(stat)) stat = local_stat
+        else
+          if (present(stat)) stat = HSD_STAT_TYPE_ERROR
+          val = (0.0_dp, 0.0_dp)
+        end if
+      end block
     class default
       if (present(stat)) stat = HSD_STAT_TYPE_ERROR
       val = (0.0_dp, 0.0_dp)
@@ -379,6 +481,18 @@ contains
     type is (hsd_value)
       call child%get_int_array(val, local_stat)
       if (present(stat)) stat = local_stat
+    type is (hsd_table)
+      block
+        type(hsd_value), pointer :: vnode
+        call get_inline_value_(child, vnode, local_stat)
+        if (local_stat == 0) then
+          call vnode%get_int_array(val, local_stat)
+          if (present(stat)) stat = local_stat
+        else
+          if (present(stat)) stat = HSD_STAT_TYPE_ERROR
+          allocate(val(0))
+        end if
+      end block
     class default
       if (present(stat)) stat = HSD_STAT_TYPE_ERROR
       allocate(val(0))
@@ -408,6 +522,18 @@ contains
     type is (hsd_value)
       call child%get_real_array(val, local_stat)
       if (present(stat)) stat = local_stat
+    type is (hsd_table)
+      block
+        type(hsd_value), pointer :: vnode
+        call get_inline_value_(child, vnode, local_stat)
+        if (local_stat == 0) then
+          call vnode%get_real_array(val, local_stat)
+          if (present(stat)) stat = local_stat
+        else
+          if (present(stat)) stat = HSD_STAT_TYPE_ERROR
+          allocate(val(0))
+        end if
+      end block
     class default
       if (present(stat)) stat = HSD_STAT_TYPE_ERROR
       allocate(val(0))
@@ -461,6 +587,18 @@ contains
     type is (hsd_value)
       call child%get_logical_array(val, local_stat)
       if (present(stat)) stat = local_stat
+    type is (hsd_table)
+      block
+        type(hsd_value), pointer :: vnode
+        call get_inline_value_(child, vnode, local_stat)
+        if (local_stat == 0) then
+          call vnode%get_logical_array(val, local_stat)
+          if (present(stat)) stat = local_stat
+        else
+          if (present(stat)) stat = HSD_STAT_TYPE_ERROR
+          allocate(val(0))
+        end if
+      end block
     class default
       if (present(stat)) stat = HSD_STAT_TYPE_ERROR
       allocate(val(0))
@@ -490,6 +628,18 @@ contains
     type is (hsd_value)
       call child%get_string_array(val, local_stat)
       if (present(stat)) stat = local_stat
+    type is (hsd_table)
+      block
+        type(hsd_value), pointer :: vnode
+        call get_inline_value_(child, vnode, local_stat)
+        if (local_stat == 0) then
+          call vnode%get_string_array(val, local_stat)
+          if (present(stat)) stat = local_stat
+        else
+          if (present(stat)) stat = HSD_STAT_TYPE_ERROR
+          allocate(character(len=1) :: val(0))
+        end if
+      end block
     class default
       if (present(stat)) stat = HSD_STAT_TYPE_ERROR
       allocate(character(len=1) :: val(0))
@@ -519,6 +669,18 @@ contains
     type is (hsd_value)
       call child%get_complex_array(val, local_stat)
       if (present(stat)) stat = local_stat
+    type is (hsd_table)
+      block
+        type(hsd_value), pointer :: vnode
+        call get_inline_value_(child, vnode, local_stat)
+        if (local_stat == 0) then
+          call vnode%get_complex_array(val, local_stat)
+          if (present(stat)) stat = local_stat
+        else
+          if (present(stat)) stat = HSD_STAT_TYPE_ERROR
+          allocate(val(0))
+        end if
+      end block
     class default
       if (present(stat)) stat = HSD_STAT_TYPE_ERROR
       allocate(val(0))
@@ -621,8 +783,9 @@ contains
       if (associated(child)) then
         select type (child)
         type is (hsd_value)
-          ! Only include unnamed value nodes (raw text content)
-          if (.not. allocated(child%name) .or. len_trim(child%name) == 0) then
+          ! Include unnamed, empty-named, or #text-named value nodes
+          if (.not. allocated(child%name) .or. len_trim(child%name) == 0 &
+              & .or. child%name == "#text") then
             call child%get_string(str_val, local_stat)
             if (local_stat == 0 .and. len_trim(str_val) > 0) then
               if (len(combined_text) > 0) then
@@ -672,8 +835,9 @@ contains
       if (associated(child)) then
         select type (child)
         type is (hsd_value)
-          ! Only include unnamed value nodes (raw text content)
-          if (.not. allocated(child%name) .or. len_trim(child%name) == 0) then
+          ! Include unnamed, empty-named, or #text-named value nodes
+          if (.not. allocated(child%name) .or. len_trim(child%name) == 0 &
+              & .or. child%name == "#text") then
             call child%get_string(str_val, local_stat)
             if (local_stat == 0 .and. len_trim(str_val) > 0) then
               if (len(combined_text) > 0) then

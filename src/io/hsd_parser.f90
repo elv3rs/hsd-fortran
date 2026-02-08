@@ -235,6 +235,31 @@ contains
 
   end function parser_is_cycle
 
+  !> Strip trailing newlines (and spaces) from a string.
+  pure function strip_trailing_nl(str) result(trimmed)
+    character(len=*), intent(in) :: str
+    character(len=:), allocatable :: trimmed
+
+    integer :: last
+
+    last = len(str)
+    do while (last > 0)
+      if (str(last:last) == char(10) .or. str(last:last) == char(13) &
+          & .or. str(last:last) == ' ') then
+        last = last - 1
+      else
+        exit
+      end if
+    end do
+
+    if (last > 0) then
+      trimmed = str(1:last)
+    else
+      trimmed = ""
+    end if
+
+  end function strip_trailing_nl
+
   !> Parse content (multiple tags/values)
   recursive subroutine parse_content(state, parent, error)
     type(parser_state), intent(inout) :: state
@@ -249,16 +274,41 @@ contains
     text_start_line = 0
 
     do while (.not. state%current_token%is_eof())
-      call state%skip_ws_comments()
+      ! Skip whitespace and comments.  When a comment is followed by a
+      ! newline, consume the newline as well so that comment-only lines
+      ! do not leave spurious blank lines in the text buffer.
+      block
+        logical :: had_comment
+        had_comment = .false.
+        do while (state%current_token%kind == TOKEN_WHITESPACE .or. &
+                  state%current_token%kind == TOKEN_COMMENT)
+          if (state%current_token%kind == TOKEN_COMMENT) had_comment = .true.
+          call state%next_token()
+        end do
+        if (had_comment .and. state%current_token%kind == TOKEN_NEWLINE) then
+          call state%next_token()
+          cycle
+        end if
+      end block
+
+      ! Preserve newlines as content separators when buffering inline text.
+      ! Without text buffered, newlines are simply skipped (e.g. between tags).
+      if (state%current_token%kind == TOKEN_NEWLINE) then
+        if (len(text_buffer) > 0) then
+          text_buffer = text_buffer // char(10)
+        end if
+        call state%next_token()
+        cycle
+      end if
 
       if (state%current_token%is_eof()) exit
 
       select case (state%current_token%kind)
       case (TOKEN_RBRACE)
         ! End of current block - return to parent
-        ! Flush any buffered text first
+        ! Flush any buffered text first (strip trailing newlines)
         if (len_trim(text_buffer) > 0) then
-          call add_text_to_parent(parent, trim(text_buffer), text_start_line)
+          call add_text_to_parent(parent, strip_trailing_nl(text_buffer), text_start_line)
           text_buffer = ""
         end if
         exit
@@ -298,6 +348,11 @@ contains
         end if
 
       case (TOKEN_NEWLINE)
+        ! Newlines should have been handled above the select case.
+        ! This is a safety fallthrough for edge cases.
+        if (len(text_buffer) > 0) then
+          text_buffer = text_buffer // char(10)
+        end if
         call state%next_token()
 
       case default
@@ -305,9 +360,9 @@ contains
       end select
     end do
 
-    ! Flush remaining text buffer
+    ! Flush remaining text buffer (strip trailing newlines)
     if (len_trim(text_buffer) > 0) then
-      call add_text_to_parent(parent, trim(text_buffer), text_start_line)
+      call add_text_to_parent(parent, strip_trailing_nl(text_buffer), text_start_line)
     end if
 
   end subroutine parse_content
@@ -327,11 +382,21 @@ contains
     type(hsd_value) :: child_value
     type(hsd_error_t), allocatable :: local_error
     character(len=:), allocatable :: value_text
+    logical :: is_amendment
+    class(hsd_node), pointer :: existing_child
+    type(hsd_table), pointer :: existing_table
 
     ! Save current state
     tag_name = trim(state%current_token%value)
     tag_line = state%current_token%line
     call state%next_token()
+
+    ! Check for amendment prefix (+Tag means merge into existing Tag)
+    is_amendment = .false.
+    if (len(tag_name) > 1 .and. tag_name(1:1) == "+") then
+      is_amendment = .true.
+      tag_name = tag_name(2:)
+    end if
 
     ! Skip whitespace (lexer already skips, defensive)
     do while (state%current_token%kind == TOKEN_WHITESPACE)
@@ -357,7 +422,7 @@ contains
     ! Determine what follows
     select case (state%current_token%kind)
     case (TOKEN_LBRACE)
-      ! Block: Tag { ... }
+      ! Block: Tag { ... } or +Tag { ... } (amendment)
       ! First flush text buffer
       if (len_trim(text_buffer) > 0) then
         call add_text_to_parent(parent, trim(text_buffer), text_start_line)
@@ -365,8 +430,36 @@ contains
       end if
 
       call state%next_token()  ! consume {
-      call new_table(child_table, tag_name, attrib, tag_line)
-      call parse_content(state, child_table, local_error)
+
+      if (is_amendment) then
+        ! Amendment: find existing child and merge into it
+        existing_child => null()
+        call parent%get_child_by_name(tag_name, existing_child, case_insensitive=.true.)
+        if (.not. associated(existing_child)) then
+          if (present(error)) then
+            call make_error(error, HSD_STAT_SYNTAX_ERROR, &
+              "Amendment target '" // tag_name // "' not found in parent", &
+              state%lexer%filename, tag_line)
+          end if
+          return
+        end if
+        select type (existing_child)
+        type is (hsd_table)
+          existing_table => existing_child
+          call parse_content(state, existing_table, local_error)
+        class default
+          if (present(error)) then
+            call make_error(error, HSD_STAT_SYNTAX_ERROR, &
+              "Amendment target '" // tag_name // "' is not a block", &
+              state%lexer%filename, tag_line)
+          end if
+          return
+        end select
+      else
+        call new_table(child_table, tag_name, attrib, tag_line)
+        call parse_content(state, child_table, local_error)
+      end if
+
       if (allocated(local_error)) then
         if (present(error)) call move_alloc(local_error, error)
         return
@@ -377,7 +470,9 @@ contains
         call state%next_token()  ! consume }
       end if
 
-      call parent%add_child(child_table)
+      if (.not. is_amendment) then
+        call parent%add_child(child_table)
+      end if
 
     case (TOKEN_EQUAL)
       ! Assignment: Tag = value or Tag = ChildTag { ... }
@@ -420,16 +515,100 @@ contains
         end do
 
         if (state%current_token%kind == TOKEN_LBRACE) then
-          ! Tag = ChildTag { ... }
+          ! Tag = ChildTag { ... } or +Tag = +ChildTag { ... }
           call state%next_token()  ! consume {
 
-          call new_table(child_table, tag_name, attrib, tag_line)
-
-          ! Create nested table with saved_token as name
           block
-            type(hsd_table) :: nested_table
-            call new_table(nested_table, trim(saved_token%value), "", saved_token%line)
-            call parse_content(state, nested_table, local_error)
+            character(len=:), allocatable :: child_tag_name
+            logical :: child_is_amendment
+            type(hsd_table), pointer :: target_table
+
+            child_tag_name = trim(saved_token%value)
+            child_is_amendment = .false.
+            if (len(child_tag_name) > 1 .and. child_tag_name(1:1) == "+") then
+              child_is_amendment = .true.
+              child_tag_name = child_tag_name(2:)
+            end if
+
+            if (is_amendment) then
+              ! +Tag = +ChildTag { ... } — amend existing Tag, then amend ChildTag inside
+              existing_child => null()
+              call parent%get_child_by_name(tag_name, existing_child, case_insensitive=.true.)
+              if (.not. associated(existing_child)) then
+                if (present(error)) then
+                  call make_error(error, HSD_STAT_SYNTAX_ERROR, &
+                    "Amendment target '" // tag_name // "' not found", &
+                    state%lexer%filename, tag_line)
+                end if
+                return
+              end if
+              select type (existing_child)
+              type is (hsd_table)
+                existing_table => existing_child
+              class default
+                if (present(error)) then
+                  call make_error(error, HSD_STAT_SYNTAX_ERROR, &
+                    "Amendment target '" // tag_name // "' is not a block", &
+                    state%lexer%filename, tag_line)
+                end if
+                return
+              end select
+
+              if (child_is_amendment) then
+                ! Find ChildTag inside the existing Tag and merge into it
+                existing_child => null()
+                call existing_table%get_child_by_name(child_tag_name, existing_child, &
+                    case_insensitive=.true.)
+                if (.not. associated(existing_child)) then
+                  if (present(error)) then
+                    call make_error(error, HSD_STAT_SYNTAX_ERROR, &
+                      "Amendment target '" // child_tag_name // "' not found in '" &
+                      // tag_name // "'", state%lexer%filename, saved_token%line)
+                  end if
+                  return
+                end if
+                select type (existing_child)
+                type is (hsd_table)
+                  call parse_content(state, existing_child, local_error)
+                class default
+                  if (present(error)) then
+                    call make_error(error, HSD_STAT_SYNTAX_ERROR, &
+                      "Amendment target '" // child_tag_name // "' is not a block", &
+                      state%lexer%filename, saved_token%line)
+                  end if
+                  return
+                end select
+              else
+                ! Regular child inside amended parent
+                block
+                  type(hsd_table) :: nested_table
+                  call new_table(nested_table, child_tag_name, "", saved_token%line)
+                  call parse_content(state, nested_table, local_error)
+                  if (allocated(local_error)) then
+                    if (present(error)) call move_alloc(local_error, error)
+                    return
+                  end if
+                  call existing_table%add_child(nested_table)
+                end block
+              end if
+            else
+              ! Normal: Tag = ChildTag { ... }
+              call new_table(child_table, tag_name, attrib, tag_line)
+
+              block
+                type(hsd_table) :: nested_table
+                call new_table(nested_table, child_tag_name, "", saved_token%line)
+                call parse_content(state, nested_table, local_error)
+                if (allocated(local_error)) then
+                  if (present(error)) call move_alloc(local_error, error)
+                  return
+                end if
+                call child_table%add_child(nested_table)
+              end block
+
+              call parent%add_child(child_table)
+            end if
+
             if (allocated(local_error)) then
               if (present(error)) call move_alloc(local_error, error)
               return
@@ -437,10 +616,7 @@ contains
             if (state%current_token%kind == TOKEN_RBRACE) then
               call state%next_token()
             end if
-            call child_table%add_child(nested_table)
           end block
-
-          call parent%add_child(child_table)
 
         else
           ! Tag = value (simple assignment)
@@ -470,12 +646,30 @@ contains
         end if
 
       else if (state%current_token%kind == TOKEN_STRING) then
-        ! Tag = "string value"
+        ! Tag = "string value" (possibly followed by more values on same line)
         value_text = state%current_token%value
         call state%next_token()
 
+        ! Collect rest of line (handles: Tag = "val1" "val2" "val3")
+        do while (state%current_token%kind /= TOKEN_NEWLINE .and. &
+                  state%current_token%kind /= TOKEN_EOF .and. &
+                  state%current_token%kind /= TOKEN_SEMICOLON .and. &
+                  state%current_token%kind /= TOKEN_RBRACE .and. &
+                  state%current_token%kind /= TOKEN_COMMENT)
+          if (state%current_token%kind == TOKEN_TEXT .or. &
+              state%current_token%kind == TOKEN_STRING) then
+            value_text = value_text // " " // state%current_token%value
+          end if
+          call state%next_token()
+        end do
+
+        ! Handle semicolon terminator
+        if (state%current_token%kind == TOKEN_SEMICOLON) then
+          call state%next_token()
+        end if
+
         call new_value(child_value, tag_name, attrib, tag_line)
-        call child_value%set_string(value_text)
+        call child_value%set_string(trim(value_text))
         call parent%add_child(child_value)
 
       else
@@ -663,6 +857,12 @@ contains
     read(unit_num, iostat=io_stat) file_content
     close(unit_num)
 
+    ! Strip HSD comments (# to end-of-line) from included text content.
+    ! This matches the inline HSD text behavior where the lexer consumes
+    ! #-comments.  Without this, files included via <<< would contain
+    ! comment lines that downstream readers (e.g. GenFormat) cannot handle.
+    call strip_hsd_comments_(file_content)
+
     ! Append to text buffer
     if (len(text_buffer) > 0) then
       text_buffer = text_buffer // CHAR_NEWLINE // file_content
@@ -672,7 +872,86 @@ contains
 
   end subroutine handle_text_include
 
-  !> Add text content to parent as a value node
+  !> Strip HSD-style comments (# to end-of-line) from text.
+  !>
+  !> Mimics the lexer behavior for inline HSD text: everything from an
+  !> unquoted '#' to the next newline is removed, including the '#' itself.
+  !> Lines that consist entirely of a comment (only whitespace before '#')
+  !> are removed completely (including the trailing newline) so that
+  !> downstream readers do not see spurious blank lines.
+  subroutine strip_hsd_comments_(text)
+    character(len=:), allocatable, intent(inout) :: text
+
+    character(len=:), allocatable :: buf
+    integer :: i, n, out_pos, line_start, line_data_start
+    logical :: in_comment, line_is_comment_only
+
+    if (.not. allocated(text)) return
+    n = len(text)
+    if (n == 0) return
+
+    allocate(character(len=n) :: buf)
+    out_pos = 0
+    in_comment = .false.
+    line_is_comment_only = .false.
+    line_start = 1
+    line_data_start = out_pos + 1
+
+    do i = 1, n
+      if (text(i:i) == char(10) .or. text(i:i) == char(13)) then
+        ! End of line
+        if (.not. line_is_comment_only) then
+          ! Keep the newline
+          out_pos = out_pos + 1
+          buf(out_pos:out_pos) = text(i:i)
+        end if
+        ! Reset for next line
+        in_comment = .false.
+        line_is_comment_only = .false.
+        line_start = i + 1
+        line_data_start = out_pos + 1
+      else if (.not. in_comment .and. text(i:i) == '#') then
+        ! Start of comment
+        in_comment = .true.
+        ! Check if only whitespace has been output for this line
+        if (out_pos < line_data_start) then
+          line_is_comment_only = .true.
+        else
+          ! Check if everything from line_data_start to out_pos is whitespace
+          line_is_comment_only = .true.
+          block
+            integer :: j
+            do j = line_data_start, out_pos
+              if (buf(j:j) /= ' ' .and. buf(j:j) /= char(9)) then
+                line_is_comment_only = .false.
+                exit
+              end if
+            end do
+          end block
+          if (line_is_comment_only) then
+            ! Remove whitespace before the comment
+            out_pos = line_data_start - 1
+          end if
+        end if
+      else if (.not. in_comment) then
+        out_pos = out_pos + 1
+        buf(out_pos:out_pos) = text(i:i)
+      end if
+    end do
+
+    if (out_pos > 0) then
+      text = buf(1:out_pos)
+    else
+      text = ""
+    end if
+
+  end subroutine strip_hsd_comments_
+
+  !> Add text content to parent as a value node.
+  !>
+  !> Uses the name "#text" to match the legacy xmlf90 convention for inline
+  !> text content. This allows hsd_get(table, "#text", val) to access inline
+  !> text uniformly.
   subroutine add_text_to_parent(parent, text, line)
     type(hsd_table), intent(inout) :: parent
     character(len=*), intent(in) :: text
@@ -680,7 +959,7 @@ contains
 
     type(hsd_value) :: val
 
-    call new_value(val, "", "", line)
+    call new_value(val, "#text", "", line)
     call val%set_raw(text)
     call parent%add_child(val)
 

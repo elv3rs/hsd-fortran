@@ -111,8 +111,12 @@ module hsd_types
   end interface
 
   !> Pointer wrapper for polymorphic node storage
+  !>
+  !> Uses a pointer (not allocatable) so that when the children array
+  !> is reallocated during growth, pointers to child nodes obtained via
+  !> get_child/get_child_by_name remain valid.
   type :: hsd_node_ptr
-    class(hsd_node), allocatable :: node
+    class(hsd_node), pointer :: node => null()
   end type hsd_node_ptr
 
   !> Iterator for traversing table children
