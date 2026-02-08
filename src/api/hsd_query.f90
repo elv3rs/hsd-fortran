@@ -1071,34 +1071,39 @@ contains
 
     type(hsd_table) :: wrap_tbl
     type(hsd_value) :: txt
-    character(len=:), allocatable :: raw_str
-    integer :: getStat, ii
+    character(len=:), allocatable :: raw_str, saved_name, saved_attrib
+    integer :: getStat, ii, saved_line
     class(hsd_node), pointer :: child
 
-    ! Extract raw text from the value node
+    ! Extract all data from val_node BEFORE remove (which deallocates it)
     call val_node%get_string(raw_str, getStat)
     if (getStat /= 0) raw_str = ""
+    saved_name = val_node%name
+    if (allocated(val_node%attrib)) then
+      saved_attrib = val_node%attrib
+    end if
+    saved_line = val_node%line
 
-    ! Build replacement table
-    call new_table(wrap_tbl, name=val_node%name, attrib=val_node%attrib, &
-        & line=val_node%line)
-    call new_value(txt, name="#text", line=val_node%line)
+    ! Build replacement table (using saved data, not val_node fields)
+    call new_table(wrap_tbl, name=saved_name, attrib=saved_attrib, &
+        & line=saved_line)
+    call new_value(txt, name="#text", line=saved_line)
     call txt%set_string(raw_str)
     call wrap_tbl%add_child(txt)
 
-    ! Remove the old value and add the new table
+    ! Remove the old value (invalidates val_node pointer) and add the new table
     call hsd_remove_child(parent, path, stat, case_insensitive=.true.)
     call parent%add_child(wrap_tbl)
 
-    ! Get a pointer to the newly added table child
+    ! Get a pointer to the newly added table child (use saved_name, not val_node)
     new_tbl_ptr => null()
     do ii = parent%num_children, 1, -1
       call parent%get_child(ii, child)
       if (associated(child)) then
         select type (child)
         type is (hsd_table)
-          if (allocated(child%name) .and. allocated(val_node%name)) then
-            if (to_lower(child%name) == to_lower(val_node%name)) then
+          if (allocated(child%name) .and. len(saved_name) > 0) then
+            if (to_lower(child%name) == to_lower(saved_name)) then
               new_tbl_ptr => child
               stat = HSD_STAT_OK
               return
