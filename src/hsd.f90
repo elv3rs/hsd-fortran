@@ -66,6 +66,7 @@ module hsd
     hsd_remove_child, hsd_get_type, hsd_is_table, hsd_is_value, hsd_is_array, &
     hsd_child_count, hsd_get_keys, hsd_get_attrib, hsd_has_attrib, hsd_set_attrib, &
     hsd_rename_child, hsd_get_choice, hsd_get_children, hsd_child_ptr, &
+    hsd_get_child_tables, hsd_table_ptr, &
     hsd_merge, hsd_clone, hsd_table_equal, hsd_set_processed
   use hsd_validation, only: hsd_require, hsd_validate_range, hsd_validate_one_of, &
     hsd_get_with_unit, hsd_get_array_with_unit, hsd_get_matrix_with_unit, &
@@ -114,6 +115,7 @@ module hsd
   public :: hsd_get_attrib, hsd_has_attrib, hsd_set_attrib
   public :: hsd_rename_child, hsd_get_choice
   public :: hsd_get_children, hsd_child_ptr
+  public :: hsd_get_child_tables, hsd_table_ptr
   public :: hsd_merge, hsd_clone
   public :: hsd_table_equal
   public :: hsd_set_processed
