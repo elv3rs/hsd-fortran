@@ -32,6 +32,7 @@ module hsd_query
   public :: hsd_get_children
   public :: hsd_merge, hsd_clone
   public :: hsd_table_equal
+  public :: hsd_set_processed
 
 contains
 
@@ -1116,6 +1117,42 @@ contains
     stat = HSD_STAT_NOT_FOUND
 
   end subroutine wrap_value_to_table_
+
+
+  !> Set the processed flag on a table and optionally all its descendants.
+  !>
+  !> When `recursive` is `.true.`, walks the entire subtree rooted at `table`
+  !> and sets `%processed = .true.` on every node (tables and values).
+  !> When `recursive` is `.false.` (the default), only the given table itself
+  !> is marked.
+  recursive subroutine hsd_set_processed(table, recursive)
+    type(hsd_table), intent(inout), target :: table
+    logical, intent(in), optional :: recursive
+
+    logical :: do_recurse
+    integer :: ii
+    class(hsd_node), pointer :: child
+
+    do_recurse = .false.
+    if (present(recursive)) do_recurse = recursive
+
+    table%processed = .true.
+
+    if (.not. do_recurse) return
+
+    do ii = 1, table%num_children
+      call table%get_child(ii, child)
+      if (.not. associated(child)) cycle
+
+      select type (child)
+      type is (hsd_table)
+        call hsd_set_processed(child, recursive=.true.)
+      type is (hsd_value)
+        child%processed = .true.
+      end select
+    end do
+
+  end subroutine hsd_set_processed
 
 end module hsd_query
 

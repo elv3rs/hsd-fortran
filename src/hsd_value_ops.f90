@@ -496,6 +496,46 @@ contains
 
   end procedure value_get_real_matrix
 
+  !> Get 2D complex matrix from raw text
+  !> Rows separated by newlines or semicolons.
+  !> Caches the parsed result for subsequent calls.
+  module procedure value_get_complex_matrix
+
+    character(len=:), allocatable :: text
+    integer :: io_stat
+
+    if (allocated(self%complex_matrix)) then
+      val = self%complex_matrix
+      nrows = self%nrows
+      ncols = self%ncols
+      if (present(stat)) stat = HSD_STAT_OK
+      return
+    end if
+
+    if (allocated(self%raw_text)) then
+      text = self%raw_text
+    else if (allocated(self%string_value)) then
+      text = self%string_value
+    else
+      allocate(val(0,0))
+      nrows = 0
+      ncols = 0
+      if (present(stat)) stat = HSD_STAT_NOT_FOUND
+      return
+    end if
+
+    call parse_complex_matrix(text, val, nrows, ncols, io_stat)
+    if (present(stat)) stat = io_stat
+
+    ! Cache result for next access
+    if (io_stat == 0) then
+      self%complex_matrix = val
+      self%nrows = nrows
+      self%ncols = ncols
+    end if
+
+  end procedure value_get_complex_matrix
+
   ! ===================================================================
   ! Destructor
   ! ===================================================================
@@ -514,6 +554,7 @@ contains
     if (allocated(self%complex_array)) deallocate(self%complex_array)
     if (allocated(self%int_matrix)) deallocate(self%int_matrix)
     if (allocated(self%real_matrix)) deallocate(self%real_matrix)
+    if (allocated(self%complex_matrix)) deallocate(self%complex_matrix)
 
     self%value_type = VALUE_TYPE_NONE
     self%nrows = 0
@@ -990,6 +1031,57 @@ contains
     end if
 
   end subroutine split_by_newlines
+
+  !> Parse 2D complex matrix
+  subroutine parse_complex_matrix(text, mat, nrows, ncols, stat)
+    character(len=*), intent(in) :: text
+    complex(dp), allocatable, intent(out) :: mat(:,:)
+    integer, intent(out) :: nrows, ncols, stat
+
+    character(len=:), allocatable :: rows(:)
+    complex(dp), allocatable :: row_vals(:)
+    integer :: i, j
+
+    call count_matrix_dims(text, rows, nrows, ncols, stat)
+
+    if (nrows == 0 .or. ncols == 0) then
+      allocate(mat(0,0))
+      nrows = 0
+      ncols = 0
+      stat = 0
+      return
+    end if
+
+    if (stat /= 0) then
+      ! Ragged matrix: return error but preserve dimension info
+      allocate(mat(0,0))
+      return
+    end if
+
+    allocate(mat(nrows, ncols))
+    mat = (0.0_dp, 0.0_dp)
+
+    j = 0
+    do i = 1, size(rows)
+      if (len_trim(rows(i)) > 0) then
+        call parse_complex_array(rows(i), row_vals, stat)
+        if (stat /= 0) then
+          deallocate(mat)
+          allocate(mat(0,0))
+          nrows = 0
+          ncols = 0
+          return
+        end if
+        if (size(row_vals) > 0) then
+          j = j + 1
+          mat(j, 1:size(row_vals)) = row_vals
+        end if
+      end if
+    end do
+
+    stat = 0
+
+  end subroutine parse_complex_matrix
 
   !> Parse a single complex number from string
   !> Supports: 4.0+9.0i, 2.0-3.0i, (1.0,2.0), 5.0+2.0j, 3.5,

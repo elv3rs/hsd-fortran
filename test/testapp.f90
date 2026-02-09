@@ -20,6 +20,7 @@ program testapp
   use test_full_coverage_suite, only: full_coverage_tests => tests
   use test_dftb_integration_suite, only: dftb_integration_tests => tests
   use test_new_apis_suite, only: new_apis_tests => tests
+  use test_set_processed_suite, only: set_processed_tests => tests
   use test_edge_cases_io_suite, only: io_edge_cases_tests => tests
   implicit none (type, external)
 
@@ -43,6 +44,7 @@ program testapp
       full_coverage_tests(), &
       dftb_integration_tests(), &
       new_apis_tests(), &
+      set_processed_tests(), &
       io_edge_cases_tests() &
   ]))
 

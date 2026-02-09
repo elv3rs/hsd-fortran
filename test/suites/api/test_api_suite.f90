@@ -90,7 +90,10 @@ contains
             test("get_choice", test_get_choice), &
             test("set_string_array", test_set_string_array), &
             test("set_integer_matrix", test_set_integer_matrix), &
-            test("set_real_matrix", test_set_real_matrix) &
+            test("set_real_matrix", test_set_real_matrix), &
+            test("set_complex_matrix", test_set_complex_matrix), &
+            test("get_or_set_array_missing", test_get_or_set_array_missing), &
+            test("get_or_set_array_existing", test_get_or_set_array_existing) &
         ])) &
     ])
 
@@ -1568,5 +1571,124 @@ contains
 
     call root%destroy()
   end subroutine test_set_real_matrix
+
+  !> Test hsd_get_or_set array overloads write default back to tree when key is missing
+  subroutine test_get_or_set_array_missing()
+    type(hsd_table) :: root
+    integer :: stat
+    integer, allocatable :: iarr(:)
+    real(dp), allocatable :: rarr(:)
+    real(sp), allocatable :: sparr(:)
+    logical, allocatable :: larr(:)
+
+    call new_table(root, "root")
+
+    ! Integer array: key missing -> should set default and write it back
+    call hsd_get_or_set(root, "missing_iarr", iarr, [1, 2, 3], stat=stat)
+    call check(stat == HSD_STAT_NOT_FOUND, msg="int array stat should be NOT_FOUND")
+    call check(size(iarr) == 3, msg="int array size should be 3")
+    call check(all(iarr == [1, 2, 3]), msg="int array should match default")
+    ! Verify it was written back
+    call hsd_get(root, "missing_iarr", iarr, stat=stat)
+    call check(stat == HSD_STAT_OK, msg="int array stat should be OK after write-back")
+    call check(all(iarr == [1, 2, 3]), msg="int array write-back should match")
+
+    ! Real(dp) array
+    call hsd_get_or_set(root, "missing_rarr", rarr, [1.0_dp, 2.5_dp], stat=stat)
+    call check(stat == HSD_STAT_NOT_FOUND, msg="real array stat should be NOT_FOUND")
+    call check(size(rarr) == 2, msg="real array size should be 2")
+    call check(all(abs(rarr - [1.0_dp, 2.5_dp]) < 1.0e-10_dp), &
+        & msg="real array should match default")
+    call hsd_get(root, "missing_rarr", rarr, stat=stat)
+    call check(stat == HSD_STAT_OK, msg="real array write-back stat should be OK")
+    call check(all(abs(rarr - [1.0_dp, 2.5_dp]) < 1.0e-10_dp), &
+        & msg="real array write-back should match")
+
+    ! Real(sp) array
+    call hsd_get_or_set(root, "missing_sparr", sparr, [1.0_sp, 2.0_sp], stat=stat)
+    call check(stat == HSD_STAT_NOT_FOUND, msg="sp array stat should be NOT_FOUND")
+    call check(size(sparr) == 2, msg="sp array size should be 2")
+    call check(all(abs(sparr - [1.0_sp, 2.0_sp]) < 1.0e-5_sp), msg="sp array should match default")
+    call hsd_get(root, "missing_sparr", sparr, stat=stat)
+    call check(stat == HSD_STAT_OK, msg="sp array write-back stat should be OK")
+    call check(all(abs(sparr - [1.0_sp, 2.0_sp]) < 1.0e-5_sp), &
+        & msg="sp array write-back should match")
+
+    ! Logical array
+    call hsd_get_or_set(root, "missing_larr", larr, [.true., .false., .true.], stat=stat)
+    call check(stat == HSD_STAT_NOT_FOUND, msg="logical array stat should be NOT_FOUND")
+    call check(size(larr) == 3, msg="logical array size should be 3")
+    call check(larr(1) .and. .not. larr(2) .and. larr(3), msg="logical array should match default")
+    call hsd_get(root, "missing_larr", larr, stat=stat)
+    call check(stat == HSD_STAT_OK, msg="logical array write-back stat should be OK")
+    call check(larr(1) .and. .not. larr(2) .and. larr(3), &
+        & msg="logical array write-back should match")
+
+    call root%destroy()
+  end subroutine test_get_or_set_array_missing
+
+  !> Test hsd_get_or_set array overloads return existing values without overwriting
+  subroutine test_get_or_set_array_existing()
+    type(hsd_table) :: root
+    type(hsd_error_t), allocatable :: error
+    integer :: stat
+    integer, allocatable :: iarr(:)
+    real(dp), allocatable :: rarr(:)
+    logical, allocatable :: larr(:)
+
+    call hsd_load_string( &
+        & "existing_iarr = 10 20 30" // char(10) // &
+        & "existing_rarr = 1.5 2.5 3.5" // char(10) // &
+        & "existing_larr = Yes No" // char(10), &
+        & root, error)
+    call check(.not. allocated(error), msg="parse should succeed")
+
+    ! Integer array: existing key -> should return actual values
+    call hsd_get_or_set(root, "existing_iarr", iarr, [0, 0, 0], stat=stat)
+    call check(stat == HSD_STAT_OK, msg="existing int array stat should be OK")
+    call check(size(iarr) == 3, msg="existing int array size should be 3")
+    call check(all(iarr == [10, 20, 30]), msg="should return existing int array, not default")
+
+    ! Real(dp) array: existing key -> should return actual values
+    call hsd_get_or_set(root, "existing_rarr", rarr, [0.0_dp, 0.0_dp, 0.0_dp], stat=stat)
+    call check(stat == HSD_STAT_OK, msg="existing real array stat should be OK")
+    call check(size(rarr) == 3, msg="existing real array size should be 3")
+    call check(all(abs(rarr - [1.5_dp, 2.5_dp, 3.5_dp]) < 1.0e-10_dp), &
+        & msg="should return existing real array, not default")
+
+    ! Logical array: existing key -> should return actual values
+    call hsd_get_or_set(root, "existing_larr", larr, [.false., .false.], stat=stat)
+    call check(stat == HSD_STAT_OK, msg="existing logical array stat should be OK")
+    call check(size(larr) == 2, msg="existing logical array size should be 2")
+    call check(larr(1) .and. .not. larr(2), &
+        & msg="should return existing logical array, not default")
+
+    call root%destroy()
+  end subroutine test_get_or_set_array_existing
+
+  !> Test hsd_set / hsd_get_matrix roundtrip with complex matrix
+  subroutine test_set_complex_matrix()
+    type(hsd_table) :: root
+    complex(dp) :: mat(2,3)
+    complex(dp), allocatable :: mat_out(:,:)
+    integer :: nrows, ncols, stat
+
+    call new_table(root, "root")
+
+    mat(1,:) = [(1.0_dp, 2.0_dp), (3.0_dp, -4.0_dp), (5.0_dp, 0.0_dp)]
+    mat(2,:) = [(0.0_dp, 1.0_dp), (-2.5_dp, 3.5_dp), (7.0_dp, 8.0_dp)]
+    call hsd_set(root, "CplxMatrix", mat, stat=stat)
+    call check(stat == HSD_STAT_OK, msg="set complex matrix should succeed")
+
+    ! Read it back
+    call hsd_get_matrix(root, "CplxMatrix", mat_out, nrows, ncols, stat=stat)
+    call check(stat == HSD_STAT_OK, msg="get complex matrix should succeed")
+    call check(nrows == 2, msg="complex matrix nrows should be 2")
+    call check(ncols == 3, msg="complex matrix ncols should be 3")
+    call check(all(abs(mat_out - mat) < 1.0e-10_dp), &
+        & msg="complex matrix values should match")
+
+    call root%destroy()
+  end subroutine test_set_complex_matrix
 
 end module test_api_suite

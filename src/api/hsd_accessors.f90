@@ -60,12 +60,17 @@ module hsd_accessors
     module procedure :: hsd_get_or_set_real_sp
     module procedure :: hsd_get_or_set_logical
     module procedure :: hsd_get_or_set_complex_dp
+    module procedure :: hsd_get_or_set_integer_array
+    module procedure :: hsd_get_or_set_real_dp_array
+    module procedure :: hsd_get_or_set_real_sp_array
+    module procedure :: hsd_get_or_set_logical_array
   end interface hsd_get_or_set
 
   !> Generic interface for getting 2D matrices
   interface hsd_get_matrix
     module procedure :: hsd_get_integer_matrix
     module procedure :: hsd_get_real_dp_matrix
+    module procedure :: hsd_get_complex_dp_matrix
   end interface hsd_get_matrix
 
 contains
@@ -938,6 +943,120 @@ contains
 
   end subroutine get_real_matrix_from_table
 
+  !> Get 2D complex matrix by path
+  !> Handles both value nodes and table nodes (where content is in unnamed children)
+  !>
+  !> If `order` is present and set to "column-major", the returned matrix is
+  !> transposed so that text rows map to Fortran columns (column-major layout).
+  !> Default is text-layout (row-major).
+  subroutine hsd_get_complex_dp_matrix(table, path, val, nrows, ncols, stat, order)
+    type(hsd_table), intent(in), target :: table
+    character(len=*), intent(in) :: path
+    complex(dp), allocatable, intent(out) :: val(:,:)
+    integer, intent(out) :: nrows, ncols
+    integer, intent(out), optional :: stat
+    character(len=*), intent(in), optional :: order
+
+    class(hsd_node), pointer :: child
+    integer :: local_stat
+
+    call hsd_get_child(table, path, child, local_stat)
+
+    if (local_stat /= 0 .or. .not. associated(child)) then
+      if (present(stat)) stat = HSD_STAT_NOT_FOUND
+      allocate(val(0,0))
+      nrows = 0
+      ncols = 0
+      return
+    end if
+
+    child%processed = .true.
+
+    select type (child)
+    type is (hsd_value)
+      call child%get_complex_matrix(val, nrows, ncols, local_stat)
+      if (present(stat)) stat = local_stat
+    type is (hsd_table)
+      ! Table nodes store matrix data as unnamed child values
+      call get_complex_matrix_from_table(child, val, nrows, ncols, local_stat)
+      if (present(stat)) stat = local_stat
+    class default
+      if (present(stat)) stat = HSD_STAT_TYPE_ERROR
+      allocate(val(0,0))
+      nrows = 0
+      ncols = 0
+    end select
+
+    ! Transpose if column-major order requested
+    if (present(order)) then
+      if (order == "column-major" .and. nrows > 0 .and. ncols > 0) then
+        block
+          complex(dp), allocatable :: tmp(:,:)
+          integer :: swap
+          allocate(tmp(ncols, nrows))
+          tmp = transpose(val)
+          call move_alloc(tmp, val)
+          swap = nrows
+          nrows = ncols
+          ncols = swap
+        end block
+      end if
+    end if
+
+  end subroutine hsd_get_complex_dp_matrix
+
+  !> Extract complex matrix from table with unnamed value children
+  subroutine get_complex_matrix_from_table(tbl, mat, nrows, ncols, stat)
+    type(hsd_table), intent(in) :: tbl
+    complex(dp), allocatable, intent(out) :: mat(:,:)
+    integer, intent(out) :: nrows, ncols, stat
+
+    class(hsd_node), pointer :: child
+    character(len=:), allocatable :: combined_text, str_val
+    integer :: i, local_stat
+
+    ! Combine all unnamed value children into single text
+    combined_text = ""
+    do i = 1, tbl%num_children
+      call tbl%get_child(i, child)
+      if (associated(child)) then
+        select type (child)
+        type is (hsd_value)
+          ! Include unnamed, empty-named, or #text-named value nodes
+          if (.not. allocated(child%name) .or. len_trim(child%name) == 0 &
+              & .or. child%name == "#text") then
+            call child%get_string(str_val, local_stat)
+            if (local_stat == 0 .and. len_trim(str_val) > 0) then
+              if (len(combined_text) > 0) then
+                combined_text = combined_text // char(10) // str_val
+              else
+                combined_text = str_val
+              end if
+            end if
+          end if
+        end select
+      end if
+    end do
+
+    if (len_trim(combined_text) == 0) then
+      allocate(mat(0,0))
+      nrows = 0
+      ncols = 0
+      stat = HSD_STAT_OK
+      return
+    end if
+
+    ! Parse the combined text as a matrix
+    block
+      type(hsd_value) :: temp_val
+      call new_value(temp_val)
+      call temp_val%set_raw(combined_text)
+      call temp_val%get_complex_matrix(mat, nrows, ncols, stat)
+      call temp_val%destroy()
+    end block
+
+  end subroutine get_complex_matrix_from_table
+
   ! ===== helpers =====
 
   !> Mark a named child node as processed
@@ -1130,5 +1249,121 @@ contains
     end if
 
   end subroutine hsd_get_or_set_complex_dp
+
+  !> Get integer array with default, writing default back to tree if absent
+  subroutine hsd_get_or_set_integer_array(table, path, val, default, stat, child)
+    type(hsd_table), intent(inout), target :: table
+    character(len=*), intent(in) :: path
+    integer, allocatable, intent(out) :: val(:)
+    integer, intent(in) :: default(:)
+    integer, intent(out), optional :: stat
+    type(hsd_table), pointer, intent(out), optional :: child
+
+    integer :: local_stat
+
+    call hsd_get_integer_array(table, path, val, local_stat)
+
+    if (local_stat /= 0) then
+      val = default
+      call hsd_set(table, path, default)
+      call mark_child_processed_(table, path)
+      if (present(stat)) stat = local_stat
+    else
+      if (present(stat)) stat = HSD_STAT_OK
+    end if
+
+    if (present(child)) then
+      call hsd_get_table(table, path, child)
+      if (.not. associated(child)) child => table
+    end if
+
+  end subroutine hsd_get_or_set_integer_array
+
+  !> Get double precision real array with default, writing default back to tree if absent
+  subroutine hsd_get_or_set_real_dp_array(table, path, val, default, stat, child)
+    type(hsd_table), intent(inout), target :: table
+    character(len=*), intent(in) :: path
+    real(dp), allocatable, intent(out) :: val(:)
+    real(dp), intent(in) :: default(:)
+    integer, intent(out), optional :: stat
+    type(hsd_table), pointer, intent(out), optional :: child
+
+    integer :: local_stat
+
+    call hsd_get_real_dp_array(table, path, val, local_stat)
+
+    if (local_stat /= 0) then
+      val = default
+      call hsd_set(table, path, default)
+      call mark_child_processed_(table, path)
+      if (present(stat)) stat = local_stat
+    else
+      if (present(stat)) stat = HSD_STAT_OK
+    end if
+
+    if (present(child)) then
+      call hsd_get_table(table, path, child)
+      if (.not. associated(child)) child => table
+    end if
+
+  end subroutine hsd_get_or_set_real_dp_array
+
+  !> Get single precision real array with default, writing default back to tree if absent
+  subroutine hsd_get_or_set_real_sp_array(table, path, val, default, stat, child)
+    type(hsd_table), intent(inout), target :: table
+    character(len=*), intent(in) :: path
+    real(sp), allocatable, intent(out) :: val(:)
+    real(sp), intent(in) :: default(:)
+    integer, intent(out), optional :: stat
+    type(hsd_table), pointer, intent(out), optional :: child
+
+    integer :: local_stat
+
+    call hsd_get_real_sp_array(table, path, val, local_stat)
+
+    if (local_stat /= 0) then
+      val = default
+      call hsd_set(table, path, real(default, dp))
+      call mark_child_processed_(table, path)
+      if (present(stat)) stat = local_stat
+    else
+      if (present(stat)) stat = HSD_STAT_OK
+    end if
+
+    if (present(child)) then
+      call hsd_get_table(table, path, child)
+      if (.not. associated(child)) child => table
+    end if
+
+  end subroutine hsd_get_or_set_real_sp_array
+
+  !> Get logical array with default, writing default back to tree if absent
+  subroutine hsd_get_or_set_logical_array(table, path, val, default, stat, child)
+    type(hsd_table), intent(inout), target :: table
+    character(len=*), intent(in) :: path
+    logical, allocatable, intent(out) :: val(:)
+    logical, intent(in) :: default(:)
+    integer, intent(out), optional :: stat
+    type(hsd_table), pointer, intent(out), optional :: child
+
+    integer :: local_stat
+
+    call hsd_get_logical_array(table, path, val, local_stat)
+
+    if (local_stat /= 0) then
+      val = default
+      call hsd_set(table, path, default)
+      call mark_child_processed_(table, path)
+      if (present(stat)) stat = local_stat
+    else
+      if (present(stat)) stat = HSD_STAT_OK
+    end if
+
+    if (present(child)) then
+      call hsd_get_table(table, path, child)
+      if (.not. associated(child)) child => table
+    end if
+
+  end subroutine hsd_get_or_set_logical_array
 
 end module hsd_accessors

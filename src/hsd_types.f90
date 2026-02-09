@@ -193,6 +193,8 @@ module hsd_types
     integer, allocatable :: int_matrix(:,:)
     !> 2D real matrix
     real(dp), allocatable :: real_matrix(:,:)
+    !> 2D complex matrix
+    complex(dp), allocatable :: complex_matrix(:,:)
     !> Number of rows (for matrix data)
     integer :: nrows = 0
     !> Number of columns (for matrix data)
@@ -216,6 +218,7 @@ module hsd_types
     procedure :: get_complex_array => value_get_complex_array
     procedure :: get_int_matrix => value_get_int_matrix
     procedure :: get_real_matrix => value_get_real_matrix
+    procedure :: get_complex_matrix => value_get_complex_matrix
     procedure :: destroy => value_destroy
   end type hsd_value
 
@@ -459,6 +462,15 @@ module hsd_types
       integer, intent(out) :: nrows, ncols
       integer, intent(out), optional :: stat
     end subroutine value_get_real_matrix
+
+    module subroutine value_get_complex_matrix( &
+        & self, val, nrows, ncols, stat)
+      implicit none (type, external)
+      class(hsd_value), intent(inout) :: self
+      complex(dp), allocatable, intent(out) :: val(:,:)
+      integer, intent(out) :: nrows, ncols
+      integer, intent(out), optional :: stat
+    end subroutine value_get_complex_matrix
 
     ! --- Destructor (submodule hsd_value_ops) ---
 
