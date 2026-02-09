@@ -7,7 +7,7 @@ module hsd_accessors
   use hsd_constants, only: dp, sp
   use hsd_error, only: HSD_STAT_OK, HSD_STAT_NOT_FOUND, HSD_STAT_TYPE_ERROR
   use hsd_types, only: hsd_node, hsd_table, hsd_value, new_value, VALUE_TYPE_ARRAY
-  use hsd_query, only: hsd_get_child
+  use hsd_query, only: hsd_get_child, hsd_get_table
   use hsd_mutators, only: hsd_set
   implicit none (type, external)
   private
@@ -958,12 +958,13 @@ contains
   ! ===== hsd_get_or_set implementations =====
 
   !> Get string value with default, writing default back to tree if absent
-  subroutine hsd_get_or_set_string(table, path, val, default, stat)
+  subroutine hsd_get_or_set_string(table, path, val, default, stat, child)
     type(hsd_table), intent(inout), target :: table
     character(len=*), intent(in) :: path
     character(len=:), allocatable, intent(out) :: val
     character(len=*), intent(in) :: default
     integer, intent(out), optional :: stat
+    type(hsd_table), pointer, intent(out), optional :: child
 
     integer :: local_stat
 
@@ -978,15 +979,21 @@ contains
       if (present(stat)) stat = HSD_STAT_OK
     end if
 
+    if (present(child)) then
+      call hsd_get_table(table, path, child)
+      if (.not. associated(child)) child => table
+    end if
+
   end subroutine hsd_get_or_set_string
 
   !> Get integer value with default, writing default back to tree if absent
-  subroutine hsd_get_or_set_integer(table, path, val, default, stat)
+  subroutine hsd_get_or_set_integer(table, path, val, default, stat, child)
     type(hsd_table), intent(inout), target :: table
     character(len=*), intent(in) :: path
     integer, intent(out) :: val
     integer, intent(in) :: default
     integer, intent(out), optional :: stat
+    type(hsd_table), pointer, intent(out), optional :: child
 
     integer :: local_stat
 
@@ -1001,15 +1008,21 @@ contains
       if (present(stat)) stat = HSD_STAT_OK
     end if
 
+    if (present(child)) then
+      call hsd_get_table(table, path, child)
+      if (.not. associated(child)) child => table
+    end if
+
   end subroutine hsd_get_or_set_integer
 
   !> Get double precision real value with default, writing default back to tree if absent
-  subroutine hsd_get_or_set_real_dp(table, path, val, default, stat)
+  subroutine hsd_get_or_set_real_dp(table, path, val, default, stat, child)
     type(hsd_table), intent(inout), target :: table
     character(len=*), intent(in) :: path
     real(dp), intent(out) :: val
     real(dp), intent(in) :: default
     integer, intent(out), optional :: stat
+    type(hsd_table), pointer, intent(out), optional :: child
 
     integer :: local_stat
 
@@ -1024,15 +1037,21 @@ contains
       if (present(stat)) stat = HSD_STAT_OK
     end if
 
+    if (present(child)) then
+      call hsd_get_table(table, path, child)
+      if (.not. associated(child)) child => table
+    end if
+
   end subroutine hsd_get_or_set_real_dp
 
   !> Get single precision real value with default, writing default back to tree if absent
-  subroutine hsd_get_or_set_real_sp(table, path, val, default, stat)
+  subroutine hsd_get_or_set_real_sp(table, path, val, default, stat, child)
     type(hsd_table), intent(inout), target :: table
     character(len=*), intent(in) :: path
     real(sp), intent(out) :: val
     real(sp), intent(in) :: default
     integer, intent(out), optional :: stat
+    type(hsd_table), pointer, intent(out), optional :: child
 
     integer :: local_stat
 
@@ -1047,15 +1066,21 @@ contains
       if (present(stat)) stat = HSD_STAT_OK
     end if
 
+    if (present(child)) then
+      call hsd_get_table(table, path, child)
+      if (.not. associated(child)) child => table
+    end if
+
   end subroutine hsd_get_or_set_real_sp
 
   !> Get logical value with default, writing default back to tree if absent
-  subroutine hsd_get_or_set_logical(table, path, val, default, stat)
+  subroutine hsd_get_or_set_logical(table, path, val, default, stat, child)
     type(hsd_table), intent(inout), target :: table
     character(len=*), intent(in) :: path
     logical, intent(out) :: val
     logical, intent(in) :: default
     integer, intent(out), optional :: stat
+    type(hsd_table), pointer, intent(out), optional :: child
 
     integer :: local_stat
 
@@ -1070,15 +1095,21 @@ contains
       if (present(stat)) stat = HSD_STAT_OK
     end if
 
+    if (present(child)) then
+      call hsd_get_table(table, path, child)
+      if (.not. associated(child)) child => table
+    end if
+
   end subroutine hsd_get_or_set_logical
 
   !> Get complex value with default, writing default back to tree if absent
-  subroutine hsd_get_or_set_complex_dp(table, path, val, default, stat)
+  subroutine hsd_get_or_set_complex_dp(table, path, val, default, stat, child)
     type(hsd_table), intent(inout), target :: table
     character(len=*), intent(in) :: path
     complex(dp), intent(out) :: val
     complex(dp), intent(in) :: default
     integer, intent(out), optional :: stat
+    type(hsd_table), pointer, intent(out), optional :: child
 
     integer :: local_stat
 
@@ -1091,6 +1122,11 @@ contains
       if (present(stat)) stat = local_stat
     else
       if (present(stat)) stat = HSD_STAT_OK
+    end if
+
+    if (present(child)) then
+      call hsd_get_table(table, path, child)
+      if (.not. associated(child)) child => table
     end if
 
   end subroutine hsd_get_or_set_complex_dp
