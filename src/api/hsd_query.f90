@@ -616,7 +616,7 @@ contains
       select type (child)
       type is (hsd_table)
         if (allocated(child%name)) then
-          choice_name = child%name
+          choice_name = to_lower(child%name)
         end if
         choice_table => child
         choice_table%processed = .true.
@@ -632,9 +632,9 @@ contains
       select type (child)
       type is (hsd_value)
         if (allocated(child%string_value)) then
-          choice_name = child%string_value
+          choice_name = to_lower(child%string_value)
         else if (allocated(child%name)) then
-          choice_name = child%name
+          choice_name = to_lower(child%name)
         end if
         if (present(stat)) stat = HSD_STAT_OK
         return

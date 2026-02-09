@@ -1486,7 +1486,7 @@ contains
 
     call hsd_get_choice(root, "Driver", choice_name, choice_table, stat=stat)
     call check(stat == HSD_STAT_OK, msg="get_choice should succeed")
-    call check(choice_name == "ConjugateGradient", msg="choice name should match")
+    call check(choice_name == "conjugategradient", msg="choice name should match (lowercase)")
     call check(associated(choice_table), msg="choice_table should be associated")
 
     ! Read from the choice table

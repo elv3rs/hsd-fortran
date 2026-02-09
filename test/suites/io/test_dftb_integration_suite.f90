@@ -87,12 +87,12 @@ contains
     call load_dftb_input(root, error)
     call check(.not. allocated(error), msg="Parse OK")
 
-    call check(hsd_has_child(root, "Geometry"), msg="Has Geometry")
-    call check(hsd_has_child(root, "Driver"), msg="Has Driver")
-    call check(hsd_has_child(root, "Hamiltonian"), msg="Has Hamiltonian")
-    call check(hsd_has_child(root, "Options"), msg="Has Options")
-    call check(hsd_has_child(root, "Analysis"), msg="Has Analysis")
-    call check(hsd_has_child(root, "ParserOptions"), msg="Has ParserOptions")
+    call check(hsd_has_child(root, "geometry"), msg="Has Geometry")
+    call check(hsd_has_child(root, "driver"), msg="Has Driver")
+    call check(hsd_has_child(root, "hamiltonian"), msg="Has Hamiltonian")
+    call check(hsd_has_child(root, "options"), msg="Has Options")
+    call check(hsd_has_child(root, "analysis"), msg="Has Analysis")
+    call check(hsd_has_child(root, "parseroptions"), msg="Has ParserOptions")
 
     call root%destroy()
   end subroutine test_top_level_sections
@@ -375,7 +375,7 @@ contains
     region_count = 0
     call iter%init(project_states)
     do while (iter%next(child))
-      if (child%name == "Region") region_count = region_count + 1
+      if (child%name == "region") region_count = region_count + 1
     end do
     call check(is_equal(region_count, 2), msg="Two Region blocks found")
 

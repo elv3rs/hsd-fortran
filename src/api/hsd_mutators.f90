@@ -563,7 +563,7 @@ contains
         ! Need to create node
         if (len_trim(remaining) > 0) then
           ! More path segments: create table
-          call new_table(new_tbl, name=segment)
+          call new_table(new_tbl, name=to_lower(segment))
           call current_table%add_child(new_tbl)
           ! Get the newly added child
           do i = current_table%num_children, 1, -1
@@ -576,7 +576,7 @@ contains
           end do
         else
           ! Final segment: create value node
-          call new_value(new_val, name=segment)
+          call new_value(new_val, name=to_lower(segment))
           call current_table%add_child(new_val)
           ! Get the newly added child
           do i = current_table%num_children, 1, -1

@@ -767,7 +767,7 @@ contains
     call hsd_load_string("NewSect { X = 10 }", overlay, err)
     call hsd_merge(base, overlay, stat)
     call check(stat == HSD_STAT_OK, msg="Merge ok")
-    call check(hsd_has_child(base, "NewSect"), msg="Table added")
+    call check(hsd_has_child(base, "newsect"), msg="Table added")
     call base%destroy()
     call overlay%destroy()
   end subroutine test_merge_new_table_child
@@ -781,7 +781,7 @@ contains
     call hsd_load_string("NewKey = hello", overlay, err)
     call hsd_merge(base, overlay, stat)
     call check(stat == HSD_STAT_OK, msg="Merge ok")
-    call check(hsd_has_child(base, "NewKey"), msg="Value added")
+    call check(hsd_has_child(base, "newkey"), msg="Value added")
     call base%destroy()
     call overlay%destroy()
   end subroutine test_merge_new_value_child
@@ -1865,9 +1865,9 @@ contains
         "Epsilon = 5", root, error)
     call check(.not. allocated(error), msg="Parse ok")
     ! Removing by name uses the hash index
-    call root%remove_child_by_name("Beta", case_insensitive=.true.)
-    call check(.not. hsd_has_child(root, "Beta"), msg="Beta removed")
-    call check(hsd_has_child(root, "Alpha"), msg="Alpha kept")
+    call root%remove_child_by_name("beta", case_insensitive=.true.)
+    call check(.not. hsd_has_child(root, "beta"), msg="Beta removed")
+    call check(hsd_has_child(root, "alpha"), msg="Alpha kept")
   end subroutine test_table_remove_ci
 
   !> Test iterator past end
@@ -2038,7 +2038,7 @@ contains
         "K = 11" // char(10) // "L = 12" // char(10) // &
         "M = 13" // char(10) // "N = 14", root, error)
     call check(.not. allocated(error), msg="Parse ok")
-    call check(hsd_has_child(root, "N"), msg="Lookup after auto-init")
+    call check(hsd_has_child(root, "n"), msg="Lookup after auto-init")
   end subroutine test_hash_auto_init
 
   !> Test updating a key in overflow chain
@@ -2088,14 +2088,14 @@ contains
         "Tau = 19" // char(10) // "Upsilon = 20", root, error)
     call check(.not. allocated(error), msg="Parse ok")
     ! Remove several to trigger chain promotion
-    call hsd_remove_child(root, "Alpha", stat)
-    call hsd_remove_child(root, "Gamma", stat)
-    call hsd_remove_child(root, "Epsilon", stat)
-    call hsd_remove_child(root, "Eta", stat)
-    call hsd_remove_child(root, "Iota", stat)
+    call hsd_remove_child(root, "alpha", stat)
+    call hsd_remove_child(root, "gamma", stat)
+    call hsd_remove_child(root, "epsilon", stat)
+    call hsd_remove_child(root, "eta", stat)
+    call hsd_remove_child(root, "iota", stat)
     ! Verify remaining keys still accessible
-    call check(hsd_has_child(root, "Beta"), msg="Beta survives")
-    call check(hsd_has_child(root, "Sigma"), msg="Sigma survives")
+    call check(hsd_has_child(root, "beta"), msg="Beta survives")
+    call check(hsd_has_child(root, "sigma"), msg="Sigma survives")
   end subroutine test_hash_promote_remove
 
   !> Test removing key from overflow chain

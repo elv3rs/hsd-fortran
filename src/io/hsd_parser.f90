@@ -16,6 +16,7 @@ module hsd_parser
     HSD_STAT_OK, HSD_STAT_SYNTAX_ERROR, HSD_STAT_FILE_NOT_FOUND, &
     HSD_STAT_IO_ERROR, HSD_STAT_INCLUDE_CYCLE, HSD_STAT_INCLUDE_DEPTH, &
     HSD_STAT_UNCLOSED_ATTRIB
+  use hsd_utils, only: to_lower
   implicit none (type, external)
   private
 
@@ -380,6 +381,7 @@ contains
     type(hsd_error_t), allocatable, intent(out), optional :: error
 
     character(len=:), allocatable :: tag_name, attrib
+    character(len=:), allocatable :: original_text
     integer :: tag_line
     type(hsd_token_t) :: saved_token
     type(hsd_table) :: child_table
@@ -390,8 +392,9 @@ contains
     class(hsd_node), pointer :: existing_child
     type(hsd_table), pointer :: existing_table
 
-    ! Save current state
-    tag_name = trim(state%current_token%value)
+    ! Save current state — preserve original text for data fallback, lowercase for tag use
+    original_text = trim(state%current_token%value)
+    tag_name = to_lower(original_text)
     tag_line = state%current_token%line
     call state%next_token()
 
@@ -527,7 +530,7 @@ contains
             logical :: child_is_amendment
             type(hsd_table), pointer :: target_table
 
-            child_tag_name = trim(saved_token%value)
+            child_tag_name = to_lower(trim(saved_token%value))
             child_is_amendment = .false.
             if (len(child_tag_name) > 1 .and. child_tag_name(1:1) == "+") then
               child_is_amendment = .true.
@@ -684,28 +687,28 @@ contains
       end if
 
     case (TOKEN_NEWLINE, TOKEN_EOF, TOKEN_RBRACE, TOKEN_SEMICOLON)
-      ! Just a tag name on its own - treat as text
+      ! Just a tag name on its own - treat as text (preserve original case)
       if (len(text_buffer) > 0) then
         if (text_buffer(len(text_buffer):len(text_buffer)) == char(10)) then
-          text_buffer = text_buffer // tag_name
+          text_buffer = text_buffer // original_text
         else
-          text_buffer = text_buffer // " " // tag_name
+          text_buffer = text_buffer // " " // original_text
         end if
       else
-        text_buffer = tag_name
+        text_buffer = original_text
         text_start_line = tag_line
       end if
 
     case default
-      ! Treat as part of text
+      ! Treat as part of text (preserve original case)
       if (len(text_buffer) > 0) then
         if (text_buffer(len(text_buffer):len(text_buffer)) == char(10)) then
-          text_buffer = text_buffer // tag_name
+          text_buffer = text_buffer // original_text
         else
-          text_buffer = text_buffer // " " // tag_name
+          text_buffer = text_buffer // " " // original_text
         end if
       else
-        text_buffer = tag_name
+        text_buffer = original_text
         text_start_line = tag_line
       end if
     end select
