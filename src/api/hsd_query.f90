@@ -1171,8 +1171,9 @@ contains
     type(hsd_table) :: wrap_tbl
     type(hsd_value) :: txt
     character(len=:), allocatable :: raw_str, saved_name, saved_attrib
-    integer :: getStat, ii, saved_line
-    class(hsd_node), pointer :: child
+    integer :: getStat, ii, saved_line, last_slash
+    class(hsd_node), pointer :: child, parent_node
+    type(hsd_table), pointer :: actual_parent
 
     ! Extract all data from val_node BEFORE remove (which deallocates it)
     call val_node%get_string(raw_str, getStat)
@@ -1183,6 +1184,26 @@ contains
     end if
     saved_line = val_node%line
 
+    ! Navigate to the actual parent table when path has slashes
+    ! (e.g. for path "electrondynamics/restart", the actual parent is "electrondynamics")
+    last_slash = index(path, "/", back=.true.)
+    if (last_slash > 0) then
+      call hsd_get_child(parent, path(1:last_slash - 1), parent_node, getStat)
+      if (.not. associated(parent_node)) then
+        stat = HSD_STAT_NOT_FOUND
+        return
+      end if
+      select type (parent_node)
+      type is (hsd_table)
+        actual_parent => parent_node
+      class default
+        stat = HSD_STAT_NOT_FOUND
+        return
+      end select
+    else
+      actual_parent => parent
+    end if
+
     ! Build replacement table (using saved data, not val_node fields)
     call new_table(wrap_tbl, name=saved_name, attrib=saved_attrib, &
         & line=saved_line)
@@ -1190,14 +1211,14 @@ contains
     call txt%set_string(raw_str)
     call wrap_tbl%add_child(txt)
 
-    ! Remove the old value (invalidates val_node pointer) and add the new table
-    call hsd_remove_child(parent, path, stat, case_insensitive=.true.)
-    call parent%add_child(wrap_tbl)
+    ! Remove the old value from actual parent and add the new table there
+    call hsd_remove_child(actual_parent, saved_name, stat, case_insensitive=.true.)
+    call actual_parent%add_child(wrap_tbl)
 
     ! Get a pointer to the newly added table child (use saved_name, not val_node)
     new_tbl_ptr => null()
-    do ii = parent%num_children, 1, -1
-      call parent%get_child(ii, child)
+    do ii = actual_parent%num_children, 1, -1
+      call actual_parent%get_child(ii, child)
       if (associated(child)) then
         select type (child)
         type is (hsd_table)
