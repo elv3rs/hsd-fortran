@@ -60,14 +60,16 @@ module hsd
   use hsd_walk_api, only: hsd_walk
 
   ! Specialized API modules
-  use hsd_accessors, only: hsd_get, hsd_get_or, hsd_get_or_set, hsd_get_matrix
+  use hsd_accessors, only: hsd_get, hsd_get_or, hsd_get_or_set, hsd_get_matrix, &
+    hsd_get_inline_text
   use hsd_mutators, only: hsd_set, hsd_clear_children
   use hsd_query, only: hsd_get_child, hsd_get_table, hsd_has_child, &
     hsd_remove_child, hsd_get_type, hsd_is_table, hsd_is_value, hsd_is_array, &
     hsd_child_count, hsd_get_keys, hsd_get_attrib, hsd_has_attrib, hsd_set_attrib, &
     hsd_rename_child, hsd_get_choice, hsd_get_children, hsd_child_ptr, &
     hsd_get_child_tables, hsd_table_ptr, &
-    hsd_merge, hsd_clone, hsd_table_equal, hsd_set_processed
+    hsd_merge, hsd_clone, hsd_table_equal, hsd_set_processed, &
+    hsd_has_value_children, hsd_get_name
   use hsd_validation, only: hsd_require, hsd_validate_range, hsd_validate_one_of, &
     hsd_get_with_unit, hsd_get_array_with_unit, hsd_get_matrix_with_unit, &
     hsd_node_context, hsd_format_error, hsd_format_warning, &
@@ -103,6 +105,7 @@ module hsd
 
   ! Re-export data accessors (from hsd_accessors)
   public :: hsd_get, hsd_get_or, hsd_get_or_set, hsd_get_matrix
+  public :: hsd_get_inline_text
 
   ! Re-export data mutators (from hsd_mutators)
   public :: hsd_set, hsd_clear_children
@@ -119,6 +122,7 @@ module hsd
   public :: hsd_merge, hsd_clone
   public :: hsd_table_equal
   public :: hsd_set_processed
+  public :: hsd_has_value_children, hsd_get_name
 
   ! Re-export validation (from hsd_validation)
   public :: hsd_require, hsd_validate_range, hsd_validate_one_of

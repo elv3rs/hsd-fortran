@@ -14,6 +14,7 @@ module hsd_accessors
 
   ! Public interfaces
   public :: hsd_get, hsd_get_or, hsd_get_or_set, hsd_get_matrix
+  public :: hsd_get_inline_text
 
   !> Generic interface for getting values
   !>
@@ -1365,5 +1366,49 @@ contains
     end if
 
   end subroutine hsd_get_or_set_logical_array
+
+
+  !> Get concatenated text content of all unnamed value children.
+  !>
+  !> Iterates children of `table`, collecting text from unnamed or "#text"
+  !> `hsd_value` nodes. Multiple values are separated by spaces.
+  subroutine hsd_get_inline_text(table, text, stat)
+    type(hsd_table), intent(in), target :: table
+    character(len=:), allocatable, intent(out) :: text
+    integer, intent(out), optional :: stat
+
+    integer :: ii, local_stat
+    class(hsd_node), pointer :: child
+    character(len=:), allocatable :: piece
+
+    text = ""
+    do ii = 1, table%num_children
+      call table%get_child(ii, child)
+      if (.not. associated(child)) cycle
+      select type (v => child)
+      type is (hsd_value)
+        if (.not. allocated(v%name) .or. len_trim(v%name) == 0 &
+            & .or. v%name == "#text") then
+          call v%get_string(piece, local_stat)
+          if (local_stat == HSD_STAT_OK .and. allocated(piece)) then
+            if (len(text) > 0) then
+              text = text // " " // piece
+            else
+              text = piece
+            end if
+          end if
+        end if
+      end select
+    end do
+
+    if (present(stat)) then
+      if (len(text) > 0) then
+        stat = HSD_STAT_OK
+      else
+        stat = HSD_STAT_NOT_FOUND
+      end if
+    end if
+
+  end subroutine hsd_get_inline_text
 
 end module hsd_accessors

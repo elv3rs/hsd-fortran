@@ -39,6 +39,8 @@ module hsd_query
   public :: hsd_merge, hsd_clone
   public :: hsd_table_equal
   public :: hsd_set_processed
+  public :: hsd_has_value_children
+  public :: hsd_get_name
 
 contains
 
@@ -1272,6 +1274,54 @@ contains
     end do
 
   end subroutine hsd_set_processed
+
+
+  !> Check whether a table has any value children (inline data).
+  function hsd_has_value_children(table) result(has)
+    type(hsd_table), intent(in), target :: table
+    logical :: has
+
+    integer :: ii
+    class(hsd_node), pointer :: child
+
+    has = .false.
+    do ii = 1, table%num_children
+      call table%get_child(ii, child)
+      if (.not. associated(child)) cycle
+      select type (child)
+      type is (hsd_value)
+        has = .true.
+        return
+      end select
+    end do
+
+  end function hsd_has_value_children
+
+
+  !> Get the lowercased name of a node.
+  !>
+  !> If the node's name is unset or blank, returns the `default` string
+  !> (which itself defaults to "" if not provided).
+  subroutine hsd_get_name(node, name, default)
+    class(hsd_node), intent(in) :: node
+    character(len=:), allocatable, intent(out) :: name
+    character(len=*), intent(in), optional :: default
+
+    character(len=:), allocatable :: fallback
+
+    if (present(default)) then
+      fallback = default
+    else
+      fallback = ""
+    end if
+
+    if (allocated(node%name) .and. len_trim(node%name) > 0) then
+      name = to_lower(node%name)
+    else
+      name = fallback
+    end if
+
+  end subroutine hsd_get_name
 
 end module hsd_query
 
