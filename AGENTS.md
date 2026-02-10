@@ -196,6 +196,16 @@ This ensures tests work regardless of where CTest runs from.
 | `hsd_schema` | Declarative schema-based validation |
 | `hsd_visitor` | Visitor pattern for tree traversal |
 
+### Generic Tree Utilities (in `hsd_query`)
+
+These functions were upstreamed from DFTB+ and are part of the public API:
+
+| Function | Purpose |
+|----------|---------|
+| `hsd_get_name` | Returns the tag name of a node (table or value) |
+| `hsd_has_value_children` | Checks whether a table contains any `hsd_value` children (replaces DFTB+'s `hasInlineData`) |
+| `hsd_get_inline_text` | Retrieves the concatenated text content from value children of a table (replaces DFTB+'s `getFirstTextChild`) |
+
 ### I/O Layer (`src/io/`)
 
 | Module | Purpose |
