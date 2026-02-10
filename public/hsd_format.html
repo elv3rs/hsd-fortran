@@ -1,0 +1,685 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HSD Format Reference &mdash; HSD-Fortran 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=8d563738"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Error Message Quick Reference" href="error_handling.html" />
+    <link rel="prev" title="User Guide" href="user_guide.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            HSD-Fortran
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#building-with-cmake">Building with CMake</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#basic-build">Basic Build</a></li>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#debug-build-with-coverage">Debug Build with Coverage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#cmake-options">CMake Options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#using-as-a-cmake-subproject">Using as a CMake Subproject</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#building-with-fpm">Building with fpm</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#using-as-an-fpm-dependency">Using as an fpm Dependency</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#verifying-installation">Verifying Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#running-the-example">Running the Example</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="user_guide.html">User Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#basic-usage">Basic Usage</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="user_guide.html#loading-hsd-files">Loading HSD Files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user_guide.html#accessing-values">Accessing Values</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user_guide.html#default-values">Default Values</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#working-with-arrays">Working with Arrays</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="user_guide.html#working-with-matrices">Working with Matrices</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#type-introspection">Type Introspection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#working-with-attributes-units">Working with Attributes (Units)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#modifying-trees">Modifying Trees</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#saving-hsd-files">Saving HSD Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#tree-operations">Tree Operations</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="user_guide.html#cloning-trees">Cloning Trees</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user_guide.html#merging-trees">Merging Trees</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#iterating-children">Iterating Children</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#schema-validation">Schema Validation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="user_guide.html#validation-helpers">Validation Helpers</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#visitor-pattern">Visitor Pattern</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#best-practices">Best Practices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#example-complete-configuration-parser">Example: Complete Configuration Parser</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">HSD Format Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#basic-syntax">Basic Syntax</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#structure">Structure</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#comments">Comments</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#data-types">Data Types</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#strings">Strings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#integers">Integers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#real-numbers">Real Numbers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#booleans">Booleans</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#arrays">Arrays</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#complex-numbers">Complex Numbers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#matrices-multi-line-data">Matrices (Multi-line Data)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#advanced-syntax">Advanced Syntax</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#typed-blocks-short-form">Typed Blocks (Short Form)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#attributes-units">Attributes (Units)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#file-includes">File Includes</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#include-path-resolution">Include Path Resolution</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#escaping-and-special-characters">Escaping and Special Characters</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#quoted-strings">Quoted Strings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#identifier-rules">Identifier Rules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#duplicate-keys">Duplicate Keys</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#grammar-summary">Grammar Summary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#error-messages">Error Messages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#compatibility-notes">Compatibility Notes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#dftb-compatibility">DFTB+ Compatibility</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#differences-from-json-yaml">Differences from JSON/YAML</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="error_handling.html">Error Message Quick Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="error_handling.html#error-type-structure">Error Type Structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="error_handling.html#creating-errors-with-context">Creating Errors with Context</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="error_handling.html#basic-error">Basic Error</a></li>
+<li class="toctree-l3"><a class="reference internal" href="error_handling.html#error-with-full-context">Error with Full Context</a></li>
+<li class="toctree-l3"><a class="reference internal" href="error_handling.html#syntax-error-helper">Syntax Error Helper</a></li>
+<li class="toctree-l3"><a class="reference internal" href="error_handling.html#type-error-helper">Type Error Helper</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="error_handling.html#error-codes">Error Codes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="error_handling.html#usage-examples">Usage Examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="error_handling.html#handling-errors">Handling Errors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="error_handling.html#error-output-format">Error Output Format</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="error_handling.html#common-error-scenarios">Common Error Scenarios</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="error_handling.html#unclosed-bracket">Unclosed Bracket</a></li>
+<li class="toctree-l3"><a class="reference internal" href="error_handling.html#include-cycle">Include Cycle</a></li>
+<li class="toctree-l3"><a class="reference internal" href="error_handling.html#file-not-found">File Not Found</a></li>
+<li class="toctree-l3"><a class="reference internal" href="error_handling.html#type-mismatch">Type Mismatch</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="error_handling.html#best-practices">Best Practices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="error_handling.html#coding-conventions-for-stat-parameters">Coding Conventions for <code class="docutils literal notranslate"><span class="pre">stat</span></code> Parameters</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="error_handling.html#the-pattern">The Pattern</a></li>
+<li class="toctree-l3"><a class="reference internal" href="error_handling.html#recommended-approaches">Recommended Approaches</a></li>
+<li class="toctree-l3"><a class="reference internal" href="error_handling.html#common-mistakes-to-avoid">Common Mistakes to Avoid</a></li>
+<li class="toctree-l3"><a class="reference internal" href="error_handling.html#using-local-status-variables">Using Local Status Variables</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="thread_safety.html">Thread Safety Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="thread_safety.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="thread_safety.html#thread-safety-summary">Thread Safety Summary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="thread_safety.html#detailed-analysis">Detailed Analysis</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="thread_safety.html#safe-operations-no-synchronization-needed">Safe Operations (No Synchronization Needed)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="thread_safety.html#unsafe-operations-require-external-synchronization">Unsafe Operations (Require External Synchronization)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="thread_safety.html#module-specific-notes">Module-Specific Notes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="thread_safety.html#hsd-types">hsd_types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="thread_safety.html#hsd-parser">hsd_parser</a></li>
+<li class="toctree-l3"><a class="reference internal" href="thread_safety.html#hsd-formatter">hsd_formatter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="thread_safety.html#hsd-schema">hsd_schema</a></li>
+<li class="toctree-l3"><a class="reference internal" href="thread_safety.html#hsd-hash-table">hsd_hash_table</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="thread_safety.html#openmp-considerations">OpenMP Considerations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="thread_safety.html#coarray-fortran-considerations">Coarray Fortran Considerations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="thread_safety.html#recommendations">Recommendations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="thread_safety.html#future-considerations">Future Considerations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="thread_safety.html#implementation-notes">Implementation Notes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="thread_safety.html#why-no-built-in-synchronization">Why No Built-in Synchronization?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="thread_safety.html#hash-table-thread-safety">Hash Table Thread Safety</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="fuzzing.html">Fuzz Testing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="fuzzing.html#prerequisites">Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fuzzing.html#building-the-fuzz-target">Building the Fuzz Target</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fuzzing.html#running-the-fuzzer">Running the Fuzzer</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="fuzzing.html#basic-usage">Basic Usage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fuzzing.html#using-the-dictionary">Using the Dictionary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fuzzing.html#parallel-fuzzing">Parallel Fuzzing</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="fuzzing.html#understanding-output">Understanding Output</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="fuzzing.html#reproducing-issues">Reproducing Issues</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="fuzzing.html#corpus-management">Corpus Management</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="fuzzing.html#minimizing-the-corpus">Minimizing the Corpus</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fuzzing.html#minimizing-a-crash">Minimizing a Crash</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="fuzzing.html#seed-corpus">Seed Corpus</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fuzzing.html#troubleshooting">Troubleshooting</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="fuzzing.html#afl-qemu-trace-not-found">“afl-qemu-trace not found”</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fuzzing.html#hmm-your-system-is-configured-to-send-core-dump-notifications">“Hmm, your system is configured to send core dump notifications”</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fuzzing.html#low-execution-speed">Low Execution Speed</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fuzzing.html#afl-shows-0-paths">AFL++ Shows 0 Paths</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api.html#module-hsd">Module: hsd</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#types">Types</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#core-types">Core Types</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api.html#hsd-table"><code class="docutils literal notranslate"><span class="pre">hsd_table</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api.html#hsd-value"><code class="docutils literal notranslate"><span class="pre">hsd_value</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api.html#hsd-error-t"><code class="docutils literal notranslate"><span class="pre">hsd_error_t</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api.html#hsd-iterator"><code class="docutils literal notranslate"><span class="pre">hsd_iterator</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api.html#hsd-schema-t"><code class="docutils literal notranslate"><span class="pre">hsd_schema_t</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api.html#hsd-visitor-t"><code class="docutils literal notranslate"><span class="pre">hsd_visitor_t</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#precision-constants">Precision Constants</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#value-type-constants">Value Type Constants</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#error-codes">Error Codes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#schema-constants">Schema Constants</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#i-o-procedures">I/O Procedures</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-load">hsd_load</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-load-string">hsd_load_string</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-dump">hsd_dump</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-dump-to-string">hsd_dump_to_string</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#accessor-procedures">Accessor Procedures</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-get">hsd_get</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-get-or">hsd_get_or</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-get-matrix">hsd_get_matrix</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-get-inline-text">hsd_get_inline_text</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#query-procedures">Query Procedures</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-has-child">hsd_has_child</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-is-table">hsd_is_table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-is-value">hsd_is_value</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-is-array">hsd_is_array</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-child-count">hsd_child_count</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-get-keys">hsd_get_keys</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-get-type">hsd_get_type</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-get-attrib">hsd_get_attrib</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-has-attrib">hsd_has_attrib</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-get-child">hsd_get_child</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-get-table">hsd_get_table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-has-value-children">hsd_has_value_children</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-get-name">hsd_get_name</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#mutation-procedures">Mutation Procedures</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-set">hsd_set</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-remove-child">hsd_remove_child</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#tree-operations">Tree Operations</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-clone">hsd_clone</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-merge">hsd_merge</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#validation-procedures">Validation Procedures</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-require">hsd_require</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-validate-range">hsd_validate_range</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-validate-one-of">hsd_validate_one_of</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-get-with-unit">hsd_get_with_unit</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#schema-validation">Schema Validation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#schema-init">schema_init</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#schema-destroy">schema_destroy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#schema-add-field">schema_add_field</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#schema-add-field-enum">schema_add_field_enum</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#schema-validate">schema_validate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#schema-validate-strict">schema_validate_strict</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#visitor-pattern">Visitor Pattern</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-accept">hsd_accept</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#constructor-functions">Constructor Functions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#new-table">new_table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#new-value">new_value</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">HSD-Fortran</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">HSD Format Reference</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/elv3rs/hsd-fortran/blob/main/docs/hsd_format.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="hsd-format-reference">
+<h1>HSD Format Reference<a class="headerlink" href="#hsd-format-reference" title="Link to this heading"></a></h1>
+<p>HSD (Human-friendly Structured Data) is a data format designed to be easy for humans to read and write
+while supporting hierarchical data structures similar to JSON or YAML.</p>
+<p>This document describes the HSD syntax and features supported by HSD-Fortran.</p>
+<section id="basic-syntax">
+<h2>Basic Syntax<a class="headerlink" href="#basic-syntax" title="Link to this heading"></a></h2>
+<section id="structure">
+<h3>Structure<a class="headerlink" href="#structure" title="Link to this heading"></a></h3>
+<p>HSD uses a block-based structure with curly braces:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>TagName {
+  ChildTag = value
+  NestedBlock {
+    AnotherValue = 123
+  }
+}
+</pre></div>
+</div>
+<p>Key concepts:</p>
+<ul class="simple">
+<li><p><strong>Tags</strong> are identifiers that name data elements</p></li>
+<li><p><strong>Blocks</strong> are delimited by <code class="docutils literal notranslate"><span class="pre">{</span></code> and <code class="docutils literal notranslate"><span class="pre">}</span></code></p></li>
+<li><p><strong>Values</strong> follow an <code class="docutils literal notranslate"><span class="pre">=</span></code> sign</p></li>
+<li><p><strong>Whitespace</strong> is generally ignored (spaces, tabs, newlines)</p></li>
+</ul>
+</section>
+<section id="comments">
+<h3>Comments<a class="headerlink" href="#comments" title="Link to this heading"></a></h3>
+<p>Comments start with <code class="docutils literal notranslate"><span class="pre">#</span></code> and continue to the end of the line:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span># This is a comment
+Driver {
+  MaxSteps = 100  # This is an inline comment
+}
+</pre></div>
+</div>
+</section>
+</section>
+<section id="data-types">
+<h2>Data Types<a class="headerlink" href="#data-types" title="Link to this heading"></a></h2>
+<section id="strings">
+<h3>Strings<a class="headerlink" href="#strings" title="Link to this heading"></a></h3>
+<p>Strings can be unquoted (if they contain no special characters) or quoted:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span># Unquoted string
+Name = hello
+
+# Quoted string (required for spaces or special characters)
+Description = &quot;Hello, World!&quot;
+Path = &quot;/path/to/file&quot;
+
+# Empty string
+Empty = &quot;&quot;
+</pre></div>
+</div>
+</section>
+<section id="integers">
+<h3>Integers<a class="headerlink" href="#integers" title="Link to this heading"></a></h3>
+<p>Standard integer notation:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Count = 42
+Negative = -10
+Large = 1000000
+</pre></div>
+</div>
+</section>
+<section id="real-numbers">
+<h3>Real Numbers<a class="headerlink" href="#real-numbers" title="Link to this heading"></a></h3>
+<p>Real numbers support standard and scientific notation:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Value = 3.14159
+Small = 1.0e-5
+Large = 1.5E+10
+Precise = 2.99792458d8  # Fortran &#39;d&#39; exponent also supported
+</pre></div>
+</div>
+</section>
+<section id="booleans">
+<h3>Booleans<a class="headerlink" href="#booleans" title="Link to this heading"></a></h3>
+<p>HSD supports multiple boolean formats:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span># Primary format (recommended)
+Enabled = Yes
+Disabled = No
+
+# Alternative formats
+Flag1 = On
+Flag2 = Off
+Flag3 = 1
+Flag4 = 0
+
+# Optional (if HSD_ACCEPT_TRUE_FALSE is enabled)
+Flag5 = True
+Flag6 = False
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>When writing HSD output, the library always uses <code class="docutils literal notranslate"><span class="pre">Yes</span></code>/<code class="docutils literal notranslate"><span class="pre">No</span></code> format.</p>
+</div>
+</section>
+<section id="arrays">
+<h3>Arrays<a class="headerlink" href="#arrays" title="Link to this heading"></a></h3>
+<p>Arrays are space-separated or comma-separated values:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span># Space-separated
+Integers = 1 2 3 4 5
+
+# Comma-separated
+Reals = 1.0, 2.5, 3.0
+
+# Mixed separators
+Values = 1, 2 3, 4
+
+# String arrays
+Elements = C H O N
+Paths = &quot;file1.dat&quot; &quot;file2.dat&quot;
+</pre></div>
+</div>
+</section>
+<section id="complex-numbers">
+<h3>Complex Numbers<a class="headerlink" href="#complex-numbers" title="Link to this heading"></a></h3>
+<p>Complex numbers use parentheses:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Complex = (1.0, 2.0)
+ComplexArray = (1.0, 0.0) (0.0, 1.0)
+</pre></div>
+</div>
+</section>
+<section id="matrices-multi-line-data">
+<h3>Matrices (Multi-line Data)<a class="headerlink" href="#matrices-multi-line-data" title="Link to this heading"></a></h3>
+<p>Multi-line values within a block are treated as matrix data:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Lattice {
+  10.0  0.0  0.0
+   0.0 10.0  0.0
+   0.0  0.0 10.0
+}
+
+KPoints {
+  0.0 0.0 0.0  1.0
+  0.5 0.0 0.0  2.0
+  0.5 0.5 0.0  4.0
+}
+</pre></div>
+</div>
+<p>Each line represents a row; columns are space-separated.</p>
+</section>
+</section>
+<section id="advanced-syntax">
+<h2>Advanced Syntax<a class="headerlink" href="#advanced-syntax" title="Link to this heading"></a></h2>
+<section id="typed-blocks-short-form">
+<h3>Typed Blocks (Short Form)<a class="headerlink" href="#typed-blocks-short-form" title="Link to this heading"></a></h3>
+<p>Assign a type to a block using the short form:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span># Long form
+Hamiltonian {
+  Type = DFTB
+  SCC = Yes
+}
+
+# Equivalent short form
+Hamiltonian = DFTB {
+  SCC = Yes
+}
+</pre></div>
+</div>
+<p>This is commonly used to specify which variant of a block is being configured.</p>
+</section>
+<section id="attributes-units">
+<h3>Attributes (Units)<a class="headerlink" href="#attributes-units" title="Link to this heading"></a></h3>
+<p>Values can have attributes, typically used for physical units:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Temperature [Kelvin] = 300.0
+MaxForce [eV/Angstrom] = 0.001
+Lattice [Angstrom] {
+  10.0 0.0 0.0
+  0.0 10.0 0.0
+  0.0 0.0 10.0
+}
+</pre></div>
+</div>
+<p>Attributes are enclosed in square brackets <code class="docutils literal notranslate"><span class="pre">[...]</span></code> after the tag name.</p>
+</section>
+<section id="file-includes">
+<h3>File Includes<a class="headerlink" href="#file-includes" title="Link to this heading"></a></h3>
+<p>HSD supports including content from other files:</p>
+<p><strong>Parsed include</strong> (<code class="docutils literal notranslate"><span class="pre">&lt;&lt;+</span></code>): The included file is parsed as HSD:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span># Include another HSD file
+&lt;&lt;+ &quot;common_settings.hsd&quot;
+
+Driver {
+  &lt;&lt;+ &quot;driver_defaults.hsd&quot;
+  MaxSteps = 100  # Can override included values
+}
+</pre></div>
+</div>
+<p><strong>Text include</strong> (<code class="docutils literal notranslate"><span class="pre">&lt;&lt;&lt;</span></code>): The included file is read as raw text:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Geometry {
+  &lt;&lt;&lt; &quot;coordinates.xyz&quot;
+}
+</pre></div>
+</div>
+<section id="include-path-resolution">
+<h4>Include Path Resolution<a class="headerlink" href="#include-path-resolution" title="Link to this heading"></a></h4>
+<ul class="simple">
+<li><p>Relative paths are resolved relative to the including file’s directory</p></li>
+<li><p>Absolute paths are used as-is</p></li>
+<li><p>Circular includes are detected and result in an error</p></li>
+</ul>
+</section>
+</section>
+</section>
+<section id="escaping-and-special-characters">
+<h2>Escaping and Special Characters<a class="headerlink" href="#escaping-and-special-characters" title="Link to this heading"></a></h2>
+<section id="quoted-strings">
+<h3>Quoted Strings<a class="headerlink" href="#quoted-strings" title="Link to this heading"></a></h3>
+<p>Within quoted strings:</p>
+<ul class="simple">
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code> for a literal quote character</p></li>
+<li><p>Newlines and other whitespace are preserved</p></li>
+</ul>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Message = &quot;He said &quot;&quot;Hello&quot;&quot; to me&quot;
+MultiLine = &quot;Line 1
+Line 2&quot;
+</pre></div>
+</div>
+</section>
+<section id="identifier-rules">
+<h3>Identifier Rules<a class="headerlink" href="#identifier-rules" title="Link to this heading"></a></h3>
+<p>Tag names (identifiers) must:</p>
+<ul class="simple">
+<li><p>Start with a letter or underscore</p></li>
+<li><p>Contain only letters, numbers, and underscores</p></li>
+<li><p>Be case-sensitive</p></li>
+</ul>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span># Valid
+MaxSteps = 100
+max_steps = 100
+_private = 1
+
+# These are different tags
+Temperature = 300
+temperature = 300  # Different from Temperature
+</pre></div>
+</div>
+</section>
+<section id="duplicate-keys">
+<h3>Duplicate Keys<a class="headerlink" href="#duplicate-keys" title="Link to this heading"></a></h3>
+<p>Duplicate keys are allowed within the same block.</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Key = 100
+Key = 200
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>All occurrences are preserved in the parsed tree.</p></li>
+<li><p>When querying a value by name (e.g., using accessors like <code class="docutils literal notranslate"><span class="pre">hsd_get</span></code>), the <strong>last</strong> occurrence is returned.</p></li>
+<li><p>To access all values, one must iterate through the children of the block.</p></li>
+</ul>
+</section>
+</section>
+<section id="grammar-summary">
+<h2>Grammar Summary<a class="headerlink" href="#grammar-summary" title="Link to this heading"></a></h2>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>document     := block*
+block        := tag [&#39;=&#39; (value | type)] [attribute] (&#39;{&#39; content &#39;}&#39; | ε)
+content      := (block | value | include)*
+tag          := identifier
+type         := identifier
+attribute    := &#39;[&#39; text &#39;]&#39;
+value        := string | number | boolean | array | complex
+string       := quoted_string | unquoted_word
+number       := integer | real
+boolean      := &#39;Yes&#39; | &#39;No&#39; | &#39;On&#39; | &#39;Off&#39; | &#39;1&#39; | &#39;0&#39; | &#39;True&#39; | &#39;False&#39;
+array        := value ((&#39;,&#39; | &#39; &#39;) value)*
+complex      := &#39;(&#39; real &#39;,&#39; real &#39;)&#39;
+include      := &#39;&lt;&lt;+&#39; quoted_string | &#39;&lt;&lt;&lt;&#39; quoted_string
+comment      := &#39;#&#39; text_to_eol
+</pre></div>
+</div>
+</section>
+<section id="error-messages">
+<h2>Error Messages<a class="headerlink" href="#error-messages" title="Link to this heading"></a></h2>
+<p>The parser provides detailed error messages for syntax errors:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Error in &#39;config.hsd&#39; at line 5, column 12: Unclosed attribute bracket
+  Expected: ]
+  Got:      =
+  Hint: Add closing &#39;]&#39; to complete the attribute
+</pre></div>
+</div>
+<p>Common errors include:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Unclosed</span> <span class="pre">tag</span></code>: Missing closing <code class="docutils literal notranslate"><span class="pre">}</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Unclosed</span> <span class="pre">attribute</span></code>: Missing closing <code class="docutils literal notranslate"><span class="pre">]</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Unclosed</span> <span class="pre">quote</span></code>: Missing closing <code class="docutils literal notranslate"><span class="pre">&quot;</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Orphan</span> <span class="pre">text</span></code>: Text appearing outside any block</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Include</span> <span class="pre">cycle</span></code>: Circular file includes</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Include</span> <span class="pre">depth</span> <span class="pre">exceeded</span></code>: Too many nested includes</p></li>
+</ul>
+</section>
+<section id="compatibility-notes">
+<h2>Compatibility Notes<a class="headerlink" href="#compatibility-notes" title="Link to this heading"></a></h2>
+<section id="dftb-compatibility">
+<h3>DFTB+ Compatibility<a class="headerlink" href="#dftb-compatibility" title="Link to this heading"></a></h3>
+<p>HSD-Fortran is designed to be compatible with DFTB+ input files. Key notes:</p>
+<ul class="simple">
+<li><p>All standard DFTB+ HSD syntax is supported</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">&lt;&lt;+</span></code> and <code class="docutils literal notranslate"><span class="pre">&lt;&lt;&lt;</span></code> include directives work identically</p></li>
+<li><p>Boolean values <code class="docutils literal notranslate"><span class="pre">Yes</span></code>/<code class="docutils literal notranslate"><span class="pre">No</span></code> are the canonical format</p></li>
+</ul>
+</section>
+<section id="differences-from-json-yaml">
+<h3>Differences from JSON/YAML<a class="headerlink" href="#differences-from-json-yaml" title="Link to this heading"></a></h3>
+<p>Unlike JSON:</p>
+<ul class="simple">
+<li><p>No colons between keys and values (uses <code class="docutils literal notranslate"><span class="pre">=</span></code>)</p></li>
+<li><p>Comments are supported</p></li>
+<li><p>Unquoted strings are allowed</p></li>
+<li><p>Arrays don’t need brackets</p></li>
+</ul>
+<p>Unlike YAML:</p>
+<ul class="simple">
+<li><p>Uses explicit braces for structure (not indentation-based)</p></li>
+<li><p>Simpler, more predictable parsing</p></li>
+<li><p>No complex features like anchors/aliases</p></li>
+</ul>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="user_guide.html" class="btn btn-neutral float-left" title="User Guide" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="error_handling.html" class="btn btn-neutral float-right" title="Error Message Quick Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, DFTB+ developers group.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

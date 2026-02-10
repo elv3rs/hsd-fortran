@@ -1,0 +1,662 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Build Systems and Debug Configuration &mdash; HSD-Fortran 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=8d563738"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            HSD-Fortran
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#building-with-cmake">Building with CMake</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#basic-build">Basic Build</a></li>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#debug-build-with-coverage">Debug Build with Coverage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#cmake-options">CMake Options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#using-as-a-cmake-subproject">Using as a CMake Subproject</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#building-with-fpm">Building with fpm</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#using-as-an-fpm-dependency">Using as an fpm Dependency</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#verifying-installation">Verifying Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#running-the-example">Running the Example</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="user_guide.html">User Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#basic-usage">Basic Usage</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="user_guide.html#loading-hsd-files">Loading HSD Files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user_guide.html#accessing-values">Accessing Values</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user_guide.html#default-values">Default Values</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#working-with-arrays">Working with Arrays</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="user_guide.html#working-with-matrices">Working with Matrices</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#type-introspection">Type Introspection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#working-with-attributes-units">Working with Attributes (Units)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#modifying-trees">Modifying Trees</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#saving-hsd-files">Saving HSD Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#tree-operations">Tree Operations</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="user_guide.html#cloning-trees">Cloning Trees</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user_guide.html#merging-trees">Merging Trees</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#iterating-children">Iterating Children</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#schema-validation">Schema Validation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="user_guide.html#validation-helpers">Validation Helpers</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#visitor-pattern">Visitor Pattern</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#best-practices">Best Practices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#example-complete-configuration-parser">Example: Complete Configuration Parser</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="hsd_format.html">HSD Format Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="hsd_format.html#basic-syntax">Basic Syntax</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hsd_format.html#structure">Structure</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hsd_format.html#comments">Comments</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hsd_format.html#data-types">Data Types</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hsd_format.html#strings">Strings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hsd_format.html#integers">Integers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hsd_format.html#real-numbers">Real Numbers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hsd_format.html#booleans">Booleans</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hsd_format.html#arrays">Arrays</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hsd_format.html#complex-numbers">Complex Numbers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hsd_format.html#matrices-multi-line-data">Matrices (Multi-line Data)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hsd_format.html#advanced-syntax">Advanced Syntax</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hsd_format.html#typed-blocks-short-form">Typed Blocks (Short Form)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hsd_format.html#attributes-units">Attributes (Units)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hsd_format.html#file-includes">File Includes</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hsd_format.html#include-path-resolution">Include Path Resolution</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hsd_format.html#escaping-and-special-characters">Escaping and Special Characters</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hsd_format.html#quoted-strings">Quoted Strings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hsd_format.html#identifier-rules">Identifier Rules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hsd_format.html#duplicate-keys">Duplicate Keys</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hsd_format.html#grammar-summary">Grammar Summary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hsd_format.html#error-messages">Error Messages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hsd_format.html#compatibility-notes">Compatibility Notes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hsd_format.html#dftb-compatibility">DFTB+ Compatibility</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hsd_format.html#differences-from-json-yaml">Differences from JSON/YAML</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="error_handling.html">Error Message Quick Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="error_handling.html#error-type-structure">Error Type Structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="error_handling.html#creating-errors-with-context">Creating Errors with Context</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="error_handling.html#basic-error">Basic Error</a></li>
+<li class="toctree-l3"><a class="reference internal" href="error_handling.html#error-with-full-context">Error with Full Context</a></li>
+<li class="toctree-l3"><a class="reference internal" href="error_handling.html#syntax-error-helper">Syntax Error Helper</a></li>
+<li class="toctree-l3"><a class="reference internal" href="error_handling.html#type-error-helper">Type Error Helper</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="error_handling.html#error-codes">Error Codes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="error_handling.html#usage-examples">Usage Examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="error_handling.html#handling-errors">Handling Errors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="error_handling.html#error-output-format">Error Output Format</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="error_handling.html#common-error-scenarios">Common Error Scenarios</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="error_handling.html#unclosed-bracket">Unclosed Bracket</a></li>
+<li class="toctree-l3"><a class="reference internal" href="error_handling.html#include-cycle">Include Cycle</a></li>
+<li class="toctree-l3"><a class="reference internal" href="error_handling.html#file-not-found">File Not Found</a></li>
+<li class="toctree-l3"><a class="reference internal" href="error_handling.html#type-mismatch">Type Mismatch</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="error_handling.html#best-practices">Best Practices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="error_handling.html#coding-conventions-for-stat-parameters">Coding Conventions for <code class="docutils literal notranslate"><span class="pre">stat</span></code> Parameters</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="error_handling.html#the-pattern">The Pattern</a></li>
+<li class="toctree-l3"><a class="reference internal" href="error_handling.html#recommended-approaches">Recommended Approaches</a></li>
+<li class="toctree-l3"><a class="reference internal" href="error_handling.html#common-mistakes-to-avoid">Common Mistakes to Avoid</a></li>
+<li class="toctree-l3"><a class="reference internal" href="error_handling.html#using-local-status-variables">Using Local Status Variables</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="thread_safety.html">Thread Safety Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="thread_safety.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="thread_safety.html#thread-safety-summary">Thread Safety Summary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="thread_safety.html#detailed-analysis">Detailed Analysis</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="thread_safety.html#safe-operations-no-synchronization-needed">Safe Operations (No Synchronization Needed)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="thread_safety.html#unsafe-operations-require-external-synchronization">Unsafe Operations (Require External Synchronization)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="thread_safety.html#module-specific-notes">Module-Specific Notes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="thread_safety.html#hsd-types">hsd_types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="thread_safety.html#hsd-parser">hsd_parser</a></li>
+<li class="toctree-l3"><a class="reference internal" href="thread_safety.html#hsd-formatter">hsd_formatter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="thread_safety.html#hsd-schema">hsd_schema</a></li>
+<li class="toctree-l3"><a class="reference internal" href="thread_safety.html#hsd-hash-table">hsd_hash_table</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="thread_safety.html#openmp-considerations">OpenMP Considerations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="thread_safety.html#coarray-fortran-considerations">Coarray Fortran Considerations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="thread_safety.html#recommendations">Recommendations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="thread_safety.html#future-considerations">Future Considerations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="thread_safety.html#implementation-notes">Implementation Notes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="thread_safety.html#why-no-built-in-synchronization">Why No Built-in Synchronization?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="thread_safety.html#hash-table-thread-safety">Hash Table Thread Safety</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="fuzzing.html">Fuzz Testing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="fuzzing.html#prerequisites">Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fuzzing.html#building-the-fuzz-target">Building the Fuzz Target</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fuzzing.html#running-the-fuzzer">Running the Fuzzer</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="fuzzing.html#basic-usage">Basic Usage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fuzzing.html#using-the-dictionary">Using the Dictionary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fuzzing.html#parallel-fuzzing">Parallel Fuzzing</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="fuzzing.html#understanding-output">Understanding Output</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="fuzzing.html#reproducing-issues">Reproducing Issues</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="fuzzing.html#corpus-management">Corpus Management</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="fuzzing.html#minimizing-the-corpus">Minimizing the Corpus</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fuzzing.html#minimizing-a-crash">Minimizing a Crash</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="fuzzing.html#seed-corpus">Seed Corpus</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fuzzing.html#troubleshooting">Troubleshooting</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="fuzzing.html#afl-qemu-trace-not-found">“afl-qemu-trace not found”</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fuzzing.html#hmm-your-system-is-configured-to-send-core-dump-notifications">“Hmm, your system is configured to send core dump notifications”</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fuzzing.html#low-execution-speed">Low Execution Speed</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fuzzing.html#afl-shows-0-paths">AFL++ Shows 0 Paths</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api.html#module-hsd">Module: hsd</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#types">Types</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#core-types">Core Types</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api.html#hsd-table"><code class="docutils literal notranslate"><span class="pre">hsd_table</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api.html#hsd-value"><code class="docutils literal notranslate"><span class="pre">hsd_value</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api.html#hsd-error-t"><code class="docutils literal notranslate"><span class="pre">hsd_error_t</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api.html#hsd-iterator"><code class="docutils literal notranslate"><span class="pre">hsd_iterator</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api.html#hsd-schema-t"><code class="docutils literal notranslate"><span class="pre">hsd_schema_t</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api.html#hsd-visitor-t"><code class="docutils literal notranslate"><span class="pre">hsd_visitor_t</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#precision-constants">Precision Constants</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#value-type-constants">Value Type Constants</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#error-codes">Error Codes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#schema-constants">Schema Constants</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#i-o-procedures">I/O Procedures</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-load">hsd_load</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-load-string">hsd_load_string</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-dump">hsd_dump</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-dump-to-string">hsd_dump_to_string</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#accessor-procedures">Accessor Procedures</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-get">hsd_get</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-get-or">hsd_get_or</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-get-matrix">hsd_get_matrix</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-get-inline-text">hsd_get_inline_text</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#query-procedures">Query Procedures</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-has-child">hsd_has_child</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-is-table">hsd_is_table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-is-value">hsd_is_value</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-is-array">hsd_is_array</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-child-count">hsd_child_count</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-get-keys">hsd_get_keys</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-get-type">hsd_get_type</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-get-attrib">hsd_get_attrib</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-has-attrib">hsd_has_attrib</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-get-child">hsd_get_child</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-get-table">hsd_get_table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-has-value-children">hsd_has_value_children</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-get-name">hsd_get_name</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#mutation-procedures">Mutation Procedures</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-set">hsd_set</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-remove-child">hsd_remove_child</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#tree-operations">Tree Operations</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-clone">hsd_clone</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-merge">hsd_merge</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#validation-procedures">Validation Procedures</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-require">hsd_require</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-validate-range">hsd_validate_range</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-validate-one-of">hsd_validate_one_of</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-get-with-unit">hsd_get_with_unit</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#schema-validation">Schema Validation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#schema-init">schema_init</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#schema-destroy">schema_destroy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#schema-add-field">schema_add_field</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#schema-add-field-enum">schema_add_field_enum</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#schema-validate">schema_validate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#schema-validate-strict">schema_validate_strict</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#visitor-pattern">Visitor Pattern</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-accept">hsd_accept</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#constructor-functions">Constructor Functions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#new-table">new_table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#new-value">new_value</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">HSD-Fortran</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Build Systems and Debug Configuration</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/elv3rs/hsd-fortran/blob/main/docs/build_systems.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="build-systems-and-debug-configuration">
+<h1>Build Systems and Debug Configuration<a class="headerlink" href="#build-systems-and-debug-configuration" title="Link to this heading"></a></h1>
+<p>This document explains the build systems available for HSD-Fortran and how to use debug modes with comprehensive runtime checks and leak detection.</p>
+<section id="build-systems">
+<h2>Build Systems<a class="headerlink" href="#build-systems" title="Link to this heading"></a></h2>
+<p>HSD-Fortran supports two build systems:</p>
+<ol class="arabic simple">
+<li><p><strong>CMake</strong> (recommended for development and testing)</p></li>
+<li><p><strong>fpm</strong> (Fortran Package Manager - for simpler builds)</p></li>
+</ol>
+</section>
+<section id="cmake-build-system">
+<h2>CMake Build System<a class="headerlink" href="#cmake-build-system" title="Link to this heading"></a></h2>
+<section id="quick-start">
+<h3>Quick Start<a class="headerlink" href="#quick-start" title="Link to this heading"></a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Configure and build</span>
+cmake<span class="w"> </span>-B<span class="w"> </span>build<span class="w"> </span>-DCMAKE_BUILD_TYPE<span class="o">=</span>Debug
+cmake<span class="w"> </span>--build<span class="w"> </span>build
+
+<span class="c1"># Run tests</span>
+ctest<span class="w"> </span>--test-dir<span class="w"> </span>build<span class="w"> </span>--output-on-failure
+</pre></div>
+</div>
+</section>
+<section id="build-types">
+<h3>Build Types<a class="headerlink" href="#build-types" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>Debug</strong>: Full debugging support with runtime checks</p></li>
+<li><p><strong>Release</strong>: Optimized build</p></li>
+<li><p><strong>RelWithDebInfo</strong>: Optimized with debug symbols</p></li>
+<li><p><strong>MinSizeRel</strong>: Optimized for size</p></li>
+</ul>
+</section>
+<section id="cmake-options">
+<h3>CMake Options<a class="headerlink" href="#cmake-options" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Option</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">HSD_ACCEPT_TRUE_FALSE</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ON</span></code></p></td>
+<td><p>Accept <code class="docutils literal notranslate"><span class="pre">True</span></code>/<code class="docutils literal notranslate"><span class="pre">False</span></code> as boolean values</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">HSD_BUILD_TESTS</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ON</span></code></p></td>
+<td><p>Build test suite</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">HSD_BUILD_EXAMPLES</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ON</span></code></p></td>
+<td><p>Build example programs</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">HSD_BUILD_BENCHMARKS</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ON</span></code></p></td>
+<td><p>Build benchmark programs</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">HSD_COVERAGE</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">OFF</span></code></p></td>
+<td><p>Enable code coverage (requires GCC)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">HSD_SANITIZERS</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">OFF</span></code></p></td>
+<td><p>Enable sanitizers for leak/memory detection</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="debug-mode-features">
+<h3>Debug Mode Features<a class="headerlink" href="#debug-mode-features" title="Link to this heading"></a></h3>
+<p>When building in Debug mode (<code class="docutils literal notranslate"><span class="pre">-DCMAKE_BUILD_TYPE=Debug</span></code>), the following features are automatically enabled:</p>
+<p><strong>GCC (gfortran)</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">-g</span></code>: Debug symbols</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-fcheck=all</span></code>: All runtime checks (bounds, pointer, memory, etc.)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-fbacktrace</span></code>: Backtrace on errors</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-ffpe-trap=invalid,zero,overflow</span></code>: Trap floating point exceptions</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-finit-real=snan</span></code>: Initialize reals to signaling NaN</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-finit-integer=-999999</span></code>: Initialize integers to sentinel value</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-finit-logical=true</span></code>: Initialize logicals</p></li>
+</ul>
+<p><strong>Intel (ifort)</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">-g</span></code>: Debug symbols</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-check</span> <span class="pre">all</span></code>: All runtime checks</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-traceback</span></code>: Backtrace on errors</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-fpe0</span></code>: Trap floating point exceptions</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-init=snan</span></code>: Initialize to signaling NaN</p></li>
+</ul>
+</section>
+<section id="sanitizers-leak-detection">
+<h3>Sanitizers (Leak Detection)<a class="headerlink" href="#sanitizers-leak-detection" title="Link to this heading"></a></h3>
+<p>Enable sanitizers for comprehensive memory leak and error detection:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cmake<span class="w"> </span>-B<span class="w"> </span>build-sanitize<span class="w"> </span>-DCMAKE_BUILD_TYPE<span class="o">=</span>Debug<span class="w"> </span>-DHSD_SANITIZERS<span class="o">=</span>ON
+cmake<span class="w"> </span>--build<span class="w"> </span>build-sanitize
+ctest<span class="w"> </span>--test-dir<span class="w"> </span>build-sanitize
+</pre></div>
+</div>
+<p>Sanitizers enabled:</p>
+<ul class="simple">
+<li><p><strong>AddressSanitizer</strong>: Detects memory errors, buffer overflows, use-after-free</p></li>
+<li><p><strong>LeakSanitizer</strong>: Detects memory leaks</p></li>
+<li><p><strong>UndefinedBehaviorSanitizer</strong>: Detects undefined behavior</p></li>
+</ul>
+<p><strong>Note</strong>: Sanitizers require the runtime library (libasan) and may slow down execution significantly.</p>
+</section>
+<section id="code-coverage">
+<h3>Code Coverage<a class="headerlink" href="#code-coverage" title="Link to this heading"></a></h3>
+<p>Enable coverage reporting for test suite:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cmake<span class="w"> </span>-B<span class="w"> </span>build<span class="w"> </span>-DCMAKE_BUILD_TYPE<span class="o">=</span>Debug<span class="w"> </span>-DHSD_COVERAGE<span class="o">=</span>ON
+cmake<span class="w"> </span>--build<span class="w"> </span>build
+ctest<span class="w"> </span>--test-dir<span class="w"> </span>build
+
+<span class="c1"># Generate coverage report</span>
+lcov<span class="w"> </span>--capture<span class="w"> </span>--directory<span class="w"> </span>build/src<span class="w"> </span>--output-file<span class="w"> </span>build/coverage.info<span class="w"> </span>--ignore-errors<span class="w"> </span>inconsistent
+genhtml<span class="w"> </span>build/coverage.info<span class="w"> </span>--output-directory<span class="w"> </span>build/coverage_html
+</pre></div>
+</div>
+</section>
+</section>
+<section id="fpm-build-system">
+<h2>FPM Build System<a class="headerlink" href="#fpm-build-system" title="Link to this heading"></a></h2>
+<section id="setup-and-limitations">
+<h3>Setup and Limitations<a class="headerlink" href="#setup-and-limitations" title="Link to this heading"></a></h3>
+<p>⚠️ <strong>fpm 0.10.x doesn’t recursively scan subdirectories</strong>: Test suites are organized in <code class="docutils literal notranslate"><span class="pre">test/suites/{api,core,io,coverage}/</span></code>, but fpm can’t discover them automatically.</p>
+<p><strong>Workaround</strong>: Symlinks are created in <code class="docutils literal notranslate"><span class="pre">test/</span></code> pointing to the actual test files in subdirectories.
+These symlinks are listed in <code class="docutils literal notranslate"><span class="pre">test/.gitignore</span></code> and need to be recreated if test files are added.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create symlinks (from project root)</span>
+<span class="nb">cd</span><span class="w"> </span><span class="nb">test</span>
+<span class="k">for</span><span class="w"> </span>f<span class="w"> </span><span class="k">in</span><span class="w"> </span>suites/api/*.f90<span class="w"> </span>suites/core/*.f90<span class="w"> </span>suites/io/*.f90<span class="w"> </span>suites/coverage/*.f90<span class="p">;</span><span class="w"> </span><span class="k">do</span>
+<span class="w">  </span>ln<span class="w"> </span>-sf<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$f</span><span class="s2">&quot;</span><span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span>basename<span class="w"> </span><span class="nv">$f</span><span class="k">)</span><span class="s2">&quot;</span>
+<span class="k">done</span>
+</pre></div>
+</div>
+<p><strong>Note</strong>: This is only needed for fpm. CMake explicitly lists all source files and doesn’t require symlinks.</p>
+</section>
+<section id="build-and-test">
+<h3>Build and Test<a class="headerlink" href="#build-and-test" title="Link to this heading"></a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Build with debug profile (includes runtime checks)</span>
+fpm<span class="w"> </span>build<span class="w"> </span>--profile<span class="w"> </span>debug
+
+<span class="c1"># Run tests</span>
+fpm<span class="w"> </span><span class="nb">test</span><span class="w"> </span>--profile<span class="w"> </span>debug
+
+<span class="c1"># Build example</span>
+fpm<span class="w"> </span>run<span class="w"> </span>simple_read<span class="w"> </span>--profile<span class="w"> </span>debug
+</pre></div>
+</div>
+</section>
+<section id="debug-flags-in-fpm">
+<h3>Debug Flags in FPM<a class="headerlink" href="#debug-flags-in-fpm" title="Link to this heading"></a></h3>
+<p>FPM’s debug profile automatically includes:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">-g</span></code>: Debug symbols</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-fcheck=bounds</span></code>: Bounds checking</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-fcheck=array-temps</span></code>: Array temporary checks</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-fbacktrace</span></code>: Backtrace on errors</p></li>
+</ul>
+</section>
+<section id="custom-debug-flags">
+<h3>Custom Debug Flags<a class="headerlink" href="#custom-debug-flags" title="Link to this heading"></a></h3>
+<p>For even more comprehensive debugging including sanitizers:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>fpm<span class="w"> </span>build<span class="w"> </span>--flag<span class="w"> </span><span class="s2">&quot;-g -Wall -Wextra -fcheck=all -fbacktrace -fsanitize=address -fsanitize=leak&quot;</span>
+fpm<span class="w"> </span><span class="nb">test</span><span class="w"> </span>--flag<span class="w"> </span><span class="s2">&quot;-g -Wall -Wextra -fcheck=all -fbacktrace -fsanitize=address -fsanitize=leak&quot;</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="recommended-workflow">
+<h2>Recommended Workflow<a class="headerlink" href="#recommended-workflow" title="Link to this heading"></a></h2>
+<section id="development-workflow">
+<h3>Development Workflow<a class="headerlink" href="#development-workflow" title="Link to this heading"></a></h3>
+<ol class="arabic simple">
+<li><p>Use CMake with Debug mode for development</p></li>
+<li><p>Enable sanitizers when investigating memory issues</p></li>
+<li><p>Run full test suite regularly</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Daily development</span>
+cmake<span class="w"> </span>-B<span class="w"> </span>build<span class="w"> </span>-DCMAKE_BUILD_TYPE<span class="o">=</span>Debug
+cmake<span class="w"> </span>--build<span class="w"> </span>build
+ctest<span class="w"> </span>--test-dir<span class="w"> </span>build
+
+<span class="c1"># When investigating leaks/crashes</span>
+cmake<span class="w"> </span>-B<span class="w"> </span>build-sanitize<span class="w"> </span>-DCMAKE_BUILD_TYPE<span class="o">=</span>Debug<span class="w"> </span>-DHSD_SANITIZERS<span class="o">=</span>ON
+cmake<span class="w"> </span>--build<span class="w"> </span>build-sanitize
+ctest<span class="w"> </span>--test-dir<span class="w"> </span>build-sanitize
+</pre></div>
+</div>
+</section>
+<section id="quick-testing-workflow">
+<h3>Quick Testing Workflow<a class="headerlink" href="#quick-testing-workflow" title="Link to this heading"></a></h3>
+<p>Use fpm for quick iterations when not debugging:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>fpm<span class="w"> </span><span class="nb">test</span><span class="w"> </span>--profile<span class="w"> </span>debug
+</pre></div>
+</div>
+</section>
+<section id="pre-release-workflow">
+<h3>Pre-Release Workflow<a class="headerlink" href="#pre-release-workflow" title="Link to this heading"></a></h3>
+<ol class="arabic simple">
+<li><p>Run tests with sanitizers enabled</p></li>
+<li><p>Check code coverage</p></li>
+<li><p>Build in Release mode and verify performance</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Sanitizer check</span>
+cmake<span class="w"> </span>-B<span class="w"> </span>build-sanitize<span class="w"> </span>-DCMAKE_BUILD_TYPE<span class="o">=</span>Debug<span class="w"> </span>-DHSD_SANITIZERS<span class="o">=</span>ON
+cmake<span class="w"> </span>--build<span class="w"> </span>build-sanitize
+ctest<span class="w"> </span>--test-dir<span class="w"> </span>build-sanitize
+
+<span class="c1"># Coverage check</span>
+cmake<span class="w"> </span>-B<span class="w"> </span>build-coverage<span class="w"> </span>-DCMAKE_BUILD_TYPE<span class="o">=</span>Debug<span class="w"> </span>-DHSD_COVERAGE<span class="o">=</span>ON
+cmake<span class="w"> </span>--build<span class="w"> </span>build-coverage
+ctest<span class="w"> </span>--test-dir<span class="w"> </span>build-coverage
+<span class="c1"># Generate and review coverage report</span>
+
+<span class="c1"># Release build</span>
+cmake<span class="w"> </span>-B<span class="w"> </span>build-release<span class="w"> </span>-DCMAKE_BUILD_TYPE<span class="o">=</span>Release
+cmake<span class="w"> </span>--build<span class="w"> </span>build-release
+ctest<span class="w"> </span>--test-dir<span class="w"> </span>build-release
+</pre></div>
+</div>
+</section>
+</section>
+<section id="interpreting-debug-output">
+<h2>Interpreting Debug Output<a class="headerlink" href="#interpreting-debug-output" title="Link to this heading"></a></h2>
+<section id="runtime-check-failures">
+<h3>Runtime Check Failures<a class="headerlink" href="#runtime-check-failures" title="Link to this heading"></a></h3>
+<p>When runtime checks fail, you’ll see detailed error messages:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>At line 123 of file src/hsd_types.f90
+Fortran runtime error: Array reference out of bounds
+Backtrace for this error:
+#0  0x7f... in function_name
+</pre></div>
+</div>
+</section>
+<section id="sanitizer-output">
+<h3>Sanitizer Output<a class="headerlink" href="#sanitizer-output" title="Link to this heading"></a></h3>
+<p>Sanitizers provide detailed reports:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=================================================================
+==12345==ERROR: LeakSanitizer: detected memory leaks
+
+Direct leak of 64 byte(s) in 1 object(s) allocated from:
+    #0 0x... in malloc
+    #1 0x... in my_function
+</pre></div>
+</div>
+</section>
+<section id="floating-point-exceptions">
+<h3>Floating Point Exceptions<a class="headerlink" href="#floating-point-exceptions" title="Link to this heading"></a></h3>
+<p>FPE traps will halt execution on invalid operations:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Program received signal SIGFPE: Floating-point exception - erroneous arithmetic operation.
+Backtrace for this signal:
+#0  0x... in divide_by_zero
+</pre></div>
+</div>
+</section>
+</section>
+<section id="troubleshooting">
+<h2>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Link to this heading"></a></h2>
+<section id="sanitizer-runtime-errors">
+<h3>Sanitizer Runtime Errors<a class="headerlink" href="#sanitizer-runtime-errors" title="Link to this heading"></a></h3>
+<p>If you get sanitizer runtime errors, ensure libasan is installed:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Ubuntu/Debian</span>
+sudo<span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>libasan6
+
+<span class="c1"># Fedora</span>
+sudo<span class="w"> </span>dnf<span class="w"> </span>install<span class="w"> </span>libasan
+</pre></div>
+</div>
+</section>
+<section id="fpm-test-failures">
+<h3>FPM Test Failures<a class="headerlink" href="#fpm-test-failures" title="Link to this heading"></a></h3>
+<p>If fpm tests fail with “module not found”, re-create the symlinks:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span><span class="nb">test</span>
+<span class="k">for</span><span class="w"> </span>f<span class="w"> </span><span class="k">in</span><span class="w"> </span>suites/api/*.f90<span class="w"> </span>suites/core/*.f90<span class="w"> </span>suites/io/*.f90<span class="w"> </span>suites/coverage/*.f90<span class="p">;</span><span class="w"> </span><span class="k">do</span>
+<span class="w">  </span>ln<span class="w"> </span>-sf<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$f</span><span class="s2">&quot;</span><span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span>basename<span class="w"> </span><span class="nv">$f</span><span class="k">)</span><span class="s2">&quot;</span>
+<span class="k">done</span>
+</pre></div>
+</div>
+</section>
+<section id="coverage-generation-issues">
+<h3>Coverage Generation Issues<a class="headerlink" href="#coverage-generation-issues" title="Link to this heading"></a></h3>
+<p>Ensure lcov is installed:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>lcov
+</pre></div>
+</div>
+</section>
+</section>
+<section id="summary">
+<h2>Summary<a class="headerlink" href="#summary" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><strong>CMake</strong> is the primary build system with full feature support</p></li>
+<li><p><strong>FPM</strong> provides a simpler alternative for quick builds</p></li>
+<li><p><strong>Debug builds</strong> include comprehensive runtime checks by default</p></li>
+<li><p><strong>Sanitizers</strong> can detect memory leaks and errors not caught by standard checks</p></li>
+<li><p>Both build systems are tested and working with all 381 tests passing</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, DFTB+ developers group.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,1008 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>API Reference &mdash; HSD-Fortran 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=8d563738"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Fuzz Testing" href="fuzzing.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            HSD-Fortran
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#building-with-cmake">Building with CMake</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#basic-build">Basic Build</a></li>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#debug-build-with-coverage">Debug Build with Coverage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#cmake-options">CMake Options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#using-as-a-cmake-subproject">Using as a CMake Subproject</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#building-with-fpm">Building with fpm</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#using-as-an-fpm-dependency">Using as an fpm Dependency</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#verifying-installation">Verifying Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#running-the-example">Running the Example</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="user_guide.html">User Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#basic-usage">Basic Usage</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="user_guide.html#loading-hsd-files">Loading HSD Files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user_guide.html#accessing-values">Accessing Values</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user_guide.html#default-values">Default Values</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#working-with-arrays">Working with Arrays</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="user_guide.html#working-with-matrices">Working with Matrices</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#type-introspection">Type Introspection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#working-with-attributes-units">Working with Attributes (Units)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#modifying-trees">Modifying Trees</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#saving-hsd-files">Saving HSD Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#tree-operations">Tree Operations</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="user_guide.html#cloning-trees">Cloning Trees</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user_guide.html#merging-trees">Merging Trees</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#iterating-children">Iterating Children</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#schema-validation">Schema Validation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="user_guide.html#validation-helpers">Validation Helpers</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#visitor-pattern">Visitor Pattern</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#best-practices">Best Practices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#example-complete-configuration-parser">Example: Complete Configuration Parser</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="hsd_format.html">HSD Format Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="hsd_format.html#basic-syntax">Basic Syntax</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hsd_format.html#structure">Structure</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hsd_format.html#comments">Comments</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hsd_format.html#data-types">Data Types</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hsd_format.html#strings">Strings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hsd_format.html#integers">Integers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hsd_format.html#real-numbers">Real Numbers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hsd_format.html#booleans">Booleans</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hsd_format.html#arrays">Arrays</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hsd_format.html#complex-numbers">Complex Numbers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hsd_format.html#matrices-multi-line-data">Matrices (Multi-line Data)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hsd_format.html#advanced-syntax">Advanced Syntax</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hsd_format.html#typed-blocks-short-form">Typed Blocks (Short Form)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hsd_format.html#attributes-units">Attributes (Units)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hsd_format.html#file-includes">File Includes</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hsd_format.html#include-path-resolution">Include Path Resolution</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hsd_format.html#escaping-and-special-characters">Escaping and Special Characters</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hsd_format.html#quoted-strings">Quoted Strings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hsd_format.html#identifier-rules">Identifier Rules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hsd_format.html#duplicate-keys">Duplicate Keys</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hsd_format.html#grammar-summary">Grammar Summary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hsd_format.html#error-messages">Error Messages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hsd_format.html#compatibility-notes">Compatibility Notes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hsd_format.html#dftb-compatibility">DFTB+ Compatibility</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hsd_format.html#differences-from-json-yaml">Differences from JSON/YAML</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="error_handling.html">Error Message Quick Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="error_handling.html#error-type-structure">Error Type Structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="error_handling.html#creating-errors-with-context">Creating Errors with Context</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="error_handling.html#basic-error">Basic Error</a></li>
+<li class="toctree-l3"><a class="reference internal" href="error_handling.html#error-with-full-context">Error with Full Context</a></li>
+<li class="toctree-l3"><a class="reference internal" href="error_handling.html#syntax-error-helper">Syntax Error Helper</a></li>
+<li class="toctree-l3"><a class="reference internal" href="error_handling.html#type-error-helper">Type Error Helper</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="error_handling.html#error-codes">Error Codes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="error_handling.html#usage-examples">Usage Examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="error_handling.html#handling-errors">Handling Errors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="error_handling.html#error-output-format">Error Output Format</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="error_handling.html#common-error-scenarios">Common Error Scenarios</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="error_handling.html#unclosed-bracket">Unclosed Bracket</a></li>
+<li class="toctree-l3"><a class="reference internal" href="error_handling.html#include-cycle">Include Cycle</a></li>
+<li class="toctree-l3"><a class="reference internal" href="error_handling.html#file-not-found">File Not Found</a></li>
+<li class="toctree-l3"><a class="reference internal" href="error_handling.html#type-mismatch">Type Mismatch</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="error_handling.html#best-practices">Best Practices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="error_handling.html#coding-conventions-for-stat-parameters">Coding Conventions for <code class="docutils literal notranslate"><span class="pre">stat</span></code> Parameters</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="error_handling.html#the-pattern">The Pattern</a></li>
+<li class="toctree-l3"><a class="reference internal" href="error_handling.html#recommended-approaches">Recommended Approaches</a></li>
+<li class="toctree-l3"><a class="reference internal" href="error_handling.html#common-mistakes-to-avoid">Common Mistakes to Avoid</a></li>
+<li class="toctree-l3"><a class="reference internal" href="error_handling.html#using-local-status-variables">Using Local Status Variables</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="thread_safety.html">Thread Safety Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="thread_safety.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="thread_safety.html#thread-safety-summary">Thread Safety Summary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="thread_safety.html#detailed-analysis">Detailed Analysis</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="thread_safety.html#safe-operations-no-synchronization-needed">Safe Operations (No Synchronization Needed)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="thread_safety.html#unsafe-operations-require-external-synchronization">Unsafe Operations (Require External Synchronization)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="thread_safety.html#module-specific-notes">Module-Specific Notes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="thread_safety.html#hsd-types">hsd_types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="thread_safety.html#hsd-parser">hsd_parser</a></li>
+<li class="toctree-l3"><a class="reference internal" href="thread_safety.html#hsd-formatter">hsd_formatter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="thread_safety.html#hsd-schema">hsd_schema</a></li>
+<li class="toctree-l3"><a class="reference internal" href="thread_safety.html#hsd-hash-table">hsd_hash_table</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="thread_safety.html#openmp-considerations">OpenMP Considerations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="thread_safety.html#coarray-fortran-considerations">Coarray Fortran Considerations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="thread_safety.html#recommendations">Recommendations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="thread_safety.html#future-considerations">Future Considerations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="thread_safety.html#implementation-notes">Implementation Notes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="thread_safety.html#why-no-built-in-synchronization">Why No Built-in Synchronization?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="thread_safety.html#hash-table-thread-safety">Hash Table Thread Safety</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="fuzzing.html">Fuzz Testing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="fuzzing.html#prerequisites">Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fuzzing.html#building-the-fuzz-target">Building the Fuzz Target</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fuzzing.html#running-the-fuzzer">Running the Fuzzer</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="fuzzing.html#basic-usage">Basic Usage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fuzzing.html#using-the-dictionary">Using the Dictionary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fuzzing.html#parallel-fuzzing">Parallel Fuzzing</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="fuzzing.html#understanding-output">Understanding Output</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="fuzzing.html#reproducing-issues">Reproducing Issues</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="fuzzing.html#corpus-management">Corpus Management</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="fuzzing.html#minimizing-the-corpus">Minimizing the Corpus</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fuzzing.html#minimizing-a-crash">Minimizing a Crash</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="fuzzing.html#seed-corpus">Seed Corpus</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fuzzing.html#troubleshooting">Troubleshooting</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="fuzzing.html#afl-qemu-trace-not-found">“afl-qemu-trace not found”</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fuzzing.html#hmm-your-system-is-configured-to-send-core-dump-notifications">“Hmm, your system is configured to send core dump notifications”</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fuzzing.html#low-execution-speed">Low Execution Speed</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fuzzing.html#afl-shows-0-paths">AFL++ Shows 0 Paths</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-hsd">Module: hsd</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#types">Types</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#core-types">Core Types</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hsd-table"><code class="docutils literal notranslate"><span class="pre">hsd_table</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hsd-value"><code class="docutils literal notranslate"><span class="pre">hsd_value</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hsd-error-t"><code class="docutils literal notranslate"><span class="pre">hsd_error_t</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hsd-iterator"><code class="docutils literal notranslate"><span class="pre">hsd_iterator</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hsd-schema-t"><code class="docutils literal notranslate"><span class="pre">hsd_schema_t</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hsd-visitor-t"><code class="docutils literal notranslate"><span class="pre">hsd_visitor_t</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#precision-constants">Precision Constants</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#value-type-constants">Value Type Constants</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#error-codes">Error Codes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#schema-constants">Schema Constants</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#i-o-procedures">I/O Procedures</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#hsd-load">hsd_load</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hsd-load-string">hsd_load_string</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hsd-dump">hsd_dump</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hsd-dump-to-string">hsd_dump_to_string</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#accessor-procedures">Accessor Procedures</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#hsd-get">hsd_get</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hsd-get-or">hsd_get_or</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hsd-get-matrix">hsd_get_matrix</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hsd-get-inline-text">hsd_get_inline_text</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#query-procedures">Query Procedures</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#hsd-has-child">hsd_has_child</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hsd-is-table">hsd_is_table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hsd-is-value">hsd_is_value</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hsd-is-array">hsd_is_array</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hsd-child-count">hsd_child_count</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hsd-get-keys">hsd_get_keys</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hsd-get-type">hsd_get_type</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hsd-get-attrib">hsd_get_attrib</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hsd-has-attrib">hsd_has_attrib</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hsd-get-child">hsd_get_child</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hsd-get-table">hsd_get_table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hsd-has-value-children">hsd_has_value_children</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hsd-get-name">hsd_get_name</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#mutation-procedures">Mutation Procedures</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#hsd-set">hsd_set</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hsd-remove-child">hsd_remove_child</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#tree-operations">Tree Operations</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#hsd-clone">hsd_clone</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hsd-merge">hsd_merge</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#validation-procedures">Validation Procedures</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#hsd-require">hsd_require</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hsd-validate-range">hsd_validate_range</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hsd-validate-one-of">hsd_validate_one_of</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hsd-get-with-unit">hsd_get_with_unit</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#schema-validation">Schema Validation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#schema-init">schema_init</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#schema-destroy">schema_destroy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#schema-add-field">schema_add_field</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#schema-add-field-enum">schema_add_field_enum</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#schema-validate">schema_validate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#schema-validate-strict">schema_validate_strict</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#visitor-pattern">Visitor Pattern</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#hsd-accept">hsd_accept</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#constructor-functions">Constructor Functions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#new-table">new_table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#new-value">new_value</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">HSD-Fortran</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">API Reference</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/elv3rs/hsd-fortran/blob/main/docs/api.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="api-reference">
+<h1>API Reference<a class="headerlink" href="#api-reference" title="Link to this heading"></a></h1>
+<p>This document provides a complete reference for all public procedures and types in HSD-Fortran.</p>
+<section id="module-hsd">
+<h2>Module: hsd<a class="headerlink" href="#module-hsd" title="Link to this heading"></a></h2>
+<p>The main module that re-exports all public types and procedures. This is the only module
+you need to use in most cases.</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">use </span><span class="n">hsd</span>
+</pre></div>
+</div>
+</section>
+<section id="types">
+<h2>Types<a class="headerlink" href="#types" title="Link to this heading"></a></h2>
+<section id="core-types">
+<h3>Core Types<a class="headerlink" href="#core-types" title="Link to this heading"></a></h3>
+<section id="hsd-table">
+<h4><code class="docutils literal notranslate"><span class="pre">hsd_table</span></code><a class="headerlink" href="#hsd-table" title="Link to this heading"></a></h4>
+<p>A container node that holds child nodes. This is the main type used for parsed HSD documents.</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">type</span><span class="p">(</span><span class="n">hsd_table</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">root</span>
+</pre></div>
+</div>
+</section>
+<section id="hsd-value">
+<h4><code class="docutils literal notranslate"><span class="pre">hsd_value</span></code><a class="headerlink" href="#hsd-value" title="Link to this heading"></a></h4>
+<p>A leaf node containing a scalar value or array.</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">type</span><span class="p">(</span><span class="n">hsd_value</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">val</span>
+</pre></div>
+</div>
+</section>
+<section id="hsd-error-t">
+<h4><code class="docutils literal notranslate"><span class="pre">hsd_error_t</span></code><a class="headerlink" href="#hsd-error-t" title="Link to this heading"></a></h4>
+<p>Error information returned from parsing and validation operations.</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">type</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">hsd_error_t</span>
+<span class="w">  </span><span class="kt">integer</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">code</span><span class="w">                           </span><span class="c">! Error code (HSD_STAT_*)</span>
+<span class="w">  </span><span class="kt">character</span><span class="p">(</span><span class="nb">len</span><span class="o">=</span><span class="p">:),</span><span class="w"> </span><span class="k">allocatable</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">message</span><span class="w">  </span><span class="c">! Human-readable message</span>
+<span class="w">  </span><span class="kt">character</span><span class="p">(</span><span class="nb">len</span><span class="o">=</span><span class="p">:),</span><span class="w"> </span><span class="k">allocatable</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">filename</span><span class="w"> </span><span class="c">! Source file</span>
+<span class="w">  </span><span class="kt">integer</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">line_start</span><span class="p">,</span><span class="w"> </span><span class="n">line_end</span><span class="w">           </span><span class="c">! Line range</span>
+<span class="w">  </span><span class="kt">integer</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">column</span><span class="w">                         </span><span class="c">! Column number</span>
+<span class="w">  </span><span class="kt">character</span><span class="p">(</span><span class="nb">len</span><span class="o">=</span><span class="p">:),</span><span class="w"> </span><span class="k">allocatable</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">expected</span><span class="w"> </span><span class="c">! What was expected</span>
+<span class="w">  </span><span class="kt">character</span><span class="p">(</span><span class="nb">len</span><span class="o">=</span><span class="p">:),</span><span class="w"> </span><span class="k">allocatable</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">actual</span><span class="w">   </span><span class="c">! What was found</span>
+<span class="w">  </span><span class="kt">character</span><span class="p">(</span><span class="nb">len</span><span class="o">=</span><span class="p">:),</span><span class="w"> </span><span class="k">allocatable</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">hint</span><span class="w">     </span><span class="c">! Helpful suggestion</span>
+<span class="k">contains</span>
+<span class="k">  procedure</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="k">print</span><span class="w">                        </span><span class="c">! Print formatted error</span>
+<span class="k">end type</span>
+</pre></div>
+</div>
+</section>
+<section id="hsd-iterator">
+<h4><code class="docutils literal notranslate"><span class="pre">hsd_iterator</span></code><a class="headerlink" href="#hsd-iterator" title="Link to this heading"></a></h4>
+<p>Iterator for traversing table children.</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">type</span><span class="p">(</span><span class="n">hsd_iterator</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">iter</span>
+</pre></div>
+</div>
+</section>
+<section id="hsd-schema-t">
+<h4><code class="docutils literal notranslate"><span class="pre">hsd_schema_t</span></code><a class="headerlink" href="#hsd-schema-t" title="Link to this heading"></a></h4>
+<p>Schema definition for input validation.</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">type</span><span class="p">(</span><span class="n">hsd_schema_t</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">schema</span>
+</pre></div>
+</div>
+</section>
+<section id="hsd-visitor-t">
+<h4><code class="docutils literal notranslate"><span class="pre">hsd_visitor_t</span></code><a class="headerlink" href="#hsd-visitor-t" title="Link to this heading"></a></h4>
+<p>Base type for visitor pattern implementation.</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">type</span><span class="p">,</span><span class="w"> </span><span class="k">abstract</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">hsd_visitor_t</span>
+<span class="k">contains</span>
+<span class="k">  procedure</span><span class="p">(</span><span class="n">visit_table_iface</span><span class="p">),</span><span class="w"> </span><span class="k">deferred</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">visit_table</span>
+<span class="w">  </span><span class="k">procedure</span><span class="p">(</span><span class="n">visit_value_iface</span><span class="p">),</span><span class="w"> </span><span class="k">deferred</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">visit_value</span>
+<span class="k">end type</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="precision-constants">
+<h3>Precision Constants<a class="headerlink" href="#precision-constants" title="Link to this heading"></a></h3>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">parameter</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">dp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">kind</span><span class="p">(</span><span class="mf">1.0d0</span><span class="p">)</span><span class="w">  </span><span class="c">! Double precision</span>
+<span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">parameter</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">sp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">kind</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span><span class="w">    </span><span class="c">! Single precision</span>
+</pre></div>
+</div>
+</section>
+<section id="value-type-constants">
+<h3>Value Type Constants<a class="headerlink" href="#value-type-constants" title="Link to this heading"></a></h3>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">parameter</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">VALUE_TYPE_NONE</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span>
+<span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">parameter</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">VALUE_TYPE_STRING</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span>
+<span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">parameter</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">VALUE_TYPE_INTEGER</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span>
+<span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">parameter</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">VALUE_TYPE_REAL</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="mi">3</span>
+<span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">parameter</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">VALUE_TYPE_LOGICAL</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">4</span>
+<span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">parameter</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">VALUE_TYPE_ARRAY</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span>
+<span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">parameter</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">VALUE_TYPE_COMPLEX</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">6</span>
+</pre></div>
+</div>
+</section>
+<section id="error-codes">
+<h3>Error Codes<a class="headerlink" href="#error-codes" title="Link to this heading"></a></h3>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">parameter</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">HSD_STAT_OK</span><span class="w">             </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="w">   </span><span class="c">! Success</span>
+<span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">parameter</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">HSD_STAT_SYNTAX_ERROR</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="w">   </span><span class="c">! Generic syntax error</span>
+<span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">parameter</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">HSD_STAT_UNCLOSED_TAG</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="w">   </span><span class="c">! Block not closed</span>
+<span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">parameter</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">HSD_STAT_UNCLOSED_ATTRIB</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">3</span><span class="w">  </span><span class="c">! Attribute bracket not closed</span>
+<span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">parameter</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">HSD_STAT_UNCLOSED_QUOTE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">4</span><span class="w">   </span><span class="c">! String quote not closed</span>
+<span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">parameter</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">HSD_STAT_ORPHAN_TEXT</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span><span class="w">   </span><span class="c">! Text outside any block</span>
+<span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">parameter</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">HSD_STAT_INCLUDE_CYCLE</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="mi">6</span><span class="w">   </span><span class="c">! Circular include detected</span>
+<span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">parameter</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">HSD_STAT_INCLUDE_DEPTH</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="mi">7</span><span class="w">   </span><span class="c">! Too many nested includes</span>
+<span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">parameter</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">HSD_STAT_FILE_NOT_FOUND</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">8</span><span class="w">   </span><span class="c">! File doesn&#39;t exist</span>
+<span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">parameter</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">HSD_STAT_IO_ERROR</span><span class="w">       </span><span class="o">=</span><span class="w"> </span><span class="mi">9</span><span class="w">   </span><span class="c">! I/O operation failed</span>
+<span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">parameter</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">HSD_STAT_TYPE_ERROR</span><span class="w">     </span><span class="o">=</span><span class="w"> </span><span class="mi">10</span><span class="w">  </span><span class="c">! Type conversion failed</span>
+<span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">parameter</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">HSD_STAT_NOT_FOUND</span><span class="w">      </span><span class="o">=</span><span class="w"> </span><span class="mi">11</span><span class="w">  </span><span class="c">! Key not found in tree</span>
+<span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">parameter</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">HSD_STAT_SCHEMA_ERROR</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="mi">20</span><span class="w">  </span><span class="c">! Schema validation failed</span>
+</pre></div>
+</div>
+</section>
+<section id="schema-constants">
+<h3>Schema Constants<a class="headerlink" href="#schema-constants" title="Link to this heading"></a></h3>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">! Required/optional</span>
+<span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">parameter</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">FIELD_REQUIRED</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span>
+<span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">parameter</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">FIELD_OPTIONAL</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span>
+
+<span class="c">! Field types</span>
+<span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">parameter</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">FIELD_TYPE_ANY</span><span class="w">     </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span>
+<span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">parameter</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">FIELD_TYPE_STRING</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span>
+<span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">parameter</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">FIELD_TYPE_INTEGER</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span>
+<span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">parameter</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">FIELD_TYPE_REAL</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="mi">3</span>
+<span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">parameter</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">FIELD_TYPE_LOGICAL</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">4</span>
+<span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">parameter</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">FIELD_TYPE_TABLE</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span>
+<span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">parameter</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">FIELD_TYPE_ARRAY</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="mi">6</span>
+<span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">parameter</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">FIELD_TYPE_COMPLEX</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">7</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="i-o-procedures">
+<h2>I/O Procedures<a class="headerlink" href="#i-o-procedures" title="Link to this heading"></a></h2>
+<section id="hsd-load">
+<h3>hsd_load<a class="headerlink" href="#hsd-load" title="Link to this heading"></a></h3>
+<p>Load and parse an HSD file.</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">subroutine </span><span class="n">hsd_load</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span><span class="w"> </span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="n">error</span><span class="p">)</span>
+<span class="w">  </span><span class="kt">character</span><span class="p">(</span><span class="nb">len</span><span class="o">=*</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">filename</span>
+<span class="w">  </span><span class="k">type</span><span class="p">(</span><span class="n">hsd_table</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">out</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">root</span>
+<span class="w">  </span><span class="k">type</span><span class="p">(</span><span class="n">hsd_error_t</span><span class="p">),</span><span class="w"> </span><span class="k">allocatable</span><span class="p">,</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">out</span><span class="p">),</span><span class="w"> </span><span class="k">optional</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">error</span>
+<span class="k">end subroutine</span>
+</pre></div>
+</div>
+</section>
+<section id="hsd-load-string">
+<h3>hsd_load_string<a class="headerlink" href="#hsd-load-string" title="Link to this heading"></a></h3>
+<p>Parse HSD from a string.</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">subroutine </span><span class="n">hsd_load_string</span><span class="p">(</span><span class="n">source</span><span class="p">,</span><span class="w"> </span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="n">error</span><span class="p">,</span><span class="w"> </span><span class="n">filename</span><span class="p">)</span>
+<span class="w">  </span><span class="kt">character</span><span class="p">(</span><span class="nb">len</span><span class="o">=*</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">source</span>
+<span class="w">  </span><span class="k">type</span><span class="p">(</span><span class="n">hsd_table</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">out</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">root</span>
+<span class="w">  </span><span class="k">type</span><span class="p">(</span><span class="n">hsd_error_t</span><span class="p">),</span><span class="w"> </span><span class="k">allocatable</span><span class="p">,</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">out</span><span class="p">),</span><span class="w"> </span><span class="k">optional</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">error</span>
+<span class="w">  </span><span class="kt">character</span><span class="p">(</span><span class="nb">len</span><span class="o">=*</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">),</span><span class="w"> </span><span class="k">optional</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">filename</span><span class="w">  </span><span class="c">! For error messages</span>
+<span class="k">end subroutine</span>
+</pre></div>
+</div>
+</section>
+<section id="hsd-dump">
+<h3>hsd_dump<a class="headerlink" href="#hsd-dump" title="Link to this heading"></a></h3>
+<p>Write a tree to a file.</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">subroutine </span><span class="n">hsd_dump</span><span class="p">(</span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="n">filename</span><span class="p">,</span><span class="w"> </span><span class="n">error</span><span class="p">)</span>
+<span class="w">  </span><span class="k">type</span><span class="p">(</span><span class="n">hsd_table</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">root</span>
+<span class="w">  </span><span class="kt">character</span><span class="p">(</span><span class="nb">len</span><span class="o">=*</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">filename</span>
+<span class="w">  </span><span class="k">type</span><span class="p">(</span><span class="n">hsd_error_t</span><span class="p">),</span><span class="w"> </span><span class="k">allocatable</span><span class="p">,</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">out</span><span class="p">),</span><span class="w"> </span><span class="k">optional</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">error</span>
+<span class="k">end subroutine</span>
+</pre></div>
+</div>
+</section>
+<section id="hsd-dump-to-string">
+<h3>hsd_dump_to_string<a class="headerlink" href="#hsd-dump-to-string" title="Link to this heading"></a></h3>
+<p>Serialize a tree to a string.</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">subroutine </span><span class="n">hsd_dump_to_string</span><span class="p">(</span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="n">output</span><span class="p">)</span>
+<span class="w">  </span><span class="k">type</span><span class="p">(</span><span class="n">hsd_table</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">root</span>
+<span class="w">  </span><span class="kt">character</span><span class="p">(</span><span class="nb">len</span><span class="o">=</span><span class="p">:),</span><span class="w"> </span><span class="k">allocatable</span><span class="p">,</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">out</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">output</span>
+<span class="k">end subroutine</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="accessor-procedures">
+<h2>Accessor Procedures<a class="headerlink" href="#accessor-procedures" title="Link to this heading"></a></h2>
+<section id="hsd-get">
+<h3>hsd_get<a class="headerlink" href="#hsd-get" title="Link to this heading"></a></h3>
+<p>Get a value at the specified path. Supports multiple output types via generic interface.</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">! Scalar types</span>
+<span class="k">subroutine </span><span class="n">hsd_get</span><span class="p">(</span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="n">path</span><span class="p">,</span><span class="w"> </span><span class="k">value</span><span class="p">,</span><span class="w"> </span><span class="nb">stat</span><span class="p">)</span>
+<span class="w">  </span><span class="k">type</span><span class="p">(</span><span class="n">hsd_table</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">root</span>
+<span class="w">  </span><span class="kt">character</span><span class="p">(</span><span class="nb">len</span><span class="o">=*</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">path</span>
+<span class="w">  </span><span class="o">&lt;</span><span class="k">type</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">out</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="k">value</span><span class="w">  </span><span class="c">! integer, real(dp), real(sp), logical, character</span>
+<span class="w">  </span><span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">out</span><span class="p">),</span><span class="w"> </span><span class="k">optional</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="nb">stat</span>
+<span class="k">end subroutine</span>
+
+<span class="c">! Array types</span>
+<span class="k">subroutine </span><span class="n">hsd_get</span><span class="p">(</span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="n">path</span><span class="p">,</span><span class="w"> </span><span class="k">array</span><span class="p">,</span><span class="w"> </span><span class="nb">stat</span><span class="p">)</span>
+<span class="w">  </span><span class="k">type</span><span class="p">(</span><span class="n">hsd_table</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">root</span>
+<span class="w">  </span><span class="kt">character</span><span class="p">(</span><span class="nb">len</span><span class="o">=*</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">path</span>
+<span class="w">  </span><span class="o">&lt;</span><span class="k">type</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="k">allocatable</span><span class="p">,</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">out</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="k">array</span><span class="p">(:)</span><span class="w">  </span><span class="c">! integer, real(dp), logical, character</span>
+<span class="w">  </span><span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">out</span><span class="p">),</span><span class="w"> </span><span class="k">optional</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="nb">stat</span>
+<span class="k">end subroutine</span>
+</pre></div>
+</div>
+<p><strong>Examples:</strong></p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="kt">integer</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="nb">count</span>
+<span class="kt">real</span><span class="p">(</span><span class="n">dp</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">temperature</span>
+<span class="kt">character</span><span class="p">(</span><span class="nb">len</span><span class="o">=</span><span class="p">:),</span><span class="w"> </span><span class="k">allocatable</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">name</span>
+<span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">allocatable</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">values</span><span class="p">(:)</span>
+
+<span class="k">call </span><span class="n">hsd_get</span><span class="p">(</span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Settings/Count&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">count</span><span class="p">,</span><span class="w"> </span><span class="nb">stat</span><span class="p">)</span>
+<span class="k">call </span><span class="n">hsd_get</span><span class="p">(</span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Physics/Temperature&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">temperature</span><span class="p">,</span><span class="w"> </span><span class="nb">stat</span><span class="p">)</span>
+<span class="k">call </span><span class="n">hsd_get</span><span class="p">(</span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Geometry/Name&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="nb">stat</span><span class="p">)</span>
+<span class="k">call </span><span class="n">hsd_get</span><span class="p">(</span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Data/Values&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">values</span><span class="p">,</span><span class="w"> </span><span class="nb">stat</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="hsd-get-or">
+<h3>hsd_get_or<a class="headerlink" href="#hsd-get-or" title="Link to this heading"></a></h3>
+<p>Get a value with a default fallback if the path doesn’t exist.</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">subroutine </span><span class="n">hsd_get_or</span><span class="p">(</span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="n">path</span><span class="p">,</span><span class="w"> </span><span class="k">value</span><span class="p">,</span><span class="w"> </span><span class="n">default</span><span class="p">,</span><span class="w"> </span><span class="nb">stat</span><span class="p">)</span>
+<span class="w">  </span><span class="k">type</span><span class="p">(</span><span class="n">hsd_table</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">root</span>
+<span class="w">  </span><span class="kt">character</span><span class="p">(</span><span class="nb">len</span><span class="o">=*</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">path</span>
+<span class="w">  </span><span class="o">&lt;</span><span class="k">type</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">out</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="k">value</span>
+<span class="w">  </span><span class="o">&lt;</span><span class="k">type</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">default</span>
+<span class="w">  </span><span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">out</span><span class="p">),</span><span class="w"> </span><span class="k">optional</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="nb">stat</span><span class="w">  </span><span class="c">! HSD_STAT_NOT_FOUND if default used</span>
+<span class="k">end subroutine</span>
+</pre></div>
+</div>
+<p><strong>Example:</strong></p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">call </span><span class="n">hsd_get_or</span><span class="p">(</span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Timeout&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">timeout</span><span class="p">,</span><span class="w"> </span><span class="n">default</span><span class="o">=</span><span class="mi">3600</span><span class="p">,</span><span class="w"> </span><span class="nb">stat</span><span class="o">=</span><span class="nb">stat</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="hsd-get-matrix">
+<h3>hsd_get_matrix<a class="headerlink" href="#hsd-get-matrix" title="Link to this heading"></a></h3>
+<p>Get a 2D array from multi-line data.</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">subroutine </span><span class="n">hsd_get_matrix</span><span class="p">(</span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="n">path</span><span class="p">,</span><span class="w"> </span><span class="n">matrix</span><span class="p">,</span><span class="w"> </span><span class="nb">stat</span><span class="p">)</span>
+<span class="w">  </span><span class="k">type</span><span class="p">(</span><span class="n">hsd_table</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">root</span>
+<span class="w">  </span><span class="kt">character</span><span class="p">(</span><span class="nb">len</span><span class="o">=*</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">path</span>
+<span class="w">  </span><span class="kt">real</span><span class="p">(</span><span class="n">dp</span><span class="p">),</span><span class="w"> </span><span class="k">allocatable</span><span class="p">,</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">out</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">matrix</span><span class="p">(:,:)</span>
+<span class="w">  </span><span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">out</span><span class="p">),</span><span class="w"> </span><span class="k">optional</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="nb">stat</span>
+<span class="k">end subroutine</span>
+</pre></div>
+</div>
+</section>
+<section id="hsd-get-inline-text">
+<h3>hsd_get_inline_text<a class="headerlink" href="#hsd-get-inline-text" title="Link to this heading"></a></h3>
+<p>Get concatenated text content of all unnamed value children. Iterates
+children of the table, collecting text from unnamed or <code class="docutils literal notranslate"><span class="pre">#text</span></code>
+<code class="docutils literal notranslate"><span class="pre">hsd_value</span></code> nodes. Multiple values are separated by spaces.</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">subroutine </span><span class="n">hsd_get_inline_text</span><span class="p">(</span><span class="n">table</span><span class="p">,</span><span class="w"> </span><span class="n">text</span><span class="p">,</span><span class="w"> </span><span class="nb">stat</span><span class="p">)</span>
+<span class="w">  </span><span class="k">type</span><span class="p">(</span><span class="n">hsd_table</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">),</span><span class="w"> </span><span class="k">target</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">table</span>
+<span class="w">  </span><span class="kt">character</span><span class="p">(</span><span class="nb">len</span><span class="o">=</span><span class="p">:),</span><span class="w"> </span><span class="k">allocatable</span><span class="p">,</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">out</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">text</span>
+<span class="w">  </span><span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">out</span><span class="p">),</span><span class="w"> </span><span class="k">optional</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="nb">stat</span>
+<span class="k">end subroutine</span>
+</pre></div>
+</div>
+<p><strong>Example:</strong></p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="kt">character</span><span class="p">(</span><span class="nb">len</span><span class="o">=</span><span class="p">:),</span><span class="w"> </span><span class="k">allocatable</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">text</span>
+<span class="kt">integer</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="nb">stat</span>
+
+<span class="k">call </span><span class="n">hsd_get_inline_text</span><span class="p">(</span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="n">text</span><span class="p">,</span><span class="w"> </span><span class="nb">stat</span><span class="p">)</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">stat</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">HSD_STAT_OK</span><span class="p">)</span><span class="w"> </span><span class="k">print</span><span class="w"> </span><span class="o">*</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Inline text: &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">text</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="query-procedures">
+<h2>Query Procedures<a class="headerlink" href="#query-procedures" title="Link to this heading"></a></h2>
+<section id="hsd-has-child">
+<h3>hsd_has_child<a class="headerlink" href="#hsd-has-child" title="Link to this heading"></a></h3>
+<p>Check if a path exists in the tree.</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="kt">logical </span><span class="k">function </span><span class="n">hsd_has_child</span><span class="p">(</span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="n">path</span><span class="p">)</span>
+<span class="w">  </span><span class="k">type</span><span class="p">(</span><span class="n">hsd_table</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">root</span>
+<span class="w">  </span><span class="kt">character</span><span class="p">(</span><span class="nb">len</span><span class="o">=*</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">path</span>
+<span class="k">end function</span>
+</pre></div>
+</div>
+</section>
+<section id="hsd-is-table">
+<h3>hsd_is_table<a class="headerlink" href="#hsd-is-table" title="Link to this heading"></a></h3>
+<p>Check if the node at path is a table (container).</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="kt">logical </span><span class="k">function </span><span class="n">hsd_is_table</span><span class="p">(</span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="n">path</span><span class="p">)</span>
+<span class="w">  </span><span class="k">type</span><span class="p">(</span><span class="n">hsd_table</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">root</span>
+<span class="w">  </span><span class="kt">character</span><span class="p">(</span><span class="nb">len</span><span class="o">=*</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">path</span>
+<span class="k">end function</span>
+</pre></div>
+</div>
+</section>
+<section id="hsd-is-value">
+<h3>hsd_is_value<a class="headerlink" href="#hsd-is-value" title="Link to this heading"></a></h3>
+<p>Check if the node at path is a value (leaf).</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="kt">logical </span><span class="k">function </span><span class="n">hsd_is_value</span><span class="p">(</span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="n">path</span><span class="p">)</span>
+<span class="w">  </span><span class="k">type</span><span class="p">(</span><span class="n">hsd_table</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">root</span>
+<span class="w">  </span><span class="kt">character</span><span class="p">(</span><span class="nb">len</span><span class="o">=*</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">path</span>
+<span class="k">end function</span>
+</pre></div>
+</div>
+</section>
+<section id="hsd-is-array">
+<h3>hsd_is_array<a class="headerlink" href="#hsd-is-array" title="Link to this heading"></a></h3>
+<p>Check if the value at path contains an array.</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="kt">logical </span><span class="k">function </span><span class="n">hsd_is_array</span><span class="p">(</span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="n">path</span><span class="p">)</span>
+<span class="w">  </span><span class="k">type</span><span class="p">(</span><span class="n">hsd_table</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">root</span>
+<span class="w">  </span><span class="kt">character</span><span class="p">(</span><span class="nb">len</span><span class="o">=*</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">path</span>
+<span class="k">end function</span>
+</pre></div>
+</div>
+</section>
+<section id="hsd-child-count">
+<h3>hsd_child_count<a class="headerlink" href="#hsd-child-count" title="Link to this heading"></a></h3>
+<p>Get the number of children in a table.</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="kt">integer </span><span class="k">function </span><span class="n">hsd_child_count</span><span class="p">(</span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="n">path</span><span class="p">)</span>
+<span class="w">  </span><span class="k">type</span><span class="p">(</span><span class="n">hsd_table</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">root</span>
+<span class="w">  </span><span class="kt">character</span><span class="p">(</span><span class="nb">len</span><span class="o">=*</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">path</span><span class="w">  </span><span class="c">! Empty string for root</span>
+<span class="k">end function</span>
+</pre></div>
+</div>
+</section>
+<section id="hsd-get-keys">
+<h3>hsd_get_keys<a class="headerlink" href="#hsd-get-keys" title="Link to this heading"></a></h3>
+<p>Get all child key names.</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">subroutine </span><span class="n">hsd_get_keys</span><span class="p">(</span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="n">path</span><span class="p">,</span><span class="w"> </span><span class="n">keys</span><span class="p">)</span>
+<span class="w">  </span><span class="k">type</span><span class="p">(</span><span class="n">hsd_table</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">root</span>
+<span class="w">  </span><span class="kt">character</span><span class="p">(</span><span class="nb">len</span><span class="o">=*</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">path</span>
+<span class="w">  </span><span class="kt">character</span><span class="p">(</span><span class="nb">len</span><span class="o">=</span><span class="p">:),</span><span class="w"> </span><span class="k">allocatable</span><span class="p">,</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">out</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">keys</span><span class="p">(:)</span>
+<span class="k">end subroutine</span>
+</pre></div>
+</div>
+</section>
+<section id="hsd-get-type">
+<h3>hsd_get_type<a class="headerlink" href="#hsd-get-type" title="Link to this heading"></a></h3>
+<p>Get the value type at a path.</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="kt">integer </span><span class="k">function </span><span class="n">hsd_get_type</span><span class="p">(</span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="n">path</span><span class="p">)</span>
+<span class="w">  </span><span class="k">type</span><span class="p">(</span><span class="n">hsd_table</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">root</span>
+<span class="w">  </span><span class="kt">character</span><span class="p">(</span><span class="nb">len</span><span class="o">=*</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">path</span>
+<span class="k">end function</span>
+<span class="c">! Returns VALUE_TYPE_* constant</span>
+</pre></div>
+</div>
+</section>
+<section id="hsd-get-attrib">
+<h3>hsd_get_attrib<a class="headerlink" href="#hsd-get-attrib" title="Link to this heading"></a></h3>
+<p>Get the attribute (e.g., unit) at a path.</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">subroutine </span><span class="n">hsd_get_attrib</span><span class="p">(</span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="n">path</span><span class="p">,</span><span class="w"> </span><span class="n">attrib</span><span class="p">,</span><span class="w"> </span><span class="nb">stat</span><span class="p">)</span>
+<span class="w">  </span><span class="k">type</span><span class="p">(</span><span class="n">hsd_table</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">root</span>
+<span class="w">  </span><span class="kt">character</span><span class="p">(</span><span class="nb">len</span><span class="o">=*</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">path</span>
+<span class="w">  </span><span class="kt">character</span><span class="p">(</span><span class="nb">len</span><span class="o">=</span><span class="p">:),</span><span class="w"> </span><span class="k">allocatable</span><span class="p">,</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">out</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">attrib</span>
+<span class="w">  </span><span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">out</span><span class="p">),</span><span class="w"> </span><span class="k">optional</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="nb">stat</span>
+<span class="k">end subroutine</span>
+</pre></div>
+</div>
+</section>
+<section id="hsd-has-attrib">
+<h3>hsd_has_attrib<a class="headerlink" href="#hsd-has-attrib" title="Link to this heading"></a></h3>
+<p>Check if a node has an attribute.</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="kt">logical </span><span class="k">function </span><span class="n">hsd_has_attrib</span><span class="p">(</span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="n">path</span><span class="p">)</span>
+<span class="w">  </span><span class="k">type</span><span class="p">(</span><span class="n">hsd_table</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">root</span>
+<span class="w">  </span><span class="kt">character</span><span class="p">(</span><span class="nb">len</span><span class="o">=*</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">path</span>
+<span class="k">end function</span>
+</pre></div>
+</div>
+</section>
+<section id="hsd-get-child">
+<h3>hsd_get_child<a class="headerlink" href="#hsd-get-child" title="Link to this heading"></a></h3>
+<p>Get a child node by name.</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">subroutine </span><span class="n">hsd_get_child</span><span class="p">(</span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="n">child</span><span class="p">,</span><span class="w"> </span><span class="nb">stat</span><span class="p">)</span>
+<span class="w">  </span><span class="k">type</span><span class="p">(</span><span class="n">hsd_table</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">root</span>
+<span class="w">  </span><span class="kt">character</span><span class="p">(</span><span class="nb">len</span><span class="o">=*</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">name</span>
+<span class="w">  </span><span class="k">class</span><span class="p">(</span><span class="n">hsd_node</span><span class="p">),</span><span class="w"> </span><span class="k">pointer</span><span class="p">,</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">out</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">child</span>
+<span class="w">  </span><span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">out</span><span class="p">),</span><span class="w"> </span><span class="k">optional</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="nb">stat</span>
+<span class="k">end subroutine</span>
+</pre></div>
+</div>
+</section>
+<section id="hsd-get-table">
+<h3>hsd_get_table<a class="headerlink" href="#hsd-get-table" title="Link to this heading"></a></h3>
+<p>Get a child table by path.</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">subroutine </span><span class="n">hsd_get_table</span><span class="p">(</span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="n">path</span><span class="p">,</span><span class="w"> </span><span class="n">table</span><span class="p">,</span><span class="w"> </span><span class="nb">stat</span><span class="p">)</span>
+<span class="w">  </span><span class="k">type</span><span class="p">(</span><span class="n">hsd_table</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">root</span>
+<span class="w">  </span><span class="kt">character</span><span class="p">(</span><span class="nb">len</span><span class="o">=*</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">path</span>
+<span class="w">  </span><span class="k">type</span><span class="p">(</span><span class="n">hsd_table</span><span class="p">),</span><span class="w"> </span><span class="k">pointer</span><span class="p">,</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">out</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">table</span>
+<span class="w">  </span><span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">out</span><span class="p">),</span><span class="w"> </span><span class="k">optional</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="nb">stat</span>
+<span class="k">end subroutine</span>
+</pre></div>
+</div>
+</section>
+<section id="hsd-has-value-children">
+<h3>hsd_has_value_children<a class="headerlink" href="#hsd-has-value-children" title="Link to this heading"></a></h3>
+<p>Check whether a table has any value children (inline data).</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="kt">logical </span><span class="k">function </span><span class="n">hsd_has_value_children</span><span class="p">(</span><span class="n">table</span><span class="p">)</span>
+<span class="w">  </span><span class="k">type</span><span class="p">(</span><span class="n">hsd_table</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">),</span><span class="w"> </span><span class="k">target</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">table</span>
+<span class="k">end function</span>
+</pre></div>
+</div>
+<p><strong>Example:</strong></p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">hsd_has_value_children</span><span class="p">(</span><span class="n">root</span><span class="p">))</span><span class="w"> </span><span class="k">then</span>
+<span class="k">  print</span><span class="w"> </span><span class="o">*</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Table contains inline values&quot;</span>
+<span class="k">end if</span>
+</pre></div>
+</div>
+</section>
+<section id="hsd-get-name">
+<h3>hsd_get_name<a class="headerlink" href="#hsd-get-name" title="Link to this heading"></a></h3>
+<p>Get the lowercased name of a node. If the node’s name is unset or blank,
+returns the <code class="docutils literal notranslate"><span class="pre">default</span></code> string (which itself defaults to <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code> if not
+provided).</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">subroutine </span><span class="n">hsd_get_name</span><span class="p">(</span><span class="n">node</span><span class="p">,</span><span class="w"> </span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="n">default</span><span class="p">)</span>
+<span class="w">  </span><span class="k">class</span><span class="p">(</span><span class="n">hsd_node</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">node</span>
+<span class="w">  </span><span class="kt">character</span><span class="p">(</span><span class="nb">len</span><span class="o">=</span><span class="p">:),</span><span class="w"> </span><span class="k">allocatable</span><span class="p">,</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">out</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">name</span>
+<span class="w">  </span><span class="kt">character</span><span class="p">(</span><span class="nb">len</span><span class="o">=*</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">),</span><span class="w"> </span><span class="k">optional</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">default</span>
+<span class="k">end subroutine</span>
+</pre></div>
+</div>
+<p><strong>Example:</strong></p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="kt">character</span><span class="p">(</span><span class="nb">len</span><span class="o">=</span><span class="p">:),</span><span class="w"> </span><span class="k">allocatable</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">name</span>
+
+<span class="k">call </span><span class="n">hsd_get_name</span><span class="p">(</span><span class="n">node</span><span class="p">,</span><span class="w"> </span><span class="n">name</span><span class="p">)</span>
+<span class="k">call </span><span class="n">hsd_get_name</span><span class="p">(</span><span class="n">node</span><span class="p">,</span><span class="w"> </span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;#text&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="mutation-procedures">
+<h2>Mutation Procedures<a class="headerlink" href="#mutation-procedures" title="Link to this heading"></a></h2>
+<section id="hsd-set">
+<h3>hsd_set<a class="headerlink" href="#hsd-set" title="Link to this heading"></a></h3>
+<p>Set a value at the specified path (creates intermediate tables as needed).</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">subroutine </span><span class="n">hsd_set</span><span class="p">(</span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="n">path</span><span class="p">,</span><span class="w"> </span><span class="k">value</span><span class="p">)</span>
+<span class="w">  </span><span class="k">type</span><span class="p">(</span><span class="n">hsd_table</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">inout</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">root</span>
+<span class="w">  </span><span class="kt">character</span><span class="p">(</span><span class="nb">len</span><span class="o">=*</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">path</span>
+<span class="w">  </span><span class="o">&lt;</span><span class="k">type</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="k">value</span><span class="w">  </span><span class="c">! integer, real(dp), logical, character, arrays</span>
+<span class="k">end subroutine</span>
+</pre></div>
+</div>
+</section>
+<section id="hsd-remove-child">
+<h3>hsd_remove_child<a class="headerlink" href="#hsd-remove-child" title="Link to this heading"></a></h3>
+<p>Remove a child node.</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">subroutine </span><span class="n">hsd_remove_child</span><span class="p">(</span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="n">path</span><span class="p">,</span><span class="w"> </span><span class="nb">stat</span><span class="p">)</span>
+<span class="w">  </span><span class="k">type</span><span class="p">(</span><span class="n">hsd_table</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">inout</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">root</span>
+<span class="w">  </span><span class="kt">character</span><span class="p">(</span><span class="nb">len</span><span class="o">=*</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">path</span>
+<span class="w">  </span><span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">out</span><span class="p">),</span><span class="w"> </span><span class="k">optional</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="nb">stat</span>
+<span class="k">end subroutine</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="tree-operations">
+<h2>Tree Operations<a class="headerlink" href="#tree-operations" title="Link to this heading"></a></h2>
+<section id="hsd-clone">
+<h3>hsd_clone<a class="headerlink" href="#hsd-clone" title="Link to this heading"></a></h3>
+<p>Create a deep copy of a tree.</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">subroutine </span><span class="n">hsd_clone</span><span class="p">(</span><span class="n">source</span><span class="p">,</span><span class="w"> </span><span class="n">dest</span><span class="p">)</span>
+<span class="w">  </span><span class="k">type</span><span class="p">(</span><span class="n">hsd_table</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">source</span>
+<span class="w">  </span><span class="k">type</span><span class="p">(</span><span class="n">hsd_table</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">out</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">dest</span>
+<span class="k">end subroutine</span>
+</pre></div>
+</div>
+</section>
+<section id="hsd-merge">
+<h3>hsd_merge<a class="headerlink" href="#hsd-merge" title="Link to this heading"></a></h3>
+<p>Merge source into target (source values override target on conflict).</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">subroutine </span><span class="n">hsd_merge</span><span class="p">(</span><span class="k">target</span><span class="p">,</span><span class="w"> </span><span class="n">source</span><span class="p">)</span>
+<span class="w">  </span><span class="k">type</span><span class="p">(</span><span class="n">hsd_table</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">inout</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="k">target</span>
+<span class="k">  type</span><span class="p">(</span><span class="n">hsd_table</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">source</span>
+<span class="k">end subroutine</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="validation-procedures">
+<h2>Validation Procedures<a class="headerlink" href="#validation-procedures" title="Link to this heading"></a></h2>
+<section id="hsd-require">
+<h3>hsd_require<a class="headerlink" href="#hsd-require" title="Link to this heading"></a></h3>
+<p>Check that a required field exists (optionally check its type).</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">subroutine </span><span class="n">hsd_require</span><span class="p">(</span><span class="n">table</span><span class="p">,</span><span class="w"> </span><span class="n">path</span><span class="p">,</span><span class="w"> </span><span class="n">error</span><span class="p">,</span><span class="w"> </span><span class="n">expected_type</span><span class="p">,</span><span class="w"> </span><span class="n">context</span><span class="p">)</span>
+<span class="w">  </span><span class="k">type</span><span class="p">(</span><span class="n">hsd_table</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">),</span><span class="w"> </span><span class="k">target</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">table</span>
+<span class="w">  </span><span class="kt">character</span><span class="p">(</span><span class="nb">len</span><span class="o">=*</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">path</span>
+<span class="w">  </span><span class="k">type</span><span class="p">(</span><span class="n">hsd_error_t</span><span class="p">),</span><span class="w"> </span><span class="k">allocatable</span><span class="p">,</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">out</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">error</span>
+<span class="w">  </span><span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">),</span><span class="w"> </span><span class="k">optional</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">expected_type</span><span class="w">  </span><span class="c">! FIELD_TYPE_* constant</span>
+<span class="w">  </span><span class="kt">character</span><span class="p">(</span><span class="nb">len</span><span class="o">=*</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">),</span><span class="w"> </span><span class="k">optional</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">context</span>
+<span class="k">end subroutine</span>
+</pre></div>
+</div>
+</section>
+<section id="hsd-validate-range">
+<h3>hsd_validate_range<a class="headerlink" href="#hsd-validate-range" title="Link to this heading"></a></h3>
+<p>Validate that a numeric value at a path is within a range.</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">subroutine </span><span class="n">hsd_validate_range</span><span class="p">(</span><span class="n">table</span><span class="p">,</span><span class="w"> </span><span class="n">path</span><span class="p">,</span><span class="w"> </span><span class="n">min_val</span><span class="p">,</span><span class="w"> </span><span class="n">max_val</span><span class="p">,</span><span class="w"> </span><span class="n">error</span><span class="p">,</span><span class="w"> </span><span class="n">context</span><span class="p">)</span>
+<span class="w">  </span><span class="k">type</span><span class="p">(</span><span class="n">hsd_table</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">),</span><span class="w"> </span><span class="k">target</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">table</span>
+<span class="w">  </span><span class="kt">character</span><span class="p">(</span><span class="nb">len</span><span class="o">=*</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">path</span>
+<span class="w">  </span><span class="kt">real</span><span class="p">(</span><span class="n">dp</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">min_val</span><span class="p">,</span><span class="w"> </span><span class="n">max_val</span>
+<span class="w">  </span><span class="k">type</span><span class="p">(</span><span class="n">hsd_error_t</span><span class="p">),</span><span class="w"> </span><span class="k">allocatable</span><span class="p">,</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">out</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">error</span>
+<span class="w">  </span><span class="kt">character</span><span class="p">(</span><span class="nb">len</span><span class="o">=*</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">),</span><span class="w"> </span><span class="k">optional</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">context</span>
+<span class="k">end subroutine</span>
+</pre></div>
+</div>
+</section>
+<section id="hsd-validate-one-of">
+<h3>hsd_validate_one_of<a class="headerlink" href="#hsd-validate-one-of" title="Link to this heading"></a></h3>
+<p>Validate that a string value at a path is one of the allowed choices.</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">subroutine </span><span class="n">hsd_validate_one_of</span><span class="p">(</span><span class="n">table</span><span class="p">,</span><span class="w"> </span><span class="n">path</span><span class="p">,</span><span class="w"> </span><span class="n">choices</span><span class="p">,</span><span class="w"> </span><span class="n">error</span><span class="p">,</span><span class="w"> </span><span class="n">context</span><span class="p">)</span>
+<span class="w">  </span><span class="k">type</span><span class="p">(</span><span class="n">hsd_table</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">),</span><span class="w"> </span><span class="k">target</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">table</span>
+<span class="w">  </span><span class="kt">character</span><span class="p">(</span><span class="nb">len</span><span class="o">=*</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">path</span>
+<span class="w">  </span><span class="kt">character</span><span class="p">(</span><span class="nb">len</span><span class="o">=*</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">choices</span><span class="p">(:)</span>
+<span class="w">  </span><span class="k">type</span><span class="p">(</span><span class="n">hsd_error_t</span><span class="p">),</span><span class="w"> </span><span class="k">allocatable</span><span class="p">,</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">out</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">error</span>
+<span class="w">  </span><span class="kt">character</span><span class="p">(</span><span class="nb">len</span><span class="o">=*</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">),</span><span class="w"> </span><span class="k">optional</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">context</span>
+<span class="k">end subroutine</span>
+</pre></div>
+</div>
+</section>
+<section id="hsd-get-with-unit">
+<h3>hsd_get_with_unit<a class="headerlink" href="#hsd-get-with-unit" title="Link to this heading"></a></h3>
+<p>Get a value with unit conversion via a user-supplied converter function.</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">subroutine </span><span class="n">hsd_get_with_unit</span><span class="p">(</span><span class="n">table</span><span class="p">,</span><span class="w"> </span><span class="n">path</span><span class="p">,</span><span class="w"> </span><span class="n">val</span><span class="p">,</span><span class="w"> </span><span class="n">target_unit</span><span class="p">,</span><span class="w"> </span><span class="n">converter</span><span class="p">,</span><span class="w"> </span><span class="nb">stat</span><span class="p">)</span>
+<span class="w">  </span><span class="k">type</span><span class="p">(</span><span class="n">hsd_table</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">),</span><span class="w"> </span><span class="k">target</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">table</span>
+<span class="w">  </span><span class="kt">character</span><span class="p">(</span><span class="nb">len</span><span class="o">=*</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">path</span>
+<span class="w">  </span><span class="kt">real</span><span class="p">(</span><span class="n">dp</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">out</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">val</span>
+<span class="w">  </span><span class="kt">character</span><span class="p">(</span><span class="nb">len</span><span class="o">=*</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">target_unit</span>
+<span class="w">  </span><span class="k">interface</span>
+<span class="k">    pure function </span><span class="n">converter</span><span class="p">(</span><span class="k">value</span><span class="p">,</span><span class="w"> </span><span class="n">from_unit</span><span class="p">,</span><span class="w"> </span><span class="n">to_unit</span><span class="p">)</span><span class="w"> </span><span class="k">result</span><span class="p">(</span><span class="n">converted</span><span class="p">)</span>
+<span class="w">      </span><span class="k">import</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">dp</span>
+<span class="w">      </span><span class="kt">real</span><span class="p">(</span><span class="n">dp</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="k">value</span>
+<span class="k">      </span><span class="kt">character</span><span class="p">(</span><span class="nb">len</span><span class="o">=*</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">from_unit</span><span class="p">,</span><span class="w"> </span><span class="n">to_unit</span>
+<span class="w">      </span><span class="kt">real</span><span class="p">(</span><span class="n">dp</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">converted</span>
+<span class="w">    </span><span class="k">end function</span>
+<span class="k">  end interface</span>
+<span class="k">  </span><span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">out</span><span class="p">),</span><span class="w"> </span><span class="k">optional</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="nb">stat</span>
+<span class="k">end subroutine</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="schema-validation">
+<h2>Schema Validation<a class="headerlink" href="#schema-validation" title="Link to this heading"></a></h2>
+<section id="schema-init">
+<h3>schema_init<a class="headerlink" href="#schema-init" title="Link to this heading"></a></h3>
+<p>Initialize a schema.</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">subroutine </span><span class="n">schema_init</span><span class="p">(</span><span class="n">schema</span><span class="p">)</span>
+<span class="w">  </span><span class="k">type</span><span class="p">(</span><span class="n">hsd_schema_t</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">out</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">schema</span>
+<span class="k">end subroutine</span>
+</pre></div>
+</div>
+</section>
+<section id="schema-destroy">
+<h3>schema_destroy<a class="headerlink" href="#schema-destroy" title="Link to this heading"></a></h3>
+<p>Clean up a schema.</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">subroutine </span><span class="n">schema_destroy</span><span class="p">(</span><span class="n">schema</span><span class="p">)</span>
+<span class="w">  </span><span class="k">type</span><span class="p">(</span><span class="n">hsd_schema_t</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">inout</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">schema</span>
+<span class="k">end subroutine</span>
+</pre></div>
+</div>
+</section>
+<section id="schema-add-field">
+<h3>schema_add_field<a class="headerlink" href="#schema-add-field" title="Link to this heading"></a></h3>
+<p>Add a field definition to the schema.</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">subroutine </span><span class="n">schema_add_field</span><span class="p">(</span><span class="n">schema</span><span class="p">,</span><span class="w"> </span><span class="n">path</span><span class="p">,</span><span class="w"> </span><span class="n">requirement</span><span class="p">,</span><span class="w"> </span><span class="n">field_type</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">    </span><span class="n">min_int</span><span class="p">,</span><span class="w"> </span><span class="n">max_int</span><span class="p">,</span><span class="w"> </span><span class="n">min_real</span><span class="p">,</span><span class="w"> </span><span class="n">max_real</span><span class="p">,</span><span class="w"> </span><span class="n">description</span><span class="p">)</span>
+<span class="w">  </span><span class="k">type</span><span class="p">(</span><span class="n">hsd_schema_t</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">inout</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">schema</span>
+<span class="w">  </span><span class="kt">character</span><span class="p">(</span><span class="nb">len</span><span class="o">=*</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">path</span>
+<span class="w">  </span><span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">requirement</span><span class="w">         </span><span class="c">! FIELD_REQUIRED or FIELD_OPTIONAL</span>
+<span class="w">  </span><span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">),</span><span class="w"> </span><span class="k">optional</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">field_type</span><span class="w"> </span><span class="c">! FIELD_TYPE_* constant</span>
+<span class="w">  </span><span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">),</span><span class="w"> </span><span class="k">optional</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">min_int</span><span class="p">,</span><span class="w"> </span><span class="n">max_int</span>
+<span class="w">  </span><span class="kt">real</span><span class="p">(</span><span class="n">dp</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">),</span><span class="w"> </span><span class="k">optional</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">min_real</span><span class="p">,</span><span class="w"> </span><span class="n">max_real</span>
+<span class="w">  </span><span class="kt">character</span><span class="p">(</span><span class="nb">len</span><span class="o">=*</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">),</span><span class="w"> </span><span class="k">optional</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">description</span>
+<span class="k">end subroutine</span>
+</pre></div>
+</div>
+</section>
+<section id="schema-add-field-enum">
+<h3>schema_add_field_enum<a class="headerlink" href="#schema-add-field-enum" title="Link to this heading"></a></h3>
+<p>Add a field with enumerated allowed values.</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">subroutine </span><span class="n">schema_add_field_enum</span><span class="p">(</span><span class="n">schema</span><span class="p">,</span><span class="w"> </span><span class="n">path</span><span class="p">,</span><span class="w"> </span><span class="n">allowed_values</span><span class="p">,</span><span class="w"> </span><span class="n">required</span><span class="p">)</span>
+<span class="w">  </span><span class="k">type</span><span class="p">(</span><span class="n">hsd_schema_t</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">inout</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">schema</span>
+<span class="w">  </span><span class="kt">character</span><span class="p">(</span><span class="nb">len</span><span class="o">=*</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">path</span>
+<span class="w">  </span><span class="kt">character</span><span class="p">(</span><span class="nb">len</span><span class="o">=*</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">allowed_values</span><span class="p">(:)</span>
+<span class="w">  </span><span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">required</span>
+<span class="k">end subroutine</span>
+</pre></div>
+</div>
+</section>
+<section id="schema-validate">
+<h3>schema_validate<a class="headerlink" href="#schema-validate" title="Link to this heading"></a></h3>
+<p>Validate a tree against the schema. Returns an array of all validation errors.</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">subroutine </span><span class="n">schema_validate</span><span class="p">(</span><span class="n">schema</span><span class="p">,</span><span class="w"> </span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="n">errors</span><span class="p">)</span>
+<span class="w">  </span><span class="k">type</span><span class="p">(</span><span class="n">hsd_schema_t</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">schema</span>
+<span class="w">  </span><span class="k">type</span><span class="p">(</span><span class="n">hsd_table</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">),</span><span class="w"> </span><span class="k">target</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">root</span>
+<span class="w">  </span><span class="k">type</span><span class="p">(</span><span class="n">hsd_error_t</span><span class="p">),</span><span class="w"> </span><span class="k">allocatable</span><span class="p">,</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">out</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">errors</span><span class="p">(:)</span>
+<span class="k">end subroutine</span>
+</pre></div>
+</div>
+</section>
+<section id="schema-validate-strict">
+<h3>schema_validate_strict<a class="headerlink" href="#schema-validate-strict" title="Link to this heading"></a></h3>
+<p>Strict validation (also checks for unknown fields not in the schema).</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Currently delegates to <code class="docutils literal notranslate"><span class="pre">schema_validate</span></code> — unknown-field checking
+is not yet implemented.</p>
+</div>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">subroutine </span><span class="n">schema_validate_strict</span><span class="p">(</span><span class="n">schema</span><span class="p">,</span><span class="w"> </span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="n">errors</span><span class="p">)</span>
+<span class="w">  </span><span class="k">type</span><span class="p">(</span><span class="n">hsd_schema_t</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">schema</span>
+<span class="w">  </span><span class="k">type</span><span class="p">(</span><span class="n">hsd_table</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">),</span><span class="w"> </span><span class="k">target</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">root</span>
+<span class="w">  </span><span class="k">type</span><span class="p">(</span><span class="n">hsd_error_t</span><span class="p">),</span><span class="w"> </span><span class="k">allocatable</span><span class="p">,</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">out</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">errors</span><span class="p">(:)</span>
+<span class="k">end subroutine</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="visitor-pattern">
+<h2>Visitor Pattern<a class="headerlink" href="#visitor-pattern" title="Link to this heading"></a></h2>
+<section id="hsd-accept">
+<h3>hsd_accept<a class="headerlink" href="#hsd-accept" title="Link to this heading"></a></h3>
+<p>Apply a visitor to the tree.</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">subroutine </span><span class="n">hsd_accept</span><span class="p">(</span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="n">visitor</span><span class="p">)</span>
+<span class="w">  </span><span class="k">type</span><span class="p">(</span><span class="n">hsd_table</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">root</span>
+<span class="w">  </span><span class="k">class</span><span class="p">(</span><span class="n">hsd_visitor_t</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">inout</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">visitor</span>
+<span class="k">end subroutine</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="constructor-functions">
+<h2>Constructor Functions<a class="headerlink" href="#constructor-functions" title="Link to this heading"></a></h2>
+<section id="new-table">
+<h3>new_table<a class="headerlink" href="#new-table" title="Link to this heading"></a></h3>
+<p>Create a new table node.</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">function </span><span class="n">new_table</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="w"> </span><span class="k">result</span><span class="p">(</span><span class="n">table</span><span class="p">)</span>
+<span class="w">  </span><span class="kt">character</span><span class="p">(</span><span class="nb">len</span><span class="o">=*</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">name</span>
+<span class="w">  </span><span class="k">type</span><span class="p">(</span><span class="n">hsd_table</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">table</span>
+<span class="k">end function</span>
+</pre></div>
+</div>
+</section>
+<section id="new-value">
+<h3>new_value<a class="headerlink" href="#new-value" title="Link to this heading"></a></h3>
+<p>Create a new value node.</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">function </span><span class="n">new_value</span><span class="p">(</span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="n">val</span><span class="p">)</span><span class="w"> </span><span class="k">result</span><span class="p">(</span><span class="k">value</span><span class="p">)</span>
+<span class="w">  </span><span class="kt">character</span><span class="p">(</span><span class="nb">len</span><span class="o">=*</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">name</span>
+<span class="w">  </span><span class="o">&lt;</span><span class="k">type</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">val</span>
+<span class="w">  </span><span class="k">type</span><span class="p">(</span><span class="n">hsd_value</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="k">value</span>
+<span class="k">end function</span>
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="fuzzing.html" class="btn btn-neutral float-left" title="Fuzz Testing" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, DFTB+ developers group.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

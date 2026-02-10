@@ -142,6 +142,7 @@ fpm run --example simple_read
 | `hsd_get(root, path, value, stat)` | Get value at path |
 | `hsd_get_or(root, path, value, default, stat)` | Get with fallback default |
 | `hsd_get_matrix(root, path, matrix, stat)` | Get 2D array |
+| `hsd_get_inline_text(root, text, stat)` | Get concatenated inline text values |
 
 ### Query Operations
 
@@ -153,6 +154,8 @@ fpm run --example simple_read
 | `hsd_child_count(root, path)` | Count children in table |
 | `hsd_get_keys(root, path, keys)` | Get child key names |
 | `hsd_get_attrib(root, path, attrib)` | Get attribute (e.g., unit) |
+| `hsd_has_value_children(root, path)` | Check if table has value children |
+| `hsd_get_name(node, name, default)` | Get lowercased node name |
 
 ### Mutation and Tree Operations
 

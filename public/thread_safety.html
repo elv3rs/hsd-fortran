@@ -1,0 +1,573 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Thread Safety Guide &mdash; HSD-Fortran 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=8d563738"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Fuzz Testing" href="fuzzing.html" />
+    <link rel="prev" title="Error Message Quick Reference" href="error_handling.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            HSD-Fortran
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#building-with-cmake">Building with CMake</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#basic-build">Basic Build</a></li>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#debug-build-with-coverage">Debug Build with Coverage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#cmake-options">CMake Options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#using-as-a-cmake-subproject">Using as a CMake Subproject</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#building-with-fpm">Building with fpm</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#using-as-an-fpm-dependency">Using as an fpm Dependency</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#verifying-installation">Verifying Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#running-the-example">Running the Example</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="user_guide.html">User Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#basic-usage">Basic Usage</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="user_guide.html#loading-hsd-files">Loading HSD Files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user_guide.html#accessing-values">Accessing Values</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user_guide.html#default-values">Default Values</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#working-with-arrays">Working with Arrays</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="user_guide.html#working-with-matrices">Working with Matrices</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#type-introspection">Type Introspection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#working-with-attributes-units">Working with Attributes (Units)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#modifying-trees">Modifying Trees</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#saving-hsd-files">Saving HSD Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#tree-operations">Tree Operations</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="user_guide.html#cloning-trees">Cloning Trees</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user_guide.html#merging-trees">Merging Trees</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#iterating-children">Iterating Children</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#schema-validation">Schema Validation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="user_guide.html#validation-helpers">Validation Helpers</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#visitor-pattern">Visitor Pattern</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#best-practices">Best Practices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#example-complete-configuration-parser">Example: Complete Configuration Parser</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="hsd_format.html">HSD Format Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="hsd_format.html#basic-syntax">Basic Syntax</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hsd_format.html#structure">Structure</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hsd_format.html#comments">Comments</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hsd_format.html#data-types">Data Types</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hsd_format.html#strings">Strings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hsd_format.html#integers">Integers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hsd_format.html#real-numbers">Real Numbers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hsd_format.html#booleans">Booleans</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hsd_format.html#arrays">Arrays</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hsd_format.html#complex-numbers">Complex Numbers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hsd_format.html#matrices-multi-line-data">Matrices (Multi-line Data)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hsd_format.html#advanced-syntax">Advanced Syntax</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hsd_format.html#typed-blocks-short-form">Typed Blocks (Short Form)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hsd_format.html#attributes-units">Attributes (Units)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hsd_format.html#file-includes">File Includes</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hsd_format.html#include-path-resolution">Include Path Resolution</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hsd_format.html#escaping-and-special-characters">Escaping and Special Characters</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hsd_format.html#quoted-strings">Quoted Strings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hsd_format.html#identifier-rules">Identifier Rules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hsd_format.html#duplicate-keys">Duplicate Keys</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hsd_format.html#grammar-summary">Grammar Summary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hsd_format.html#error-messages">Error Messages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hsd_format.html#compatibility-notes">Compatibility Notes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hsd_format.html#dftb-compatibility">DFTB+ Compatibility</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hsd_format.html#differences-from-json-yaml">Differences from JSON/YAML</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="error_handling.html">Error Message Quick Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="error_handling.html#error-type-structure">Error Type Structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="error_handling.html#creating-errors-with-context">Creating Errors with Context</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="error_handling.html#basic-error">Basic Error</a></li>
+<li class="toctree-l3"><a class="reference internal" href="error_handling.html#error-with-full-context">Error with Full Context</a></li>
+<li class="toctree-l3"><a class="reference internal" href="error_handling.html#syntax-error-helper">Syntax Error Helper</a></li>
+<li class="toctree-l3"><a class="reference internal" href="error_handling.html#type-error-helper">Type Error Helper</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="error_handling.html#error-codes">Error Codes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="error_handling.html#usage-examples">Usage Examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="error_handling.html#handling-errors">Handling Errors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="error_handling.html#error-output-format">Error Output Format</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="error_handling.html#common-error-scenarios">Common Error Scenarios</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="error_handling.html#unclosed-bracket">Unclosed Bracket</a></li>
+<li class="toctree-l3"><a class="reference internal" href="error_handling.html#include-cycle">Include Cycle</a></li>
+<li class="toctree-l3"><a class="reference internal" href="error_handling.html#file-not-found">File Not Found</a></li>
+<li class="toctree-l3"><a class="reference internal" href="error_handling.html#type-mismatch">Type Mismatch</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="error_handling.html#best-practices">Best Practices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="error_handling.html#coding-conventions-for-stat-parameters">Coding Conventions for <code class="docutils literal notranslate"><span class="pre">stat</span></code> Parameters</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="error_handling.html#the-pattern">The Pattern</a></li>
+<li class="toctree-l3"><a class="reference internal" href="error_handling.html#recommended-approaches">Recommended Approaches</a></li>
+<li class="toctree-l3"><a class="reference internal" href="error_handling.html#common-mistakes-to-avoid">Common Mistakes to Avoid</a></li>
+<li class="toctree-l3"><a class="reference internal" href="error_handling.html#using-local-status-variables">Using Local Status Variables</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Thread Safety Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#thread-safety-summary">Thread Safety Summary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#detailed-analysis">Detailed Analysis</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#safe-operations-no-synchronization-needed">Safe Operations (No Synchronization Needed)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#unsafe-operations-require-external-synchronization">Unsafe Operations (Require External Synchronization)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-specific-notes">Module-Specific Notes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#hsd-types">hsd_types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hsd-parser">hsd_parser</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hsd-formatter">hsd_formatter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hsd-schema">hsd_schema</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hsd-hash-table">hsd_hash_table</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#openmp-considerations">OpenMP Considerations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#coarray-fortran-considerations">Coarray Fortran Considerations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#recommendations">Recommendations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#future-considerations">Future Considerations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#implementation-notes">Implementation Notes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#why-no-built-in-synchronization">Why No Built-in Synchronization?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hash-table-thread-safety">Hash Table Thread Safety</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="fuzzing.html">Fuzz Testing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="fuzzing.html#prerequisites">Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fuzzing.html#building-the-fuzz-target">Building the Fuzz Target</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fuzzing.html#running-the-fuzzer">Running the Fuzzer</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="fuzzing.html#basic-usage">Basic Usage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fuzzing.html#using-the-dictionary">Using the Dictionary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fuzzing.html#parallel-fuzzing">Parallel Fuzzing</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="fuzzing.html#understanding-output">Understanding Output</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="fuzzing.html#reproducing-issues">Reproducing Issues</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="fuzzing.html#corpus-management">Corpus Management</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="fuzzing.html#minimizing-the-corpus">Minimizing the Corpus</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fuzzing.html#minimizing-a-crash">Minimizing a Crash</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="fuzzing.html#seed-corpus">Seed Corpus</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fuzzing.html#troubleshooting">Troubleshooting</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="fuzzing.html#afl-qemu-trace-not-found">“afl-qemu-trace not found”</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fuzzing.html#hmm-your-system-is-configured-to-send-core-dump-notifications">“Hmm, your system is configured to send core dump notifications”</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fuzzing.html#low-execution-speed">Low Execution Speed</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fuzzing.html#afl-shows-0-paths">AFL++ Shows 0 Paths</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api.html#module-hsd">Module: hsd</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#types">Types</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#core-types">Core Types</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api.html#hsd-table"><code class="docutils literal notranslate"><span class="pre">hsd_table</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api.html#hsd-value"><code class="docutils literal notranslate"><span class="pre">hsd_value</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api.html#hsd-error-t"><code class="docutils literal notranslate"><span class="pre">hsd_error_t</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api.html#hsd-iterator"><code class="docutils literal notranslate"><span class="pre">hsd_iterator</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api.html#hsd-schema-t"><code class="docutils literal notranslate"><span class="pre">hsd_schema_t</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api.html#hsd-visitor-t"><code class="docutils literal notranslate"><span class="pre">hsd_visitor_t</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#precision-constants">Precision Constants</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#value-type-constants">Value Type Constants</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#error-codes">Error Codes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#schema-constants">Schema Constants</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#i-o-procedures">I/O Procedures</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-load">hsd_load</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-load-string">hsd_load_string</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-dump">hsd_dump</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-dump-to-string">hsd_dump_to_string</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#accessor-procedures">Accessor Procedures</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-get">hsd_get</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-get-or">hsd_get_or</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-get-matrix">hsd_get_matrix</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-get-inline-text">hsd_get_inline_text</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#query-procedures">Query Procedures</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-has-child">hsd_has_child</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-is-table">hsd_is_table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-is-value">hsd_is_value</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-is-array">hsd_is_array</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-child-count">hsd_child_count</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-get-keys">hsd_get_keys</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-get-type">hsd_get_type</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-get-attrib">hsd_get_attrib</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-has-attrib">hsd_has_attrib</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-get-child">hsd_get_child</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-get-table">hsd_get_table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-has-value-children">hsd_has_value_children</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-get-name">hsd_get_name</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#mutation-procedures">Mutation Procedures</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-set">hsd_set</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-remove-child">hsd_remove_child</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#tree-operations">Tree Operations</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-clone">hsd_clone</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-merge">hsd_merge</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#validation-procedures">Validation Procedures</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-require">hsd_require</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-validate-range">hsd_validate_range</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-validate-one-of">hsd_validate_one_of</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-get-with-unit">hsd_get_with_unit</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#schema-validation">Schema Validation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#schema-init">schema_init</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#schema-destroy">schema_destroy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#schema-add-field">schema_add_field</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#schema-add-field-enum">schema_add_field_enum</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#schema-validate">schema_validate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#schema-validate-strict">schema_validate_strict</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#visitor-pattern">Visitor Pattern</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#hsd-accept">hsd_accept</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#constructor-functions">Constructor Functions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#new-table">new_table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#new-value">new_value</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">HSD-Fortran</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Thread Safety Guide</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/elv3rs/hsd-fortran/blob/main/docs/thread_safety.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="thread-safety-guide">
+<h1>Thread Safety Guide<a class="headerlink" href="#thread-safety-guide" title="Link to this heading"></a></h1>
+<p>This document describes the thread safety characteristics of the HSD-Fortran library.</p>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading"></a></h2>
+<p>HSD-Fortran is designed primarily for single-threaded use. Most operations are <strong>NOT thread-safe</strong> by default. However, certain usage patterns are safe for concurrent access.</p>
+</section>
+<section id="thread-safety-summary">
+<h2>Thread Safety Summary<a class="headerlink" href="#thread-safety-summary" title="Link to this heading"></a></h2>
+</section>
+<section id="detailed-analysis">
+<h2>Detailed Analysis<a class="headerlink" href="#detailed-analysis" title="Link to this heading"></a></h2>
+<section id="safe-operations-no-synchronization-needed">
+<h3>Safe Operations (No Synchronization Needed)<a class="headerlink" href="#safe-operations-no-synchronization-needed" title="Link to this heading"></a></h3>
+<p><strong>1. Parsing independent files concurrently</strong></p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">! Thread 1</span>
+<span class="k">call </span><span class="n">hsd_load</span><span class="p">(</span><span class="s2">&quot;config1.hsd&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">root1</span><span class="p">,</span><span class="w"> </span><span class="n">error1</span><span class="p">)</span>
+
+<span class="c">! Thread 2 (can run concurrently)</span>
+<span class="k">call </span><span class="n">hsd_load</span><span class="p">(</span><span class="s2">&quot;config2.hsd&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">root2</span><span class="p">,</span><span class="w"> </span><span class="n">error2</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>2. Reading from a shared tree (after cache warmup)</strong></p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p><code class="docutils literal notranslate"><span class="pre">hsd_value</span></code> nodes use lazy caching: the first call to a typed getter
+(e.g. <code class="docutils literal notranslate"><span class="pre">get_int</span></code>, <code class="docutils literal notranslate"><span class="pre">get_real</span></code>) parses and stores the result internally.
+This <strong>mutates</strong> the node and is therefore <strong>NOT thread-safe</strong> if two
+threads access the same value concurrently for the first time.</p>
+<p>To make concurrent reads safe, populate all caches in a single-threaded
+context before sharing the tree (“cache warmup”).</p>
+</div>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">! Step 1 — warm up caches in the master thread</span>
+<span class="k">call </span><span class="n">hsd_get</span><span class="p">(</span><span class="n">shared_root</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;path/to/value&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">val</span><span class="p">)</span>
+<span class="k">call </span><span class="n">hsd_get</span><span class="p">(</span><span class="n">shared_root</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;path/to/other&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">val2</span><span class="p">)</span>
+<span class="c">! ... access every value node once ...</span>
+
+<span class="c">! Step 2 — now multiple threads can safely read the same tree</span>
+<span class="c">!$omp parallel</span>
+<span class="w">  </span><span class="k">call </span><span class="n">hsd_get</span><span class="p">(</span><span class="n">shared_root</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;path/to/value&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">val</span><span class="p">)</span>
+<span class="w">  </span><span class="k">call </span><span class="n">hsd_has_child</span><span class="p">(</span><span class="n">shared_root</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;some/path&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="k">call </span><span class="n">hsd_child_count</span><span class="p">(</span><span class="n">shared_root</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;table/path&quot;</span><span class="p">)</span>
+<span class="c">!$omp end parallel</span>
+</pre></div>
+</div>
+<p><strong>3. Cloning a tree for thread-local use</strong></p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">! Clone once per thread, then use freely</span>
+<span class="k">call </span><span class="n">hsd_clone</span><span class="p">(</span><span class="n">shared_root</span><span class="p">,</span><span class="w"> </span><span class="n">thread_local_copy</span><span class="p">)</span>
+<span class="c">! Now modify thread_local_copy safely</span>
+</pre></div>
+</div>
+</section>
+<section id="unsafe-operations-require-external-synchronization">
+<h3>Unsafe Operations (Require External Synchronization)<a class="headerlink" href="#unsafe-operations-require-external-synchronization" title="Link to this heading"></a></h3>
+<p><strong>1. Modifying a shared tree</strong></p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">! UNSAFE without synchronization:</span>
+<span class="k">call </span><span class="n">hsd_set</span><span class="p">(</span><span class="n">shared_root</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;path&quot;</span><span class="p">,</span><span class="w"> </span><span class="k">value</span><span class="p">)</span>
+<span class="k">call </span><span class="n">root</span><span class="p">%</span><span class="n">add_child</span><span class="p">(</span><span class="n">child</span><span class="p">)</span>
+<span class="k">call </span><span class="n">root</span><span class="p">%</span><span class="n">remove_child</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>2. Using shared iterators</strong></p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">! Each thread must have its own iterator instance</span>
+<span class="k">type</span><span class="p">(</span><span class="n">hsd_iterator</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">my_iterator</span><span class="w">  </span><span class="c">! Thread-local</span>
+<span class="k">call </span><span class="n">my_iterator</span><span class="p">%</span><span class="n">init</span><span class="p">(</span><span class="n">shared_table</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>3. Building/invalidating hash index</strong></p>
+<p>The hash index used for O(1) child lookup is modified during:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">add_child()</span></code> which modifies the data structure and hash index</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">remove_child()</span></code> (invalidates index)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">build_index()</span></code> (explicit rebuild)</p></li>
+</ul>
+</section>
+</section>
+<section id="module-specific-notes">
+<h2>Module-Specific Notes<a class="headerlink" href="#module-specific-notes" title="Link to this heading"></a></h2>
+<section id="hsd-types">
+<h3>hsd_types<a class="headerlink" href="#hsd-types" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">hsd_table</span></code> and <code class="docutils literal notranslate"><span class="pre">hsd_value</span></code> types are NOT thread-safe for modification</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hsd_value</span></code> typed getters (<code class="docutils literal notranslate"><span class="pre">get_int</span></code>, <code class="docutils literal notranslate"><span class="pre">get_real</span></code>, <code class="docutils literal notranslate"><span class="pre">get_logical</span></code>, etc.)
+<strong>mutate internal caches</strong> on first access and are therefore NOT thread-safe
+for concurrent first reads. After all caches are populated (“warmed up”),
+subsequent reads are safe.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hsd_table</span></code> read operations (<code class="docutils literal notranslate"><span class="pre">get_child</span></code>, <code class="docutils literal notranslate"><span class="pre">child_count</span></code>, etc.) are
+thread-safe if no concurrent writes</p></li>
+<li><p>The internal hash index (<code class="docutils literal notranslate"><span class="pre">name_index</span></code>) is NOT thread-safe</p></li>
+</ul>
+</section>
+<section id="hsd-parser">
+<h3>hsd_parser<a class="headerlink" href="#hsd-parser" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">hsd_parse()</span></code> and <code class="docutils literal notranslate"><span class="pre">hsd_parse_string()</span></code> are thread-safe for different output trees</p></li>
+<li><p>Include file processing is NOT thread-safe if files share the same include paths</p></li>
+</ul>
+</section>
+<section id="hsd-formatter">
+<h3>hsd_formatter<a class="headerlink" href="#hsd-formatter" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">hsd_dump()</span></code> is thread-safe for trees whose value caches are populated</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hsd_dump_to_string()</span></code> is thread-safe for trees whose value caches are populated</p></li>
+<li><p>Both may trigger cache mutation on <code class="docutils literal notranslate"><span class="pre">hsd_value</span></code> nodes if caches are not yet populated</p></li>
+</ul>
+</section>
+<section id="hsd-schema">
+<h3>hsd_schema<a class="headerlink" href="#hsd-schema" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Schema objects can be safely shared for validation (read-only)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">schema_validate()</span></code> is thread-safe for read-only trees and schemas</p></li>
+<li><p>Schema modification (add_field) is NOT thread-safe</p></li>
+</ul>
+</section>
+<section id="hsd-hash-table">
+<h3>hsd_hash_table<a class="headerlink" href="#hsd-hash-table" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>All operations are NOT thread-safe</p></li>
+<li><p>The hash table is an internal implementation detail</p></li>
+</ul>
+</section>
+</section>
+<section id="openmp-considerations">
+<h2>OpenMP Considerations<a class="headerlink" href="#openmp-considerations" title="Link to this heading"></a></h2>
+<p>When using OpenMP:</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">!$omp parallel private(local_root, local_error)</span>
+<span class="w">  </span><span class="k">call </span><span class="n">hsd_load</span><span class="p">(</span><span class="n">filenames</span><span class="p">(</span><span class="n">omp_get_thread_num</span><span class="p">()</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">local_root</span><span class="p">,</span><span class="w"> </span><span class="n">local_error</span><span class="p">)</span>
+<span class="w">  </span><span class="c">! Process local_root...</span>
+<span class="w">  </span><span class="k">call </span><span class="n">local_root</span><span class="p">%</span><span class="n">destroy</span><span class="p">()</span>
+<span class="c">!$omp end parallel</span>
+</pre></div>
+</div>
+<p>For shared reading with OpenMP:</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">! Parse once in serial region</span>
+<span class="k">call </span><span class="n">hsd_load</span><span class="p">(</span><span class="s2">&quot;shared.hsd&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">shared_root</span><span class="p">,</span><span class="w"> </span><span class="n">error</span><span class="p">)</span>
+
+<span class="c">! Warm up all value caches in serial region</span>
+<span class="k">call </span><span class="n">hsd_get</span><span class="p">(</span><span class="n">shared_root</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;value&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">my_val</span><span class="p">)</span>
+<span class="c">! ... access every value node once ...</span>
+
+<span class="c">!$omp parallel</span>
+<span class="w">  </span><span class="c">! Safe: caches already populated, read-only access</span>
+<span class="w">  </span><span class="k">call </span><span class="n">hsd_get</span><span class="p">(</span><span class="n">shared_root</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;value&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">my_val</span><span class="p">)</span>
+<span class="c">!$omp end parallel</span>
+
+<span class="k">call </span><span class="n">shared_root</span><span class="p">%</span><span class="n">destroy</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="coarray-fortran-considerations">
+<h2>Coarray Fortran Considerations<a class="headerlink" href="#coarray-fortran-considerations" title="Link to this heading"></a></h2>
+<p>Each image should maintain its own HSD trees:</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">type</span><span class="p">(</span><span class="n">hsd_table</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">local_root</span><span class="w">  </span><span class="c">! Each image has its own copy</span>
+
+<span class="k">call </span><span class="n">hsd_load</span><span class="p">(</span><span class="s2">&quot;config.hsd&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">local_root</span><span class="p">,</span><span class="w"> </span><span class="n">error</span><span class="p">)</span><span class="w">  </span><span class="c">! Each image loads independently</span>
+<span class="c">! No cross-image sharing of hsd_table objects</span>
+</pre></div>
+</div>
+</section>
+<section id="recommendations">
+<h2>Recommendations<a class="headerlink" href="#recommendations" title="Link to this heading"></a></h2>
+<ol class="arabic simple">
+<li><p><strong>Parse configuration files in the master thread</strong> and access every value
+node once (cache warmup), then share read-only</p></li>
+<li><p><strong>Clone trees</strong> if multiple threads need to modify</p></li>
+<li><p><strong>Use thread-local iterators</strong> when traversing shared trees</p></li>
+<li><p><strong>Avoid modifying shared trees</strong> without external locks</p></li>
+</ol>
+</section>
+<section id="future-considerations">
+<h2>Future Considerations<a class="headerlink" href="#future-considerations" title="Link to this heading"></a></h2>
+<p>Future versions may include:</p>
+<ul class="simple">
+<li><p>Optional mutex protection for thread-safe modification</p></li>
+<li><p>Thread-local storage for iterators</p></li>
+<li><p>Atomic reference counting for shared trees</p></li>
+</ul>
+</section>
+<section id="implementation-notes">
+<h2>Implementation Notes<a class="headerlink" href="#implementation-notes" title="Link to this heading"></a></h2>
+<section id="why-no-built-in-synchronization">
+<h3>Why No Built-in Synchronization?<a class="headerlink" href="#why-no-built-in-synchronization" title="Link to this heading"></a></h3>
+<ol class="arabic simple">
+<li><p><strong>Performance</strong>: Mutex overhead is significant for small operations</p></li>
+<li><p><strong>Flexibility</strong>: Users can choose their synchronization strategy</p></li>
+<li><p><strong>Fortran compatibility</strong>: Standard Fortran has limited synchronization primitives</p></li>
+<li><p><strong>Use case</strong>: Most HSD use is configuration parsing (single-threaded)</p></li>
+</ol>
+</section>
+<section id="hash-table-thread-safety">
+<h3>Hash Table Thread Safety<a class="headerlink" href="#hash-table-thread-safety" title="Link to this heading"></a></h3>
+<p>The O(1) child lookup hash table is implemented in <code class="docutils literal notranslate"><span class="pre">hsd_hash_table.f90</span></code>. It is intentionally NOT thread-safe because:</p>
+<ol class="arabic simple">
+<li><p>Hash table modifications (insert/remove) are rare after parsing</p></li>
+<li><p>Synchronization would penalize the common read-only case</p></li>
+<li><p>Users who need concurrent modification should clone the tree</p></li>
+</ol>
+<p>If thread-safe modification is required, users should:</p>
+<ol class="arabic simple">
+<li><p>Use external mutex/lock around modification operations</p></li>
+<li><p>Clone the tree for each thread</p></li>
+<li><p>Rebuild the tree from thread-local modifications</p></li>
+</ol>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="error_handling.html" class="btn btn-neutral float-left" title="Error Message Quick Reference" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="fuzzing.html" class="btn btn-neutral float-right" title="Fuzz Testing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, DFTB+ developers group.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
