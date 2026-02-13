@@ -16,9 +16,16 @@ HSD-Fortran is a Human-friendly Structured Data parser for Fortran, designed as 
 
 ## Quick Reference
 
+> **Intel ifx support:** The project is tested with both `gfortran` and Intel `ifx`.
+> Use `FC=ifx cmake ...` to build with ifx. All 484 tests pass with both compilers.
+
 ```bash
-# Build
+# Build (gfortran, default)
 cmake -B build -DCMAKE_BUILD_TYPE=Debug
+cmake --build build 2>&1 | tail -5
+
+# Build (Intel ifx)
+FC=ifx cmake -B build -DCMAKE_BUILD_TYPE=Debug
 cmake --build build 2>&1 | tail -5
 
 # Lint (required before committing — must pass with zero warnings)
