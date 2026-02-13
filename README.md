@@ -7,6 +7,13 @@
 [![Docs & Coverage](https://github.com/elv3rs/hsd-fortran/actions/workflows/docs.yml/badge.svg)](https://github.com/elv3rs/hsd-fortran/actions/workflows/docs.yml)
 [![Coverage](https://elv3rs.github.io/hsd-fortran/coverage/coverage.svg)](https://elv3rs.github.io/hsd-fortran/coverage/index.html)
 
+> **⚠️ Agentic Coding Proof of Concept**
+>
+> This repository was developed as a proof-of-concept for AI-assisted
+> (agentic) coding workflows. All code and documentation are **pending
+> human review** and should not be used in production without thorough
+> independent verification.
+
 A lightweight, dependency-free HSD (Human-friendly Structured Data) parser for Fortran.
 
 ## Overview
