@@ -16,6 +16,8 @@
 
 A lightweight, dependency-free HSD (Human-friendly Structured Data) parser for Fortran.
 
+**📖 [Full Documentation](https://elv3rs.github.io/hsd-fortran/)** · **[Coverage Report](https://elv3rs.github.io/hsd-fortran/coverage/)**
+
 ## Overview
 
 HSD is a data format similar to JSON and YAML, but designed to minimize the effort for humans to read and write it. It was originally developed as the input format for [DFTB+](https://github.com/dftbplus/dftbplus).
