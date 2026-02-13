@@ -161,7 +161,7 @@ contains
     end if
 
     ! Format location information
-    if (self%line_start > 0) then
+    if (allocated(self%filename) .and. self%line_start > 0) then
       if (self%line_end > self%line_start) then
         write(line_info, '(A,I0,A,I0)') "lines ", self%line_start, "-", self%line_end
       else
@@ -177,9 +177,12 @@ contains
       write(out_unit, '(A,A,A,A,A,A,A)') &
         "Error in '", trim(self%filename), "' at ", trim(line_info), &
         trim(col_info), ": ", self%message
-    else
+    else if (allocated(self%filename)) then
       write(out_unit, '(A,A,A,A)') &
         "Error in '", trim(self%filename), "': ", self%message
+    else
+      write(out_unit, '(A,A)') &
+        "Error: ", self%message
     end if
 
     ! Print expected vs actual if available

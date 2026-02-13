@@ -1315,8 +1315,12 @@ contains
       fallback = ""
     end if
 
-    if (allocated(node%name) .and. len_trim(node%name) > 0) then
-      name = to_lower(node%name)
+    if (allocated(node%name)) then
+      if (len_trim(node%name) > 0) then
+        name = to_lower(node%name)
+      else
+        name = fallback
+      end if
     else
       name = fallback
     end if

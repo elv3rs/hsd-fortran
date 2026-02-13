@@ -740,14 +740,22 @@ contains
     if (state%current_token%kind == TOKEN_RBRACKET) then
       call state%next_token()
     else if (present(error)) then
-      call make_error(error, HSD_STAT_UNCLOSED_ATTRIB, &
-        "Unclosed attribute bracket", &
-        state%lexer%filename, &
-        state%current_token%line, &
-        column=state%current_token%column, &
-        expected="]", &
-        actual=trim(state%current_token%value), &
-        hint="Add closing ']' to complete the attribute")
+      block
+        character(len=:), allocatable :: actual_str
+        if (allocated(state%current_token%value)) then
+          actual_str = trim(state%current_token%value)
+        else
+          actual_str = "<EOF>"
+        end if
+        call make_error(error, HSD_STAT_UNCLOSED_ATTRIB, &
+          "Unclosed attribute bracket", &
+          state%lexer%filename, &
+          state%current_token%line, &
+          column=state%current_token%column, &
+          expected="]", &
+          actual=actual_str, &
+          hint="Add closing ']' to complete the attribute")
+      end block
     end if
 
   end subroutine parse_attribute

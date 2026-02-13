@@ -858,17 +858,22 @@ contains
         select type (child)
         type is (hsd_value)
           ! Include unnamed, empty-named, or #text-named value nodes
-          if (.not. allocated(child%name) .or. len_trim(child%name) == 0 &
-              & .or. child%name == "#text") then
-            call child%get_string(str_val, local_stat)
-            if (local_stat == 0 .and. len_trim(str_val) > 0) then
-              if (len(combined_text) > 0) then
-                combined_text = combined_text // char(10) // str_val
-              else
-                combined_text = str_val
+          block
+            logical :: is_text_child
+            is_text_child = .not. allocated(child%name)
+            if (.not. is_text_child) &
+                & is_text_child = (len_trim(child%name) == 0 .or. child%name == "#text")
+            if (is_text_child) then
+              call child%get_string(str_val, local_stat)
+              if (local_stat == 0 .and. len_trim(str_val) > 0) then
+                if (len(combined_text) > 0) then
+                  combined_text = combined_text // char(10) // str_val
+                else
+                  combined_text = str_val
+                end if
               end if
             end if
-          end if
+          end block
         end select
       end if
     end do
@@ -910,17 +915,22 @@ contains
         select type (child)
         type is (hsd_value)
           ! Include unnamed, empty-named, or #text-named value nodes
-          if (.not. allocated(child%name) .or. len_trim(child%name) == 0 &
-              & .or. child%name == "#text") then
-            call child%get_string(str_val, local_stat)
-            if (local_stat == 0 .and. len_trim(str_val) > 0) then
-              if (len(combined_text) > 0) then
-                combined_text = combined_text // char(10) // str_val
-              else
-                combined_text = str_val
+          block
+            logical :: is_text_child
+            is_text_child = .not. allocated(child%name)
+            if (.not. is_text_child) &
+                & is_text_child = (len_trim(child%name) == 0 .or. child%name == "#text")
+            if (is_text_child) then
+              call child%get_string(str_val, local_stat)
+              if (local_stat == 0 .and. len_trim(str_val) > 0) then
+                if (len(combined_text) > 0) then
+                  combined_text = combined_text // char(10) // str_val
+                else
+                  combined_text = str_val
+                end if
               end if
             end if
-          end if
+          end block
         end select
       end if
     end do
@@ -1024,17 +1034,22 @@ contains
         select type (child)
         type is (hsd_value)
           ! Include unnamed, empty-named, or #text-named value nodes
-          if (.not. allocated(child%name) .or. len_trim(child%name) == 0 &
-              & .or. child%name == "#text") then
-            call child%get_string(str_val, local_stat)
-            if (local_stat == 0 .and. len_trim(str_val) > 0) then
-              if (len(combined_text) > 0) then
-                combined_text = combined_text // char(10) // str_val
-              else
-                combined_text = str_val
+          block
+            logical :: is_text_child
+            is_text_child = .not. allocated(child%name)
+            if (.not. is_text_child) &
+                & is_text_child = (len_trim(child%name) == 0 .or. child%name == "#text")
+            if (is_text_child) then
+              call child%get_string(str_val, local_stat)
+              if (local_stat == 0 .and. len_trim(str_val) > 0) then
+                if (len(combined_text) > 0) then
+                  combined_text = combined_text // char(10) // str_val
+                else
+                  combined_text = str_val
+                end if
               end if
             end if
-          end if
+          end block
         end select
       end if
     end do
@@ -1387,8 +1402,15 @@ contains
       if (.not. associated(child)) cycle
       select type (v => child)
       type is (hsd_value)
-        if (.not. allocated(v%name) .or. len_trim(v%name) == 0 &
-            & .or. v%name == "#text") then
+        block
+          logical :: is_anon_val
+          is_anon_val = .true.
+          if (allocated(v%name)) then
+            if (len_trim(v%name) > 0 .and. v%name /= "#text") then
+              is_anon_val = .false.
+            end if
+          end if
+        if (is_anon_val) then
           call v%get_string(piece, local_stat)
           if (local_stat == HSD_STAT_OK .and. allocated(piece)) then
             if (len(text) > 0) then
@@ -1398,6 +1420,7 @@ contains
             end if
           end if
         end if
+        end block
       end select
     end do
 

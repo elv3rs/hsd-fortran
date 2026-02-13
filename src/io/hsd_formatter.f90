@@ -22,6 +22,50 @@ module hsd_formatter
 
 contains
 
+  !> Check whether a node name is anonymous (unset, blank, or "#text")
+  !>
+  !> Uses nested if-blocks to avoid non-short-circuit .and./.or. evaluation
+  !> that can access unallocated allocatable components.
+  pure function is_anon_name_(name) result(res)
+    character(len=:), allocatable, intent(in) :: name
+    logical :: res
+
+    res = .true.
+    if (allocated(name)) then
+      if (len_trim(name) > 0 .and. name /= "#text") then
+        res = .false.
+      end if
+    end if
+
+  end function is_anon_name_
+
+  !> Safely retrieve a node name, returning empty string if unallocated
+  pure function safe_name_(name) result(res)
+    character(len=:), allocatable, intent(in) :: name
+    character(len=:), allocatable :: res
+
+    if (allocated(name)) then
+      res = name
+    else
+      res = ""
+    end if
+
+  end function safe_name_
+
+  !> Check whether a node has a non-blank name
+  !>
+  !> Uses nested if to avoid non-short-circuit access to unallocated name.
+  pure function has_name_(name) result(res)
+    character(len=:), allocatable, intent(in) :: name
+    logical :: res
+
+    res = .false.
+    if (allocated(name)) then
+      if (len_trim(name) > 0) res = .true.
+    end if
+
+  end function has_name_
+
   !> Write HSD table to a file
   subroutine hsd_dump(root, filename, error)
     type(hsd_table), intent(in) :: root
@@ -114,9 +158,9 @@ contains
         select type (single_child)
         type is (hsd_table)
           ! Tag = ChildTag { ... }
-          if (allocated(table%name) .and. len_trim(table%name) > 0) then
+          if (has_name_(table%name)) then
             write(unit_num, '(A)') indent // trim(table%name) // attrib_str // &
-              " = " // trim(single_child%name) // " {"
+              " = " // trim(safe_name_(single_child%name)) // " {"
             call write_table_content(unit_num, single_child, indent_level + 1)
             write(unit_num, '(A)') indent // "}"
           else
@@ -127,11 +171,8 @@ contains
 
         type is (hsd_value)
           ! Tag = value (for unnamed/anonymous or #text-named children)
-          if (.not. (allocated(single_child%name) .and. &
-              len_trim(single_child%name) > 0) &
-              .or. (allocated(single_child%name) .and. &
-              single_child%name == "#text")) then
-            if (allocated(table%name) .and. len_trim(table%name) > 0) then
+          if (is_anon_name_(single_child%name)) then
+            if (has_name_(table%name)) then
               call write_tag_value(unit_num, table%name, attrib_str, &
                                    single_child, indent_level)
             else
@@ -145,7 +186,7 @@ contains
     end if
 
     ! Regular block: Tag { ... }
-    if (allocated(table%name) .and. len_trim(table%name) > 0) then
+    if (has_name_(table%name)) then
       write(unit_num, '(A)') indent // trim(table%name) // attrib_str // " {"
       call write_table_content(unit_num, table, indent_level + 1)
       write(unit_num, '(A)') indent // "}"
@@ -175,8 +216,7 @@ contains
     end if
 
     ! Treat #text-named values as anonymous (inline content)
-    is_anonymous = .not. (allocated(val%name) .and. len_trim(val%name) > 0) &
-        .or. (allocated(val%name) .and. val%name == "#text")
+    is_anonymous = is_anon_name_(val%name)
 
     ! For anonymous values with multiline raw text, use unquoted format
     if (is_anonymous) then
@@ -455,8 +495,7 @@ contains
           end if
 
           ! Treat #text-named values as anonymous
-          is_anon = .not. (allocated(child%name) .and. len_trim(child%name) > 0) &
-              .or. (allocated(child%name) .and. child%name == "#text")
+          is_anon = is_anon_name_(child%name)
 
           if (is_anon) then
             ! Anonymous/inline content — check for multiline raw text first
@@ -519,9 +558,9 @@ contains
         select type (single_child)
         type is (hsd_table)
           ! Tag = ChildTag { ... }
-          if (allocated(table%name) .and. len_trim(table%name) > 0) then
+          if (has_name_(table%name)) then
             call buf%append_str(indent // trim(table%name) // attrib_str // &
-              " = " // trim(single_child%name) // " {")
+              " = " // trim(safe_name_(single_child%name)) // " {")
             call buf%append_str(CHAR_NEWLINE)
             call write_table_to_string_buf(single_child, indent_level + 1, buf)
             call buf%append_str(indent // "}")
@@ -533,11 +572,8 @@ contains
 
         type is (hsd_value)
           ! Tag = value (for unnamed/anonymous or #text-named children)
-          if (.not. (allocated(single_child%name) .and. &
-              len_trim(single_child%name) > 0) &
-              .or. (allocated(single_child%name) .and. &
-              single_child%name == "#text")) then
-            if (allocated(table%name) .and. len_trim(table%name) > 0) then
+          if (is_anon_name_(single_child%name)) then
+            if (has_name_(table%name)) then
               block
                 character(len=:), allocatable :: raw_text
                 ! Check for multiline raw text (e.g. GenFormat data)
@@ -574,7 +610,7 @@ contains
     end if
 
     ! Regular block: Tag { ... }
-    if (allocated(table%name) .and. len_trim(table%name) > 0) then
+    if (has_name_(table%name)) then
       call buf%append_str(indent // trim(table%name) // attrib_str // " {")
       call buf%append_str(CHAR_NEWLINE)
       call write_table_to_string_buf(table, indent_level + 1, buf)

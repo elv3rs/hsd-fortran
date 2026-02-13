@@ -86,16 +86,16 @@ if(CMAKE_Fortran_COMPILER_ID MATCHES "GNU")
   endif()
 elseif(CMAKE_Fortran_COMPILER_ID MATCHES "Intel")
   target_compile_options(hsd PRIVATE
-    -warn all                # Enable all warnings
-    -warn unused             # Warn about unused variables
-    -warn interfaces         # Warn about interface mismatches
-    -stand f08               # Check F2008 standard compliance
+    "SHELL:-warn all"        # Enable all warnings
+    "SHELL:-warn unused"     # Warn about unused variables
+    "SHELL:-warn interfaces" # Warn about interface mismatches
+    "SHELL:-stand f08"       # Check F2008 standard compliance
   )
   # Runtime checks and debugging support in Debug mode
   if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_compile_options(hsd PRIVATE
       -g                     # Debug symbols
-      -check all             # All runtime checks
+      "SHELL:-check all"     # All runtime checks
       -traceback             # Produce backtrace on errors
       -fpe0                  # Trap floating point exceptions
       -init=snan             # Initialize to signaling NaN
