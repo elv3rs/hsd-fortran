@@ -38,3 +38,38 @@ jobs:
       
       - name: Run tests
         run: ctest --test-dir build --output-on-failure
+
+  test-intel:
+    name: Build & Test (Intel ifx)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Intel oneAPI
+        uses: rscohn2/setup-oneapi@v0
+        with:
+          components: ifx@2025.0.0
+
+      - name: Setup Intel environment
+        run: |
+          source /opt/intel/oneapi/setvars.sh
+          printenv >> "$GITHUB_ENV"
+          echo "/opt/intel/oneapi/compiler/latest/bin" >> "$GITHUB_PATH"
+
+      - name: Configure CMake
+        run: |
+          cmake -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_Fortran_COMPILER=ifx \
+            -DHSD_BUILD_TESTS=ON \
+            -DHSD_BUILD_EXAMPLES=ON
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Run tests
+        run: ctest --test-dir build --output-on-failure
