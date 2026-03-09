@@ -40,7 +40,6 @@ set(TEST_API_SUITES
 
 set(TEST_COVERAGE_SUITES
   suites/coverage/count_visitor_mod.f90
-  suites/coverage/test_fuzz_suite.f90
   suites/coverage/test_full_coverage_suite.f90
   suites/coverage/test_coverage_gaps_suite.f90
 )

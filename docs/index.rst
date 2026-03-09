@@ -78,7 +78,7 @@ Contents
    hsd_format
    error_handling
    thread_safety
-   fuzzing
+   tree_storage
 
 .. toctree::
    :maxdepth: 2
