@@ -902,12 +902,14 @@ contains
   !> Lines that consist entirely of a comment (only whitespace before '#')
   !> are removed completely (including the trailing newline) so that
   !> downstream readers do not see spurious blank lines.
+  !> Blank lines (containing only whitespace) are also removed to match
+  !> the behavior of the legacy HSD parser.
   subroutine strip_hsd_comments_(text)
     character(len=:), allocatable, intent(inout) :: text
 
     character(len=:), allocatable :: buf
     integer :: i, n, out_pos, line_start, line_data_start
-    logical :: in_comment, line_is_comment_only
+    logical :: in_comment, line_is_comment_only, line_is_blank
 
     if (.not. allocated(text)) return
     n = len(text)
@@ -917,20 +919,25 @@ contains
     out_pos = 0
     in_comment = .false.
     line_is_comment_only = .false.
+    line_is_blank = .true.
     line_start = 1
     line_data_start = out_pos + 1
 
     do i = 1, n
       if (text(i:i) == char(10) .or. text(i:i) == char(13)) then
         ! End of line
-        if (.not. line_is_comment_only) then
+        if (.not. line_is_comment_only .and. .not. line_is_blank) then
           ! Keep the newline
           out_pos = out_pos + 1
           buf(out_pos:out_pos) = text(i:i)
+        else if (line_is_blank) then
+          ! Blank line: remove any whitespace that was already output for this line
+          out_pos = line_data_start - 1
         end if
         ! Reset for next line
         in_comment = .false.
         line_is_comment_only = .false.
+        line_is_blank = .true.
         line_start = i + 1
         line_data_start = out_pos + 1
       else if (.not. in_comment .and. text(i:i) == '#') then
@@ -959,6 +966,9 @@ contains
       else if (.not. in_comment) then
         out_pos = out_pos + 1
         buf(out_pos:out_pos) = text(i:i)
+        if (text(i:i) /= ' ' .and. text(i:i) /= char(9)) then
+          line_is_blank = .false.
+        end if
       end if
     end do
 
