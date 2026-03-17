@@ -245,6 +245,14 @@ Get concatenated text content of all unnamed value children. Iterates
 children of the table, collecting text from unnamed or ``#text``
 ``hsd_value`` nodes. Multiple values are separated by spaces.
 
+How ``#text`` is created:
+
+When a table block contains inline text (not a named ``Key = Value`` child),
+the parser stores that inline text as an internal value child named
+``#text``. For example, ``Tag { 42 }`` creates a ``Tag`` table with one
+``#text`` child containing ``42``; ``Tag { 42; Sub = x }`` creates both the
+``#text`` child (``42``) and the named ``Sub`` child.
+
 .. code-block:: fortran
 
    subroutine hsd_get_inline_text(table, text, stat)

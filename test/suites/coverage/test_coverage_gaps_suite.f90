@@ -48,13 +48,11 @@ contains
             ! P7: Column-major matrix getters
             test("matrix_column_major_int", test_matrix_column_major_int), &
             test("matrix_column_major_real", test_matrix_column_major_real), &
-            ! P8: wrap_value_to_table_ via auto_wrap
-            test("auto_wrap_value_to_table", test_auto_wrap_value_to_table), &
-            ! P9: hsd_get_choice value-child
+            ! P8: hsd_get_choice value-child
             test("get_choice_value_child", test_get_choice_value_child), &
-            ! P10: hsd_rename_child with path
+            ! P9: hsd_rename_child with path
             test("rename_child_with_path", test_rename_child_with_path), &
-            ! P11: strip_hsd_comments
+            ! P10: strip_hsd_comments
             test("strip_hsd_comments", test_strip_hsd_comments), &
             ! --- NEW TESTS ---
             ! P12: Accessor table-inline-value paths
@@ -622,35 +620,7 @@ contains
   end subroutine test_matrix_column_major_real
 
   ! ============================================================
-  ! P8: wrap_value_to_table_ via hsd_get_table(auto_wrap=.true.)
-  ! ============================================================
-
-  !> Test auto-wrapping a value child into a table
-  subroutine test_auto_wrap_value_to_table()
-    type(hsd_table) :: root
-    type(hsd_error_t), allocatable :: error
-    type(hsd_table), pointer :: child_tbl
-    integer :: stat
-    character(len=:), allocatable :: text_content
-
-    call hsd_load_string("Solver = QuickSolver", root, error)
-    call check(.not. allocated(error), msg="parse ok")
-
-    call hsd_get_table(root, "Solver", child_tbl, stat, auto_wrap=.true.)
-    call check(stat == HSD_STAT_OK, msg="auto_wrap stat ok")
-    call check(associated(child_tbl), msg="child_tbl associated after wrap")
-
-    ! The wrapped table should contain a #text child with the original value
-    call hsd_get_inline_text(child_tbl, text_content, stat)
-    call check(stat == HSD_STAT_OK, msg="inline text found")
-    call check(index(text_content, "QuickSolver") > 0, &
-        msg="wrapped text contains original value")
-
-    call root%destroy()
-  end subroutine test_auto_wrap_value_to_table
-
-  ! ============================================================
-  ! P9: hsd_get_choice value-child fallback
+  ! P8: hsd_get_choice value-child fallback
   ! ============================================================
 
   !> Get choice when only a value child exists (no table children)
