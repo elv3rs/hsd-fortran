@@ -96,16 +96,6 @@ HSD supports multiple boolean formats:
    Enabled = Yes
    Disabled = No
 
-   # Alternative formats
-   Flag1 = On
-   Flag2 = Off
-   Flag3 = 1
-   Flag4 = 0
-
-   # Optional (if HSD_ACCEPT_TRUE_FALSE is enabled)
-   Flag5 = True
-   Flag6 = False
-
 .. note::
    When writing HSD output, the library always uses ``Yes``/``No`` format.
 
@@ -297,7 +287,7 @@ Grammar Summary
    value        := string | number | boolean | array | complex
    string       := quoted_string | unquoted_word
    number       := integer | real
-   boolean      := 'Yes' | 'No' | 'On' | 'Off' | '1' | '0' | 'True' | 'False'
+   boolean      := 'Yes' | 'No'
    array        := value ((',' | ' ') value)*
    complex      := '(' real ',' real ')'
    include      := '<<+' quoted_string | '<<<' quoted_string

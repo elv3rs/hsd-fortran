@@ -32,7 +32,7 @@ contains
             test("iterator_reset", test_iterator_reset), &
             test("remove_child_edge_cases", test_remove_child_edge_cases), &
             test("get_keys_variations", test_get_keys_variations), &
-            test("visitor_deep_tree", test_visitor_deep_tree), &
+            test("deep_tree", test_deep_tree), &
             test("parse_quoted_strings", test_parse_quoted_strings), &
             test("logical_variations", test_logical_variations), &
             test("real_sp_values", test_real_sp_values), &
@@ -386,8 +386,8 @@ contains
 
   end subroutine test_get_keys_variations
 
-  !> Test visitor on deep tree
-  subroutine test_visitor_deep_tree()
+  !> Test deep tree parsing
+  subroutine test_deep_tree()
     type(hsd_table) :: root
     type(hsd_error_t), allocatable :: error
 
@@ -399,7 +399,7 @@ contains
 
     call root%destroy()
 
-  end subroutine test_visitor_deep_tree
+  end subroutine test_deep_tree
 
   !> Test parsing quoted strings in arrays
   subroutine test_parse_quoted_strings()
@@ -426,7 +426,7 @@ contains
     integer :: stat
 
     ! Test all variations
-    call hsd_load_string("a = yes; b = no; c = true; d = false; e = Yes; f = TRUE", root, error)
+    call hsd_load_string("a = yes; b = no; c = Yes; d = No; e = YES; f = NO", root, error)
     call check(.not. allocated(error), msg="Parse OK")
 
     call hsd_get(root, "a", val, stat)
@@ -436,10 +436,16 @@ contains
     call check(val .eqv. .false., msg="'no' is false")
 
     call hsd_get(root, "c", val, stat)
-    call check(val .eqv. .true., msg="'true' is true")
+    call check(val .eqv. .true., msg="'Yes' is true")
 
     call hsd_get(root, "d", val, stat)
-    call check(val .eqv. .false., msg="'false' is false")
+    call check(val .eqv. .false., msg="'No' is false")
+
+    call hsd_get(root, "e", val, stat)
+    call check(val .eqv. .true., msg="'YES' is true")
+
+    call hsd_get(root, "f", val, stat)
+    call check(val .eqv. .false., msg="'NO' is false")
 
     call root%destroy()
 

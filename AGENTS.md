@@ -3,7 +3,7 @@
 ## Main directive
 
 The project has reached **v1.0.0 release** status.  All specification phases
-(parser, accessors, mutators, visitor pattern, unit-aware
+(parser, accessors, mutators, unit-aware
 accessors, documentation) are complete.
 
 When making changes: ensure builds pass, `fortitude check` is clean, all tests
@@ -76,11 +76,9 @@ hsd-fortran/
 │   ├── hsd_table_ops.f90      # Submodule: table & iterator operations
 │   ├── hsd_value_ops.f90      # Submodule: value ops & parse helpers
 │   ├── api/                    # High-level API modules
-│   │   ├── hsd_accessors.f90   # hsd_get, hsd_get_or, hsd_get_matrix
-│   │   ├── hsd_mutators.f90    # hsd_set
-│   │   ├── hsd_query.f90       # hsd_has_child, hsd_is_table, hsd_merge, etc.
+│   │   ├── hsd_api.f90         # Unified API (accessors, mutators, query)
 │   │   ├── hsd_validation.f90  # hsd_require, hsd_validate_range
-│   │   └── hsd_visitor.f90     # Visitor pattern for tree traversal
+│   │   └── hsd_walk.f90        # Recursive tree walker (non-visitor)
 │   ├── core/                   # Core infrastructure
 │   │   ├── hsd_constants.f90   # dp, sp precision constants
 │   │   ├── hsd_error.f90       # Error types, status codes
@@ -193,13 +191,11 @@ This ensures tests work regardless of where CTest runs from.
 
 | Module | Purpose |
 |--------|---------|
-| `hsd_accessors` | Type-safe value retrieval with path navigation |
-| `hsd_mutators` | Value modification (`hsd_set`) |
-| `hsd_query` | Tree introspection (type checks, child enumeration) |
+| `hsd_api` | Unified API (accessors, mutators, query) |
 | `hsd_validation` | Value validation helpers |
-| `hsd_visitor` | Visitor pattern for tree traversal |
+| `hsd_walk` | Recursive tree walker (non-visitor) |
 
-### Generic Tree Utilities (in `hsd_query`)
+### Generic Tree Utilities (in `hsd_api`)
 
 These functions were upstreamed from DFTB+ and are part of the public API:
 

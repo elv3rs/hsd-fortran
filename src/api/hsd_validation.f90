@@ -10,7 +10,7 @@ module hsd_validation
   use hsd_types, only: hsd_node, hsd_table, hsd_value, &
     VALUE_TYPE_NONE, VALUE_TYPE_STRING, VALUE_TYPE_INTEGER, &
     VALUE_TYPE_REAL, VALUE_TYPE_LOGICAL, VALUE_TYPE_ARRAY, VALUE_TYPE_COMPLEX
-  use hsd_query, only: hsd_get_child
+  use hsd_api, only: hsd_get_child
   implicit none (type, external)
   private
 

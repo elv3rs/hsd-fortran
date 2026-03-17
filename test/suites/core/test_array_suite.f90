@@ -83,7 +83,7 @@ contains
     logical, allocatable :: arr(:)
     integer :: stat
 
-    call hsd_load_string("flags = yes no true false on off", root, error)
+    call hsd_load_string("flags = yes no Yes No YES NO", root, error)
 
     call check(.not. allocated(error), msg="No parse error")
 
@@ -92,10 +92,10 @@ contains
     call check(is_equal(size(arr), 6), msg="Array has 6 elements")
     call check(arr(1) .eqv. .true., msg="First is true (yes)")
     call check(arr(2) .eqv. .false., msg="Second is false (no)")
-    call check(arr(3) .eqv. .true., msg="Third is true")
-    call check(arr(4) .eqv. .false., msg="Fourth is false")
-    call check(arr(5) .eqv. .true., msg="Fifth is true (on)")
-    call check(arr(6) .eqv. .false., msg="Sixth is false (off)")
+    call check(arr(3) .eqv. .true., msg="Third is true (Yes)")
+    call check(arr(4) .eqv. .false., msg="Fourth is false (No)")
+    call check(arr(5) .eqv. .true., msg="Fifth is true (YES)")
+    call check(arr(6) .eqv. .false., msg="Sixth is false (NO)")
 
     call root%destroy()
 

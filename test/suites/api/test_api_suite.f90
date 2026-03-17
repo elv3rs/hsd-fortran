@@ -13,24 +13,6 @@ module test_api_suite
   integer :: walk_table_count = 0
   integer :: walk_value_count = 0
 
-  ! Helper visitor type that counts nodes
-  type, extends(hsd_visitor_t) :: counting_visitor
-    integer :: table_count = 0
-    integer :: value_count = 0
-  contains
-    procedure :: visit_table => counting_visit_table
-    procedure :: visit_value => counting_visit_value
-  end type counting_visitor
-
-  ! Helper for leave_table test
-  type, extends(hsd_visitor_t) :: nesting_visitor
-    integer :: depth_check = 0
-    integer :: tables_visited = 0
-  contains
-    procedure :: visit_table => nesting_visit_table
-    procedure :: visit_value => nesting_visit_value
-    procedure :: leave_table => nesting_leave_table
-  end type nesting_visitor
 
 contains
 
@@ -48,8 +30,6 @@ contains
             test("default_real", test_default_real), &
             test("default_string", test_default_string), &
             test("default_logical", test_default_logical), &
-            test("visitor_pattern", test_visitor_pattern), &
-            test("visitor_leave_table", test_visitor_leave_table), &
             test("get_attrib", test_get_attrib), &
             test("has_attrib", test_has_attrib), &
             test("hsd_require", test_hsd_require), &
@@ -312,64 +292,8 @@ contains
 
   end subroutine test_default_logical
 
-  !> Test visitor pattern
-  subroutine test_visitor_pattern()
-    type(hsd_table) :: root
-    type(hsd_error_t), allocatable :: error
-    type(counting_visitor) :: visitor
-    integer :: stat
-    character(len=:), allocatable :: hsd_input
 
-    hsd_input = &
-      "a = 1" // char(10) // &
-      "b = 2" // char(10) // &
-      "nested {" // char(10) // &
-      "  c = 3" // char(10) // &
-      "  inner { d = 4 }" // char(10) // &
-      "}"
 
-    call hsd_load_string(hsd_input, root, error)
-    call check(.not. allocated(error), msg="No parse error")
-
-    visitor%table_count = 0
-    visitor%value_count = 0
-
-    call hsd_accept(root, visitor, stat)
-    call check(is_equal(stat, 0), msg="visitor traversal succeeded")
-
-    ! Should visit: root, nested, inner = 3 tables
-    call check(is_equal(visitor%table_count, 3), msg="visited 3 tables")
-
-    ! Should visit: a, b, c, d = 4 values
-    call check(is_equal(visitor%value_count, 4), msg="visited 4 values")
-
-    call root%destroy()
-
-  end subroutine test_visitor_pattern
-
-  subroutine counting_visit_table(self, table, path, depth, stat)
-    class(counting_visitor), intent(inout) :: self
-    type(hsd_table), intent(in), target :: table
-    character(len=*), intent(in) :: path
-    integer, intent(in) :: depth
-    integer, intent(out), optional :: stat
-
-    self%table_count = self%table_count + 1
-    if (present(stat)) stat = 0
-
-  end subroutine counting_visit_table
-
-  subroutine counting_visit_value(self, val, path, depth, stat)
-    class(counting_visitor), intent(inout) :: self
-    type(hsd_value), intent(in) :: val
-    character(len=*), intent(in) :: path
-    integer, intent(in) :: depth
-    integer, intent(out), optional :: stat
-
-    self%value_count = self%value_count + 1
-    if (present(stat)) stat = 0
-
-  end subroutine counting_visit_value
 
   !> Test hsd_get_attrib
   subroutine test_get_attrib()
@@ -941,62 +865,9 @@ contains
   end subroutine test_default_complex
 
   !> Test leave_table callback in visitor
-  subroutine test_visitor_leave_table()
-    type(hsd_table) :: root
-    type(hsd_error_t), allocatable :: error
-    class(nesting_visitor), allocatable :: vis
-    integer :: stat
 
-    ! Build a nested structure
-    ! root
-    !   - t1 (table)
-    !     - v1 (value)
-    !   - t2 (table)
-    !     - t3 (table)
-    call hsd_load_string("t1 { v1 = 1} t2 { t3 {} }", root, error)
-    call check(.not. allocated(error), msg="Parse OK")
 
-    allocate(vis)
-    call hsd_accept(root, vis, stat)
 
-    call check(vis%depth_check == 0, msg="Depth returned to 0")
-    ! Root, t1, t2, t3 = 4 tables
-    call check(vis%tables_visited == 4, msg="Visited 4 tables")
-
-    call root%destroy()
-  end subroutine test_visitor_leave_table
-
-  subroutine nesting_visit_table(self, table, path, depth, stat)
-    class(nesting_visitor), intent(inout) :: self
-    type(hsd_table), intent(in), target :: table
-    character(len=*), intent(in) :: path
-    integer, intent(in) :: depth
-    integer, intent(out), optional :: stat
-
-    self%depth_check = self%depth_check + 1
-    self%tables_visited = self%tables_visited + 1
-    if (present(stat)) stat = 0
-  end subroutine nesting_visit_table
-
-  subroutine nesting_visit_value(self, val, path, depth, stat)
-    class(nesting_visitor), intent(inout) :: self
-    type(hsd_value), intent(in) :: val
-    character(len=*), intent(in) :: path
-    integer, intent(in) :: depth
-    integer, intent(out), optional :: stat
-    if (present(stat)) stat = 0
-  end subroutine nesting_visit_value
-
-  subroutine nesting_leave_table(self, table, path, depth, stat)
-    class(nesting_visitor), intent(inout) :: self
-    type(hsd_table), intent(in), target :: table
-    character(len=*), intent(in) :: path
-    integer, intent(in) :: depth
-    integer, intent(out), optional :: stat
-
-    self%depth_check = self%depth_check - 1
-    if (present(stat)) stat = 0
-  end subroutine nesting_leave_table
 
   !> Test hsd_table_equal with identical tables
   subroutine test_table_equal_identical()

@@ -67,18 +67,7 @@ Iterator for traversing table children.
    type(hsd_iterator) :: iter
 
 
-``hsd_visitor_t``
-^^^^^^^^^^^^^^^^^
 
-Base type for visitor pattern implementation.
-
-.. code-block:: fortran
-
-   type, abstract :: hsd_visitor_t
-   contains
-     procedure(visit_table_iface), deferred :: visit_table
-     procedure(visit_value_iface), deferred :: visit_value
-   end type
 
 Precision Constants
 ~~~~~~~~~~~~~~~~~~~
@@ -589,20 +578,7 @@ Get a value with unit conversion via a user-supplied converter function.
 
 
 
-Visitor Pattern
----------------
 
-hsd_accept
-~~~~~~~~~~
-
-Apply a visitor to the tree.
-
-.. code-block:: fortran
-
-   subroutine hsd_accept(root, visitor)
-     type(hsd_table), intent(in) :: root
-     class(hsd_visitor_t), intent(inout) :: visitor
-   end subroutine
 
 Constructor Functions
 ---------------------

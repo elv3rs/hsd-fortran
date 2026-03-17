@@ -18,7 +18,7 @@ Features
 - **Path-based accessors** for convenient data retrieval (e.g., ``"section/subsection/value"``)
 - **Schema validation** for declarative input validation
 - **Type introspection** to query node types before access
-- **Tree operations** including merge, clone, and visitor pattern traversal
+- **Tree operations** including merge, clone, and recursive traversal
 - **Thread-safe** read access to parsed trees
 
 Quick Start

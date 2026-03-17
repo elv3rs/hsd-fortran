@@ -29,7 +29,7 @@ This library provides:
 - **Include support** with cycle detection (`<<+` for HSD, `<<<` for text)
 - **Path-based accessors** for convenient data retrieval (`"section/subsection/value"`)
 - **Type introspection** to query node types before access
-- **Tree operations** including merge, clone, and visitor pattern traversal
+- **Tree operations** including merge, clone, and recursive traversal
 
 ## Quick Example
 

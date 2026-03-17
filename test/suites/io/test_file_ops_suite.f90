@@ -34,7 +34,7 @@ contains
             test("get_real_matrix", test_get_real_matrix), &
             test("get_complex_array", test_get_complex_array), &
             test("iterator_mixed_types", test_iterator_mixed_types), &
-            test("visitor_with_depth", test_visitor_with_depth), &
+
             test("parse_block_variations", test_parse_block_variations), &
             test("parse_assignment_variations", test_parse_assignment_variations), &
             test("remove_operations", test_remove_operations), &
@@ -439,21 +439,7 @@ contains
 
   end subroutine test_iterator_mixed_types
 
-  !> Test visitor with depth tracking
-  subroutine test_visitor_with_depth()
-    type(hsd_table) :: root
-    type(hsd_error_t), allocatable :: error
-    integer :: stat
 
-    call hsd_load_string("l1 { l2 { l3 { deep = 42 } } }", root, error)
-    call check(.not. allocated(error), msg="Parse OK")
-
-    ! Just visit the root to exercise visitor
-    call check(root%num_children >= 1, msg="Root has children")
-
-    call root%destroy()
-
-  end subroutine test_visitor_with_depth
 
   !> Test various block parsing patterns
   subroutine test_parse_block_variations()
@@ -666,7 +652,7 @@ contains
     logical, allocatable :: arr(:)
     integer :: stat
 
-    call hsd_load_string("flags = yes no true false", root, error)
+    call hsd_load_string("flags = yes no Yes No", root, error)
     call check(.not. allocated(error), msg="Parse OK")
 
     call hsd_get(root, "flags", arr, stat)

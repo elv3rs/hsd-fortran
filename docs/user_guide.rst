@@ -306,50 +306,7 @@ Additional validation utilities:
    call hsd_validate_one_of(root, "Driver/Method", &
      [character(len=10) :: "option1", "option2", "option3"], error)
 
-Visitor Pattern
----------------
 
-Traverse the entire tree with custom logic by extending ``hsd_visitor_t``:
-
-.. code-block:: fortran
-
-   type, extends(hsd_visitor_t) :: tree_printer
-   contains
-     procedure :: visit_table => print_table
-     procedure :: visit_value => print_value
-   end type
-
-   type(tree_printer) :: printer
-
-   call hsd_accept(root, printer)
-
-   contains
-
-   subroutine print_table(self, table, path, depth, stat)
-     class(tree_printer), intent(inout) :: self
-     type(hsd_table), intent(in), target :: table
-     character(len=*), intent(in) :: path
-     integer, intent(in) :: depth
-     integer, intent(out), optional :: stat
-     
-     print *, repeat("  ", depth), "Table: ", trim(path)
-     if (present(stat)) stat = 0
-   end subroutine
-
-   subroutine print_value(self, value, path, depth, stat)
-     class(tree_printer), intent(inout) :: self
-     type(hsd_value), intent(in) :: value
-     character(len=*), intent(in) :: path
-     integer, intent(in) :: depth
-     integer, intent(out), optional :: stat
-     
-     print *, repeat("  ", depth), "Value: ", trim(path), " = ", value%get_string()
-     if (present(stat)) stat = 0
-   end subroutine
-
-See ``example/visitor_demo.f90`` for a complete compilable example that
-includes both a tree-printing visitor and a node-counting visitor.
-   end subroutine
 
 Best Practices
 --------------
@@ -368,7 +325,6 @@ Best Practices
 
    - ``simple_read.f90`` — loading, accessing, modifying, merging, validation
    - ``matrix_demo.f90`` — arrays and matrices
-   - ``visitor_demo.f90`` — visitor pattern for tree traversal
 
 Example: Complete Configuration Parser
 --------------------------------------

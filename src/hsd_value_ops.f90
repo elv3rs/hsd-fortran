@@ -186,10 +186,10 @@ contains
     else if (allocated(self%string_value)) then
       lower_val = to_lower(trim(self%string_value))
       select case (lower_val)
-      case ("yes", "on", "1", "true", ".true.")
+      case ("yes")
         val = .true.
         if (present(stat)) stat = HSD_STAT_OK
-      case ("no", "off", "0", "false", ".false.")
+      case ("no")
         val = .false.
         if (present(stat)) stat = HSD_STAT_OK
       case default
@@ -291,9 +291,9 @@ contains
 
     do i = 1, n
       select case (to_lower(trim(tokens(i))))
-      case ("yes", "on", "1", "true", ".true.")
+      case ("yes")
         val(i) = .true.
-      case ("no", "off", "0", "false", ".false.")
+      case ("no")
         val(i) = .false.
       case default
         val(i) = .false.

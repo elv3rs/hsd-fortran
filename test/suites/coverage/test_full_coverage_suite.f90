@@ -6,7 +6,6 @@ module test_full_coverage_suite
   use hsd_token, only: token_name, TOKEN_WHITESPACE, TOKEN_NEWLINE, TOKEN_COMMENT, &
       & TOKEN_LBRACKET, TOKEN_RBRACKET, TOKEN_SEMICOLON, TOKEN_INCLUDE_TXT, &
       & TOKEN_INCLUDE_HSD, TOKEN_EOF, hsd_token_t
-  use count_visitor_mod, only: count_visitor
   use fortuno_serial, only: test => serial_case_item, &
       & check => serial_check, suite => serial_suite_item, test_list
   use build_env, only: build_dir
@@ -15,89 +14,15 @@ module test_full_coverage_suite
 
   public :: tests
 
-  !> Visitor that returns error on table visit
-  type, extends(hsd_visitor_t) :: error_on_table_visitor
-  contains
-    procedure :: visit_table => eot_visit_table
-    procedure :: visit_value => eot_visit_value
-  end type error_on_table_visitor
-
-  !> Visitor that returns error on value visit
-  type, extends(hsd_visitor_t) :: error_on_value_visitor
-  contains
-    procedure :: visit_table => eov_visit_table
-    procedure :: visit_value => eov_visit_value
-  end type error_on_value_visitor
-
-  !> Visitor that returns error on nested table visit (depth > 0)
-  type, extends(hsd_visitor_t) :: nested_table_error_visitor
-  contains
-    procedure :: visit_table => nte_visit_table
-    procedure :: visit_value => nte_visit_value
-  end type nested_table_error_visitor
 
 contains
 
-  ! --- Error visitor implementations ---
 
-  subroutine eot_visit_table(self, table, path, depth, stat)
-    class(error_on_table_visitor), intent(inout) :: self
-    type(hsd_table), intent(in), target :: table
-    character(len=*), intent(in) :: path
-    integer, intent(in) :: depth
-    integer, intent(out), optional :: stat
-    if (present(stat)) stat = 99
-  end subroutine eot_visit_table
 
-  subroutine eot_visit_value(self, val, path, depth, stat)
-    class(error_on_table_visitor), intent(inout) :: self
-    type(hsd_value), intent(in) :: val
-    character(len=*), intent(in) :: path
-    integer, intent(in) :: depth
-    integer, intent(out), optional :: stat
-    if (present(stat)) stat = 0
-  end subroutine eot_visit_value
 
-  subroutine eov_visit_table(self, table, path, depth, stat)
-    class(error_on_value_visitor), intent(inout) :: self
-    type(hsd_table), intent(in), target :: table
-    character(len=*), intent(in) :: path
-    integer, intent(in) :: depth
-    integer, intent(out), optional :: stat
-    if (present(stat)) stat = 0
-  end subroutine eov_visit_table
 
-  subroutine eov_visit_value(self, val, path, depth, stat)
-    class(error_on_value_visitor), intent(inout) :: self
-    type(hsd_value), intent(in) :: val
-    character(len=*), intent(in) :: path
-    integer, intent(in) :: depth
-    integer, intent(out), optional :: stat
-    if (present(stat)) stat = 99
-  end subroutine eov_visit_value
 
-  subroutine nte_visit_table(self, table, path, depth, stat)
-    class(nested_table_error_visitor), intent(inout) :: self
-    type(hsd_table), intent(in), target :: table
-    character(len=*), intent(in) :: path
-    integer, intent(in) :: depth
-    integer, intent(out), optional :: stat
-    ! OK at root (depth=0), error at nested tables
-    if (depth > 0) then
-      if (present(stat)) stat = 99
-    else
-      if (present(stat)) stat = 0
-    end if
-  end subroutine nte_visit_table
 
-  subroutine nte_visit_value(self, val, path, depth, stat)
-    class(nested_table_error_visitor), intent(inout) :: self
-    type(hsd_value), intent(in) :: val
-    character(len=*), intent(in) :: path
-    integer, intent(in) :: depth
-    integer, intent(out), optional :: stat
-    if (present(stat)) stat = 0
-  end subroutine nte_visit_value
 
   function tests()
     type(test_list) :: tests
@@ -159,7 +84,6 @@ contains
             test("split_by_newlines_fn", test_split_by_newlines), &
             test("parse_complex_bad_imag", test_complex_bad_imag), &
             ! === Visitor ===
-            test("visitor_unnamed_child", test_visitor_unnamed_child), &
             ! === Matrix ===
             test("matrix_int_from_table", test_matrix_int_from_table), &
             test("matrix_real_from_table", test_matrix_real_from_table), &
@@ -212,9 +136,6 @@ contains
             test("get_with_unit", test_get_with_unit), &
             test("validate_range_table", test_validate_range_table), &
             ! === Visitor error paths ===
-            test("visitor_table_error", test_visitor_table_error), &
-            test("visitor_value_error", test_visitor_value_error), &
-            test("visitor_nested_tbl_err", test_visitor_nested_table_error), &
             ! === Query ===
             test("get_keys_not_found", test_get_keys_not_found), &
             test("remove_through_value", test_remove_through_value), &
@@ -231,8 +152,7 @@ contains
             test("validate_range_string_val", test_validate_range_string), &
             test("validate_range_missing", test_validate_range_missing), &
             test("require_type_none", test_require_type_none), &
-            ! === Additional visitor coverage ===
-            test("visitor_unnamed_deep", test_visitor_unnamed_deep), &
+
             ! === Additional parser coverage ===
             test("parser_multi_token_val", test_parser_multi_token), &
             ! === Additional formatter coverage ===
@@ -952,26 +872,6 @@ contains
   ! Visitor
   ! ===========================================================================
 
-  subroutine test_visitor_unnamed_child()
-    type(hsd_table) :: root, parent
-    type(hsd_value) :: unnamed_val
-    type(count_visitor) :: cv
-    integer :: stat
-
-    call new_table(root, "")
-    call new_table(parent, "Parent")
-    ! Create value WITHOUT name parameter so name is truly unallocated
-    call new_value(unnamed_val)
-    call unnamed_val%set_string("anonymous")
-    call parent%add_child(unnamed_val)
-    call root%add_child(parent)
-
-    cv%table_count = 0
-    cv%value_count = 0
-    call hsd_accept(root, cv, stat)
-    call check(cv%value_count > 0, msg="Visited values")
-    call root%destroy()
-  end subroutine test_visitor_unnamed_child
 
   ! ===========================================================================
   ! Hash table
@@ -1891,49 +1791,8 @@ contains
   ! Visitor error paths
   ! ===========================================================================
 
-  !> Test visitor that returns error on table
-  subroutine test_visitor_table_error()
-    type(hsd_table) :: root
-    type(hsd_error_t), allocatable :: error
-    type(error_on_table_visitor) :: vis
-    integer :: stat
 
-    call hsd_load_string( &
-        "Block {" // char(10) // "  x = 1" // char(10) // "}", &
-        root, error)
-    call check(.not. allocated(error), msg="Parse ok")
-    call hsd_accept(root, vis, stat)
-    call check(stat /= HSD_STAT_OK, msg="Visitor table error")
-  end subroutine test_visitor_table_error
 
-  !> Test visitor that returns error on value
-  subroutine test_visitor_value_error()
-    type(hsd_table) :: root
-    type(hsd_error_t), allocatable :: error
-    type(error_on_value_visitor) :: vis
-    integer :: stat
-
-    call hsd_load_string("x = 1", root, error)
-    call check(.not. allocated(error), msg="Parse ok")
-    call hsd_accept(root, vis, stat)
-    call check(stat /= HSD_STAT_OK, msg="Visitor value error")
-  end subroutine test_visitor_value_error
-
-  !> Test visitor that errors on nested tables (triggers child table error path)
-  subroutine test_visitor_nested_table_error()
-    type(hsd_table) :: root
-    type(hsd_error_t), allocatable :: error
-    type(nested_table_error_visitor) :: vis
-    integer :: stat
-
-    ! Root has a child table: root → Block(table) → x(value)
-    call hsd_load_string("Block {" // char(10) // "  x = 1" // char(10) // "}", &
-        root, error)
-    call check(.not. allocated(error), msg="Parse ok")
-    call hsd_accept(root, vis, stat)
-    ! Root visit (depth=0) succeeds, Block visit (depth=1) fails
-    call check(stat /= HSD_STAT_OK, msg="Nested table error propagated")
-  end subroutine test_visitor_nested_table_error
 
   ! ===========================================================================
   ! Query
@@ -2099,33 +1958,6 @@ contains
   end subroutine test_require_type_none
 
   ! ===========================================================================
-  ! Additional coverage - visitor unnamed deep path
-  ! ===========================================================================
-
-  !> Test visitor with unnamed child inside a named table (non-empty path)
-  subroutine test_visitor_unnamed_deep()
-    type(hsd_table) :: root
-    type(count_visitor) :: vis
-    integer :: stat
-
-    ! Build: root -> Named("Parent") -> unnamed value
-    call new_table(root, "root")
-    block
-      type(hsd_table), pointer :: named_tbl
-      type(hsd_value), pointer :: val
-      allocate(named_tbl)
-      call new_table(named_tbl, "Parent")
-      allocate(val)
-      call new_value(val)  ! unnamed
-      val%string_value = "test"
-      val%value_type = VALUE_TYPE_STRING
-      call named_tbl%add_child(val)
-      call root%add_child(named_tbl)
-    end block
-    call hsd_accept(root, vis, stat)
-    call check(stat == 0, msg="Visitor deep unnamed ok")
-    call check(vis%value_count >= 1, msg="Value visited")
-  end subroutine test_visitor_unnamed_deep
 
   ! ===========================================================================
   ! Additional coverage - parser multi-token value
