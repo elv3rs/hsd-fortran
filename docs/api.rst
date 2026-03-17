@@ -414,6 +414,35 @@ Get a child table by path.
      integer, intent(out), optional :: stat
    end subroutine
 
+hsd_get_children
+~~~~~~~~~~~~~~~~
+
+Collect all children matching a (possibly path-qualified) name.
+
+.. code-block:: fortran
+
+   subroutine hsd_get_children(root, path, children, stat)
+     type(hsd_table), intent(in), target :: root
+     character(len=*), intent(in) :: path
+     type(hsd_child_ptr), allocatable, intent(out) :: children(:)
+     integer, intent(out), optional :: stat
+   end subroutine
+
+hsd_get_child_tables
+~~~~~~~~~~~~~~~~~~~~
+
+Collect all matching table children. ``hsd_table_ptr`` reuses the same
+``ptr`` storage model as ``hsd_child_ptr``.
+
+.. code-block:: fortran
+
+   subroutine hsd_get_child_tables(root, path, children, stat)
+     type(hsd_table), intent(in), target :: root
+     character(len=*), intent(in) :: path
+     type(hsd_table_ptr), allocatable, intent(out) :: children(:)
+     integer, intent(out), optional :: stat
+   end subroutine
+
 hsd_has_value_children
 ~~~~~~~~~~~~~~~~~~~~~~
 

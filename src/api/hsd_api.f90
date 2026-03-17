@@ -23,9 +23,10 @@ module hsd_api
     class(hsd_node), pointer :: ptr => null()
   end type hsd_child_ptr
 
-  !> Pointer wrapper for returning references to table children only
-  type :: hsd_table_ptr
-    type(hsd_table), pointer :: ptr => null()
+  !> Pointer wrapper for returning references to table children only.
+  !>
+  !> Extends hsd_child_ptr to keep a single shared pointer representation.
+  type, extends(hsd_child_ptr) :: hsd_table_ptr
   end type hsd_table_ptr
 
   ! Public types
@@ -736,55 +737,14 @@ module hsd_api
     type(hsd_child_ptr), allocatable, intent(out) :: children(:)
     integer, intent(out), optional :: stat
 
-    character(len=:), allocatable :: child_name
-    class(hsd_node), pointer :: child
-    type(hsd_table), pointer :: parent_table
-    integer :: local_stat, i, count
-    character(len=:), allocatable :: lower_name
-
-    call resolve_path_parent_(table, path, parent_table, child_name, local_stat)
-    if (local_stat /= HSD_STAT_OK) then
-      allocate(children(0))
-      if (present(stat)) stat = local_stat
-      return
-    end if
-
-    lower_name = to_lower(child_name)
-
-    ! First pass: count matches
-    count = 0
-    do i = 1, parent_table%num_children
-      call parent_table%get_child(i, child)
-      if (.not. associated(child)) cycle
-      if (.not. allocated(child%name)) cycle
-      if (to_lower(child%name) == lower_name) count = count + 1
-    end do
-
-    ! Allocate result
-    allocate(children(count))
-
-    ! Second pass: fill pointers
-    count = 0
-    do i = 1, parent_table%num_children
-      call parent_table%get_child(i, child)
-      if (.not. associated(child)) cycle
-      if (.not. allocated(child%name)) cycle
-      if (to_lower(child%name) == lower_name) then
-        count = count + 1
-        children(count)%ptr => child
-        child%processed = .true.
-      end if
-    end do
-
-    if (present(stat)) stat = HSD_STAT_OK
+    call collect_named_children_(table, path, children, stat, tables_only=.false.)
 
   end subroutine hsd_get_children
 
 
   !> Get all table children of a table that match a given name (case-insensitive)
   !>
-  !> Like hsd_get_children but returns only table-type children as strongly-typed
-  !> hsd_table_ptr entries, avoiding the need for select-type at the call site.
+  !> Like hsd_get_children but returns only table-type children.
   !> Supports path-based lookup: "Geometry/Atom" will navigate to the
   !> "Geometry" table then collect all table children named "Atom".
   !> If no children match, an empty (size-0) array is returned.
@@ -794,53 +754,14 @@ module hsd_api
     type(hsd_table_ptr), allocatable, intent(out) :: children(:)
     integer, intent(out), optional :: stat
 
-    character(len=:), allocatable :: child_name
-    class(hsd_node), pointer :: child
-    type(hsd_table), pointer :: parent_table
-    integer :: local_stat, i, count
-    character(len=:), allocatable :: lower_name
+    type(hsd_child_ptr), allocatable :: tmp_children(:)
+    integer :: i
 
-    call resolve_path_parent_(table, path, parent_table, child_name, local_stat)
-    if (local_stat /= HSD_STAT_OK) then
-      allocate(children(0))
-      if (present(stat)) stat = local_stat
-      return
-    end if
-
-    lower_name = to_lower(child_name)
-
-    ! First pass: count table matches
-    count = 0
-    do i = 1, parent_table%num_children
-      call parent_table%get_child(i, child)
-      if (.not. associated(child)) cycle
-      if (.not. allocated(child%name)) cycle
-      if (to_lower(child%name) /= lower_name) cycle
-      select type (child)
-      type is (hsd_table)
-        count = count + 1
-      end select
+    call collect_named_children_(table, path, tmp_children, stat, tables_only=.true.)
+    allocate(children(size(tmp_children)))
+    do i = 1, size(tmp_children)
+      children(i)%ptr => tmp_children(i)%ptr
     end do
-
-    ! Allocate result
-    allocate(children(count))
-
-    ! Second pass: fill pointers (table children only)
-    count = 0
-    do i = 1, parent_table%num_children
-      call parent_table%get_child(i, child)
-      if (.not. associated(child)) cycle
-      if (.not. allocated(child%name)) cycle
-      if (to_lower(child%name) /= lower_name) cycle
-      select type (child)
-      type is (hsd_table)
-        count = count + 1
-        children(count)%ptr => child
-        child%processed = .true.
-      end select
-    end do
-
-    if (present(stat)) stat = HSD_STAT_OK
 
   end subroutine hsd_get_child_tables
 
@@ -2052,6 +1973,124 @@ module hsd_api
 
   ! ===== helpers =====
 
+  !> Copy local status into optional output status.
+  pure subroutine set_stat_from_local_(local_stat, stat)
+    integer, intent(in) :: local_stat
+    integer, intent(out), optional :: stat
+
+    if (present(stat)) stat = local_stat
+  end subroutine set_stat_from_local_
+
+  !> Common helper for hsd_get_or_set status and optional child return.
+  subroutine finalize_get_or_set_(table, path, local_stat, stat, child)
+    type(hsd_table), intent(inout), target :: table
+    character(len=*), intent(in) :: path
+    integer, intent(in) :: local_stat
+    integer, intent(out), optional :: stat
+    type(hsd_table), pointer, intent(out), optional :: child
+
+    if (local_stat /= HSD_STAT_OK) then
+      call set_stat_from_local_(local_stat, stat)
+    else
+      call set_stat_from_local_(HSD_STAT_OK, stat)
+    end if
+
+    if (present(child)) then
+      call hsd_get_table(table, path, child)
+      if (.not. associated(child)) child => table
+    end if
+
+  end subroutine finalize_get_or_set_
+
+  !> Get or create a value child; fails with TYPE_ERROR if final node is not a value.
+  subroutine get_or_create_value_child_(table, path, vchild, stat)
+    type(hsd_table), intent(inout), target :: table
+    character(len=*), intent(in) :: path
+    type(hsd_value), pointer, intent(out) :: vchild
+    integer, intent(out) :: stat
+
+    class(hsd_node), pointer :: child
+    integer :: local_stat
+
+    nullify(vchild)
+    call get_or_create_child(table, path, child, local_stat)
+    if (local_stat /= HSD_STAT_OK) then
+      stat = local_stat
+      return
+    end if
+
+    select type (child)
+    type is (hsd_value)
+      vchild => child
+      stat = HSD_STAT_OK
+    class default
+      stat = HSD_STAT_TYPE_ERROR
+    end select
+  end subroutine get_or_create_value_child_
+
+  !> Collect child references matching the final path segment.
+  subroutine collect_named_children_(table, path, children, stat, tables_only)
+    type(hsd_table), intent(in), target :: table
+    character(len=*), intent(in) :: path
+    type(hsd_child_ptr), allocatable, intent(out) :: children(:)
+    integer, intent(out), optional :: stat
+    logical, intent(in) :: tables_only
+
+    character(len=:), allocatable :: child_name
+    class(hsd_node), pointer :: child
+    type(hsd_table), pointer :: parent_table
+    integer :: local_stat, i, count
+    character(len=:), allocatable :: lower_name
+
+    call resolve_path_parent_(table, path, parent_table, child_name, local_stat)
+    if (local_stat /= HSD_STAT_OK) then
+      allocate(children(0))
+      call set_stat_from_local_(local_stat, stat)
+      return
+    end if
+
+    lower_name = to_lower(child_name)
+
+    count = 0
+    do i = 1, parent_table%num_children
+      call parent_table%get_child(i, child)
+      if (.not. associated(child)) cycle
+      if (.not. allocated(child%name)) cycle
+      if (to_lower(child%name) /= lower_name) cycle
+      if (tables_only) then
+        select type (child)
+        type is (hsd_table)
+          count = count + 1
+        end select
+      else
+        count = count + 1
+      end if
+    end do
+
+    allocate(children(count))
+    count = 0
+    do i = 1, parent_table%num_children
+      call parent_table%get_child(i, child)
+      if (.not. associated(child)) cycle
+      if (.not. allocated(child%name)) cycle
+      if (to_lower(child%name) /= lower_name) cycle
+      if (tables_only) then
+        select type (child)
+        type is (hsd_table)
+          count = count + 1
+          children(count)%ptr => child
+          child%processed = .true.
+        end select
+      else
+        count = count + 1
+        children(count)%ptr => child
+        child%processed = .true.
+      end if
+    end do
+
+    call set_stat_from_local_(HSD_STAT_OK, stat)
+  end subroutine collect_named_children_
+
   !> Mark a named child node as processed
   subroutine mark_child_processed_(table, path)
     type(hsd_table), intent(inout), target :: table
@@ -2086,15 +2125,9 @@ module hsd_api
       val = default
       call hsd_set(table, path, default)
       call mark_child_processed_(table, path)
-      if (present(stat)) stat = local_stat
-    else
-      if (present(stat)) stat = HSD_STAT_OK
     end if
 
-    if (present(child)) then
-      call hsd_get_table(table, path, child)
-      if (.not. associated(child)) child => table
-    end if
+    call finalize_get_or_set_(table, path, local_stat, stat, child)
 
   end subroutine hsd_get_or_set_string
 
@@ -2115,15 +2148,9 @@ module hsd_api
       val = default
       call hsd_set(table, path, default)
       call mark_child_processed_(table, path)
-      if (present(stat)) stat = local_stat
-    else
-      if (present(stat)) stat = HSD_STAT_OK
     end if
 
-    if (present(child)) then
-      call hsd_get_table(table, path, child)
-      if (.not. associated(child)) child => table
-    end if
+    call finalize_get_or_set_(table, path, local_stat, stat, child)
 
   end subroutine hsd_get_or_set_integer
 
@@ -2144,15 +2171,9 @@ module hsd_api
       val = default
       call hsd_set(table, path, default)
       call mark_child_processed_(table, path)
-      if (present(stat)) stat = local_stat
-    else
-      if (present(stat)) stat = HSD_STAT_OK
     end if
 
-    if (present(child)) then
-      call hsd_get_table(table, path, child)
-      if (.not. associated(child)) child => table
-    end if
+    call finalize_get_or_set_(table, path, local_stat, stat, child)
 
   end subroutine hsd_get_or_set_real_dp
 
@@ -2173,15 +2194,9 @@ module hsd_api
       val = default
       call hsd_set(table, path, real(default, dp))
       call mark_child_processed_(table, path)
-      if (present(stat)) stat = local_stat
-    else
-      if (present(stat)) stat = HSD_STAT_OK
     end if
 
-    if (present(child)) then
-      call hsd_get_table(table, path, child)
-      if (.not. associated(child)) child => table
-    end if
+    call finalize_get_or_set_(table, path, local_stat, stat, child)
 
   end subroutine hsd_get_or_set_real_sp
 
@@ -2202,15 +2217,9 @@ module hsd_api
       val = default
       call hsd_set(table, path, default)
       call mark_child_processed_(table, path)
-      if (present(stat)) stat = local_stat
-    else
-      if (present(stat)) stat = HSD_STAT_OK
     end if
 
-    if (present(child)) then
-      call hsd_get_table(table, path, child)
-      if (.not. associated(child)) child => table
-    end if
+    call finalize_get_or_set_(table, path, local_stat, stat, child)
 
   end subroutine hsd_get_or_set_logical
 
@@ -2231,15 +2240,9 @@ module hsd_api
       val = default
       call hsd_set(table, path, default)
       call mark_child_processed_(table, path)
-      if (present(stat)) stat = local_stat
-    else
-      if (present(stat)) stat = HSD_STAT_OK
     end if
 
-    if (present(child)) then
-      call hsd_get_table(table, path, child)
-      if (.not. associated(child)) child => table
-    end if
+    call finalize_get_or_set_(table, path, local_stat, stat, child)
 
   end subroutine hsd_get_or_set_complex_dp
 
@@ -2260,15 +2263,9 @@ module hsd_api
       val = default
       call hsd_set(table, path, default)
       call mark_child_processed_(table, path)
-      if (present(stat)) stat = local_stat
-    else
-      if (present(stat)) stat = HSD_STAT_OK
     end if
 
-    if (present(child)) then
-      call hsd_get_table(table, path, child)
-      if (.not. associated(child)) child => table
-    end if
+    call finalize_get_or_set_(table, path, local_stat, stat, child)
 
   end subroutine hsd_get_or_set_integer_array
 
@@ -2289,15 +2286,9 @@ module hsd_api
       val = default
       call hsd_set(table, path, default)
       call mark_child_processed_(table, path)
-      if (present(stat)) stat = local_stat
-    else
-      if (present(stat)) stat = HSD_STAT_OK
     end if
 
-    if (present(child)) then
-      call hsd_get_table(table, path, child)
-      if (.not. associated(child)) child => table
-    end if
+    call finalize_get_or_set_(table, path, local_stat, stat, child)
 
   end subroutine hsd_get_or_set_real_dp_array
 
@@ -2318,15 +2309,9 @@ module hsd_api
       val = default
       call hsd_set(table, path, real(default, dp))
       call mark_child_processed_(table, path)
-      if (present(stat)) stat = local_stat
-    else
-      if (present(stat)) stat = HSD_STAT_OK
     end if
 
-    if (present(child)) then
-      call hsd_get_table(table, path, child)
-      if (.not. associated(child)) child => table
-    end if
+    call finalize_get_or_set_(table, path, local_stat, stat, child)
 
   end subroutine hsd_get_or_set_real_sp_array
 
@@ -2347,15 +2332,9 @@ module hsd_api
       val = default
       call hsd_set(table, path, default)
       call mark_child_processed_(table, path)
-      if (present(stat)) stat = local_stat
-    else
-      if (present(stat)) stat = HSD_STAT_OK
     end if
 
-    if (present(child)) then
-      call hsd_get_table(table, path, child)
-      if (.not. associated(child)) child => table
-    end if
+    call finalize_get_or_set_(table, path, local_stat, stat, child)
 
   end subroutine hsd_get_or_set_logical_array
 
@@ -2419,25 +2398,18 @@ module hsd_api
     character(len=*), intent(in) :: val
     integer, intent(out), optional :: stat
 
-    class(hsd_node), pointer :: child
+    type(hsd_value), pointer :: vchild
     integer :: local_stat
 
-    call get_or_create_child(table, path, child, local_stat)
+    call get_or_create_value_child_(table, path, vchild, local_stat)
 
-    if (local_stat /= 0) then
-      if (present(stat)) stat = local_stat
+    if (local_stat /= HSD_STAT_OK) then
+      call set_stat_from_local_(local_stat, stat)
       return
     end if
 
-    select type (child)
-    type is (hsd_value)
-      call child%set_string(val)
-    class default
-      if (present(stat)) stat = HSD_STAT_TYPE_ERROR
-      return
-    end select
-
-    if (present(stat)) stat = HSD_STAT_OK
+    call vchild%set_string(val)
+    call set_stat_from_local_(HSD_STAT_OK, stat)
 
   end subroutine hsd_set_string
 
@@ -2448,25 +2420,18 @@ module hsd_api
     integer, intent(in) :: val
     integer, intent(out), optional :: stat
 
-    class(hsd_node), pointer :: child
+    type(hsd_value), pointer :: vchild
     integer :: local_stat
 
-    call get_or_create_child(table, path, child, local_stat)
+    call get_or_create_value_child_(table, path, vchild, local_stat)
 
-    if (local_stat /= 0) then
-      if (present(stat)) stat = local_stat
+    if (local_stat /= HSD_STAT_OK) then
+      call set_stat_from_local_(local_stat, stat)
       return
     end if
 
-    select type (child)
-    type is (hsd_value)
-      call child%set_integer(val)
-    class default
-      if (present(stat)) stat = HSD_STAT_TYPE_ERROR
-      return
-    end select
-
-    if (present(stat)) stat = HSD_STAT_OK
+    call vchild%set_integer(val)
+    call set_stat_from_local_(HSD_STAT_OK, stat)
 
   end subroutine hsd_set_integer
 
@@ -2477,25 +2442,18 @@ module hsd_api
     real(dp), intent(in) :: val
     integer, intent(out), optional :: stat
 
-    class(hsd_node), pointer :: child
+    type(hsd_value), pointer :: vchild
     integer :: local_stat
 
-    call get_or_create_child(table, path, child, local_stat)
+    call get_or_create_value_child_(table, path, vchild, local_stat)
 
-    if (local_stat /= 0) then
-      if (present(stat)) stat = local_stat
+    if (local_stat /= HSD_STAT_OK) then
+      call set_stat_from_local_(local_stat, stat)
       return
     end if
 
-    select type (child)
-    type is (hsd_value)
-      call child%set_real(val)
-    class default
-      if (present(stat)) stat = HSD_STAT_TYPE_ERROR
-      return
-    end select
-
-    if (present(stat)) stat = HSD_STAT_OK
+    call vchild%set_real(val)
+    call set_stat_from_local_(HSD_STAT_OK, stat)
 
   end subroutine hsd_set_real_dp
 
@@ -2517,25 +2475,18 @@ module hsd_api
     logical, intent(in) :: val
     integer, intent(out), optional :: stat
 
-    class(hsd_node), pointer :: child
+    type(hsd_value), pointer :: vchild
     integer :: local_stat
 
-    call get_or_create_child(table, path, child, local_stat)
+    call get_or_create_value_child_(table, path, vchild, local_stat)
 
-    if (local_stat /= 0) then
-      if (present(stat)) stat = local_stat
+    if (local_stat /= HSD_STAT_OK) then
+      call set_stat_from_local_(local_stat, stat)
       return
     end if
 
-    select type (child)
-    type is (hsd_value)
-      call child%set_logical(val)
-    class default
-      if (present(stat)) stat = HSD_STAT_TYPE_ERROR
-      return
-    end select
-
-    if (present(stat)) stat = HSD_STAT_OK
+    call vchild%set_logical(val)
+    call set_stat_from_local_(HSD_STAT_OK, stat)
 
   end subroutine hsd_set_logical
 
@@ -2546,25 +2497,18 @@ module hsd_api
     complex(dp), intent(in) :: val
     integer, intent(out), optional :: stat
 
-    class(hsd_node), pointer :: child
+    type(hsd_value), pointer :: vchild
     integer :: local_stat
 
-    call get_or_create_child(table, path, child, local_stat)
+    call get_or_create_value_child_(table, path, vchild, local_stat)
 
-    if (local_stat /= 0) then
-      if (present(stat)) stat = local_stat
+    if (local_stat /= HSD_STAT_OK) then
+      call set_stat_from_local_(local_stat, stat)
       return
     end if
 
-    select type (child)
-    type is (hsd_value)
-      call child%set_complex(val)
-    class default
-      if (present(stat)) stat = HSD_STAT_TYPE_ERROR
-      return
-    end select
-
-    if (present(stat)) stat = HSD_STAT_OK
+    call vchild%set_complex(val)
+    call set_stat_from_local_(HSD_STAT_OK, stat)
 
   end subroutine hsd_set_complex_dp
 
