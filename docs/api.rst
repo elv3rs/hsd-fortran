@@ -407,7 +407,7 @@ Get a child table by path.
    end subroutine
 
 hsd_has_value_children
-~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
 
 Check whether a table has any value children (inline data).
 

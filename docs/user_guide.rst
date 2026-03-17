@@ -312,7 +312,7 @@ Best Practices
 --------------
 
 1. **Always check for errors** after parsing and validation
-2. **Validate inputs using hsd_require and hsd_validate_*
+2. **Validate inputs using hsd_require and hsd_validate_***
 3. **Clone trees** before modifying if you need the original
 4. **Use path notation** for cleaner code instead of manual tree traversal
 5. **Validate ranges** for numeric inputs

@@ -372,7 +372,7 @@ contains
     ! Add anonymous multiline value
     call new_value(val, "")
     val%value_type = VALUE_TYPE_STRING
-    val%raw_text = "line1" // char(10) // "line2" // char(10) // "line3"
+    val%string_value = "line1" // char(10) // "line2" // char(10) // "line3"
     call parent%add_child(val)
     call root%add_child(parent)
 
@@ -503,13 +503,13 @@ contains
     call new_table(base, "root")
     call new_value(v1, "Key")
     v1%value_type = VALUE_TYPE_STRING
-    v1%raw_text = "original"
+    v1%string_value = "original"
     call base%add_child(v1)
 
     call new_table(overlay, "root")
     call new_value(v2, "Key")
     v2%value_type = VALUE_TYPE_STRING
-    v2%raw_text = "replaced"
+    v2%string_value = "replaced"
     call overlay%add_child(v2)
 
     call hsd_merge(base, overlay, stat)
@@ -2125,7 +2125,7 @@ contains
       type(hsd_value), pointer :: val
       allocate(val)
       call new_value(val, "data")
-      val%raw_text = "1+2i 3-4i"
+      val%string_value = "1+2i 3-4i"
       call root%add_child(val)
     end block
     call hsd_get(root, "data", arr, stat)
@@ -2145,7 +2145,7 @@ contains
       type(hsd_value), pointer :: val
       allocate(val)
       call new_value(val, "data")
-      val%raw_text = '"hello" world "test"'
+      val%string_value = '"hello" world "test"'
       call root%add_child(val)
     end block
     call hsd_get(root, "data", arr, stat)
@@ -2167,7 +2167,7 @@ contains
       type(hsd_value), pointer :: val
       allocate(val)
       call new_value(val, "data")
-      val%raw_text = 'before "" after'
+      val%string_value = 'before "" after'
       call root%add_child(val)
     end block
     call hsd_get(root, "data", arr, stat)
@@ -2200,7 +2200,7 @@ contains
       type(hsd_value), pointer :: val
       allocate(val)
       call new_value(val, "data")
-      val%raw_text = "1 2 3" // char(10) // "4 5"
+      val%string_value = "1 2 3" // char(10) // "4 5"
       call root%add_child(val)
     end block
     call hsd_get_matrix(root, "data", imat, nrows, ncols, stat)
@@ -2218,7 +2218,7 @@ contains
       type(hsd_value), pointer :: val
       allocate(val)
       call new_value(val, "data")
-      val%raw_text = "1.0 2.0 3.0" // char(10) // "4.0"
+      val%string_value = "1.0 2.0 3.0" // char(10) // "4.0"
       call root%add_child(val)
     end block
     call hsd_get_matrix(root, "data", rmat, nrows, ncols, stat)
@@ -2236,7 +2236,7 @@ contains
       type(hsd_value), pointer :: val
       allocate(val)
       call new_value(val, "data")
-      val%raw_text = "   "
+      val%string_value = "   "
       call root%add_child(val)
     end block
     call hsd_get_matrix(root, "data", rmat, nrows, ncols, stat)
@@ -2255,7 +2255,7 @@ contains
       type(hsd_value), pointer :: val
       allocate(val)
       call new_value(val, "data")
-      val%raw_text = "   "
+      val%string_value = "   "
       call root%add_child(val)
     end block
     call hsd_get_matrix(root, "data", imat, nrows, ncols, stat)
@@ -2274,7 +2274,7 @@ contains
       type(hsd_value), pointer :: val
       allocate(val)
       call new_value(val, "data")
-      val%raw_text = "1 2" // char(10) // char(10) // "3 4"
+      val%string_value = "1 2" // char(10) // char(10) // "3 4"
       call root%add_child(val)
     end block
     call hsd_get_matrix(root, "data", imat, nrows, ncols, stat)

@@ -73,6 +73,7 @@ Contents
    :caption: User Documentation
 
    installation
+   build_systems
    user_guide
    hsd_format
    error_handling

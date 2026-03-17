@@ -1368,21 +1368,20 @@ module hsd_api
 
   end subroutine get_inline_value_
 
-  !> Get string value by path
-  subroutine hsd_get_string(table, path, val, stat)
+  !> Helper: Get the value node at the given path, handling inline text tables transparently
+  subroutine get_value_node_(table, path, val_node, stat)
     type(hsd_table), intent(in), target :: table
     character(len=*), intent(in) :: path
-    character(len=:), allocatable, intent(out) :: val
-    integer, intent(out), optional :: stat
+    type(hsd_value), pointer, intent(out) :: val_node
+    integer, intent(out) :: stat
 
     class(hsd_node), pointer :: child
-    integer :: local_stat
 
-    call hsd_get_child(table, path, child, local_stat)
+    nullify(val_node)
 
-    if (local_stat /= 0 .or. .not. associated(child)) then
-      if (present(stat)) stat = HSD_STAT_NOT_FOUND
-      val = ""
+    call hsd_get_child(table, path, child, stat)
+    if (stat /= 0 .or. .not. associated(child)) then
+      stat = HSD_STAT_NOT_FOUND
       return
     end if
 
@@ -1390,18 +1389,36 @@ module hsd_api
 
     select type (child)
     type is (hsd_value)
-      call child%get_string(val, local_stat)
-      if (present(stat)) stat = local_stat
+      val_node => child
+      stat = HSD_STAT_OK
     type is (hsd_table)
-      ! Table node: try to read inline text content (#text child)
-      call get_inline_text_(child, val, local_stat)
-      ! If no inline text found, this is a type error (node is a table, not a value)
-      if (local_stat == HSD_STAT_NOT_FOUND) local_stat = HSD_STAT_TYPE_ERROR
-      if (present(stat)) stat = local_stat
+      ! Try to extract inline value
+      call get_inline_value_(child, val_node, stat)
+      if (stat == HSD_STAT_NOT_FOUND) stat = HSD_STAT_TYPE_ERROR
     class default
-      if (present(stat)) stat = HSD_STAT_TYPE_ERROR
-      val = ""
+      stat = HSD_STAT_TYPE_ERROR
     end select
+  end subroutine get_value_node_
+
+  !> Get string value by path
+  subroutine hsd_get_string(table, path, val, stat)
+    type(hsd_table), intent(in), target :: table
+    character(len=*), intent(in) :: path
+    character(len=:), allocatable, intent(out) :: val
+    integer, intent(out), optional :: stat
+
+    type(hsd_value), pointer :: vnode
+    integer :: local_stat
+
+    call get_value_node_(table, path, vnode, local_stat)
+
+    if (local_stat == HSD_STAT_OK) then
+      call vnode%get_string(val, local_stat)
+    else
+      val = ""
+    end if
+
+    if (present(stat)) stat = local_stat
 
   end subroutine hsd_get_string
 
@@ -1433,40 +1450,18 @@ module hsd_api
     integer, intent(out) :: val
     integer, intent(out), optional :: stat
 
-    class(hsd_node), pointer :: child
+    type(hsd_value), pointer :: vnode
     integer :: local_stat
 
-    call hsd_get_child(table, path, child, local_stat)
+    call get_value_node_(table, path, vnode, local_stat)
 
-    if (local_stat /= 0 .or. .not. associated(child)) then
-      if (present(stat)) stat = HSD_STAT_NOT_FOUND
+    if (local_stat == HSD_STAT_OK) then
+      call vnode%get_integer(val, local_stat)
+    else
       val = 0
-      return
     end if
 
-    child%processed = .true.
-
-    select type (child)
-    type is (hsd_value)
-      call child%get_integer(val, local_stat)
-      if (present(stat)) stat = local_stat
-    type is (hsd_table)
-      block
-        type(hsd_value), pointer :: vnode
-        call get_inline_value_(child, vnode, local_stat)
-        if (local_stat == 0) then
-          call vnode%get_integer(val, local_stat)
-          if (present(stat)) stat = local_stat
-        else
-          if (present(stat)) stat = HSD_STAT_TYPE_ERROR
-          val = 0
-        end if
-      end block
-    class default
-      if (present(stat)) stat = HSD_STAT_TYPE_ERROR
-      val = 0
-    end select
-
+    if (present(stat)) stat = local_stat
   end subroutine hsd_get_integer
 
   !> Get integer value by path with default fallback
@@ -1497,40 +1492,18 @@ module hsd_api
     real(dp), intent(out) :: val
     integer, intent(out), optional :: stat
 
-    class(hsd_node), pointer :: child
+    type(hsd_value), pointer :: vnode
     integer :: local_stat
 
-    call hsd_get_child(table, path, child, local_stat)
+    call get_value_node_(table, path, vnode, local_stat)
 
-    if (local_stat /= 0 .or. .not. associated(child)) then
-      if (present(stat)) stat = HSD_STAT_NOT_FOUND
+    if (local_stat == HSD_STAT_OK) then
+      call vnode%get_real(val, local_stat)
+    else
       val = 0.0_dp
-      return
     end if
 
-    child%processed = .true.
-
-    select type (child)
-    type is (hsd_value)
-      call child%get_real(val, local_stat)
-      if (present(stat)) stat = local_stat
-    type is (hsd_table)
-      block
-        type(hsd_value), pointer :: vnode
-        call get_inline_value_(child, vnode, local_stat)
-        if (local_stat == 0) then
-          call vnode%get_real(val, local_stat)
-          if (present(stat)) stat = local_stat
-        else
-          if (present(stat)) stat = HSD_STAT_TYPE_ERROR
-          val = 0.0_dp
-        end if
-      end block
-    class default
-      if (present(stat)) stat = HSD_STAT_TYPE_ERROR
-      val = 0.0_dp
-    end select
-
+    if (present(stat)) stat = local_stat
   end subroutine hsd_get_real_dp
 
   !> Get double precision real value by path with default fallback
@@ -1598,40 +1571,18 @@ module hsd_api
     logical, intent(out) :: val
     integer, intent(out), optional :: stat
 
-    class(hsd_node), pointer :: child
+    type(hsd_value), pointer :: vnode
     integer :: local_stat
 
-    call hsd_get_child(table, path, child, local_stat)
+    call get_value_node_(table, path, vnode, local_stat)
 
-    if (local_stat /= 0 .or. .not. associated(child)) then
-      if (present(stat)) stat = HSD_STAT_NOT_FOUND
+    if (local_stat == HSD_STAT_OK) then
+      call vnode%get_logical(val, local_stat)
+    else
       val = .false.
-      return
     end if
 
-    child%processed = .true.
-
-    select type (child)
-    type is (hsd_value)
-      call child%get_logical(val, local_stat)
-      if (present(stat)) stat = local_stat
-    type is (hsd_table)
-      block
-        type(hsd_value), pointer :: vnode
-        call get_inline_value_(child, vnode, local_stat)
-        if (local_stat == 0) then
-          call vnode%get_logical(val, local_stat)
-          if (present(stat)) stat = local_stat
-        else
-          if (present(stat)) stat = HSD_STAT_TYPE_ERROR
-          val = .false.
-        end if
-      end block
-    class default
-      if (present(stat)) stat = HSD_STAT_TYPE_ERROR
-      val = .false.
-    end select
-
+    if (present(stat)) stat = local_stat
   end subroutine hsd_get_logical
 
   !> Get logical value by path with default fallback
@@ -1662,40 +1613,18 @@ module hsd_api
     complex(dp), intent(out) :: val
     integer, intent(out), optional :: stat
 
-    class(hsd_node), pointer :: child
+    type(hsd_value), pointer :: vnode
     integer :: local_stat
 
-    call hsd_get_child(table, path, child, local_stat)
+    call get_value_node_(table, path, vnode, local_stat)
 
-    if (local_stat /= 0 .or. .not. associated(child)) then
-      if (present(stat)) stat = HSD_STAT_NOT_FOUND
+    if (local_stat == HSD_STAT_OK) then
+      call vnode%get_complex(val, local_stat)
+    else
       val = (0.0_dp, 0.0_dp)
-      return
     end if
 
-    child%processed = .true.
-
-    select type (child)
-    type is (hsd_value)
-      call child%get_complex(val, local_stat)
-      if (present(stat)) stat = local_stat
-    type is (hsd_table)
-      block
-        type(hsd_value), pointer :: vnode
-        call get_inline_value_(child, vnode, local_stat)
-        if (local_stat == 0) then
-          call vnode%get_complex(val, local_stat)
-          if (present(stat)) stat = local_stat
-        else
-          if (present(stat)) stat = HSD_STAT_TYPE_ERROR
-          val = (0.0_dp, 0.0_dp)
-        end if
-      end block
-    class default
-      if (present(stat)) stat = HSD_STAT_TYPE_ERROR
-      val = (0.0_dp, 0.0_dp)
-    end select
-
+    if (present(stat)) stat = local_stat
   end subroutine hsd_get_complex_dp
 
   !> Get complex value by path with default fallback

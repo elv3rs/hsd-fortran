@@ -504,7 +504,7 @@ contains
 
     allocate(val)
     call new_value(val)
-    val%raw_text = "raw text content"
+    val%string_value = "raw text content"
 
     call val%get_string(str, stat)
     call check(stat == HSD_STAT_OK, msg="Get raw text OK")
@@ -619,7 +619,7 @@ contains
 
     allocate(val)
     call new_value(val)
-    val%raw_text = "10 20 30"
+    val%string_value = "10 20 30"
     val%value_type = VALUE_TYPE_ARRAY
 
     call val%get_int_array(arr, stat)
@@ -638,7 +638,7 @@ contains
 
     allocate(val)
     call new_value(val)
-    val%raw_text = "1.0 2.0 3.0"
+    val%string_value = "1.0 2.0 3.0"
     val%value_type = VALUE_TYPE_ARRAY
 
     call val%get_real_array(arr, stat)
@@ -657,7 +657,7 @@ contains
 
     allocate(val)
     call new_value(val)
-    val%raw_text = "Yes No"
+    val%string_value = "Yes No"
     val%value_type = VALUE_TYPE_ARRAY
 
     call val%get_logical_array(arr, stat)
@@ -676,7 +676,7 @@ contains
 
     allocate(val)
     call new_value(val)
-    val%raw_text = "1.0+2.0i 3.0+4.0i"
+    val%string_value = "1.0+2.0i 3.0+4.0i"
     val%value_type = VALUE_TYPE_ARRAY
 
     call val%get_complex_array(arr, stat)
@@ -695,7 +695,7 @@ contains
 
     allocate(val)
     call new_value(val)
-    val%raw_text = '"hello" "world"'
+    val%string_value = '"hello" "world"'
     val%value_type = VALUE_TYPE_ARRAY
 
     call val%get_string_array(arr, stat)
@@ -714,7 +714,7 @@ contains
 
     allocate(val)
     call new_value(val)
-    val%raw_text = "1 3 5" // char(10) // "2 4 6"
+    val%string_value = "1 3 5" // char(10) // "2 4 6"
     val%value_type = VALUE_TYPE_ARRAY
 
     call val%get_int_matrix(mat, nrows, ncols, stat)
@@ -734,7 +734,7 @@ contains
 
     allocate(val)
     call new_value(val)
-    val%raw_text = "1.0 3.0" // char(10) // "2.0 4.0"
+    val%string_value = "1.0 3.0" // char(10) // "2.0 4.0"
     val%value_type = VALUE_TYPE_ARRAY
 
     call val%get_real_matrix(mat, nrows, ncols, stat)
