@@ -990,13 +990,9 @@ module hsd_api
             ! Clear stale fields before overwriting
             if (allocated(base_child%string_value)) &
                 & deallocate(base_child%string_value)
-            if (allocated(base_child%raw_text)) &
-                & deallocate(base_child%raw_text)
             ! Copy new values from clone
             if (allocated(cloned_value%string_value)) &
                 & base_child%string_value = cloned_value%string_value
-            if (allocated(cloned_value%raw_text)) &
-                & base_child%raw_text = cloned_value%raw_text
           class default
             ! Type mismatch - skip
           end select
@@ -1047,7 +1043,6 @@ module hsd_api
     dest%value_type = source%value_type
 
     if (allocated(source%string_value)) dest%string_value = source%string_value
-    if (allocated(source%raw_text)) dest%raw_text = source%raw_text
 
   end subroutine clone_value
 
@@ -1135,13 +1130,6 @@ module hsd_api
 
       ! Must have the same value type
       if (a%value_type /= b%value_type) return
-
-      ! Compare raw_text
-      if (allocated(a%raw_text) .and. allocated(b%raw_text)) then
-        if (a%raw_text /= b%raw_text) return
-      else if (allocated(a%raw_text) .neqv. allocated(b%raw_text)) then
-        return
-      end if
 
       ! Compare string_value
       if (allocated(a%string_value) .and. allocated(b%string_value)) then

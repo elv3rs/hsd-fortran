@@ -124,10 +124,8 @@ module hsd_types
   type, extends(hsd_node) :: hsd_value
     !> Type of value stored (metadata for serialization/validation)
     integer :: value_type = VALUE_TYPE_NONE
-    !> String representation of the value (primary storage)
+    !> String representation of the value (primary storage for both scalars and arrays)
     character(len=:), allocatable :: string_value
-    !> String array (for multi-value or matrix data)
-    character(len=:), allocatable :: raw_text
   contains
     procedure :: set_string => value_set_string
     procedure :: set_integer => value_set_integer

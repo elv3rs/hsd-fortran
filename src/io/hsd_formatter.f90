@@ -332,8 +332,6 @@ contains
 
     if (allocated(val%string_value)) then
       text = val%string_value
-    else if (allocated(val%raw_text)) then
-      text = val%raw_text
     else
       text = ""
     end if
@@ -347,8 +345,6 @@ contains
 
     if (allocated(val%string_value)) then
       str = quote_if_needed(val%string_value)
-    else if (allocated(val%raw_text)) then
-      str = val%raw_text
     else
       str = ""
     end if

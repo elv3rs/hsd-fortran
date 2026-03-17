@@ -84,7 +84,6 @@ contains
     else
       self%value_type = VALUE_TYPE_STRING
     end if
-    self%raw_text = text
     self%string_value = text
 
   end procedure value_set_raw
@@ -102,9 +101,6 @@ contains
 
     if (allocated(self%string_value)) then
       val = self%string_value
-      if (present(stat)) stat = HSD_STAT_OK
-    else if (allocated(self%raw_text)) then
-      val = self%raw_text
       if (present(stat)) stat = HSD_STAT_OK
     else
       val = ""
@@ -202,9 +198,7 @@ contains
     integer :: io_stat
 
     ! Get source text
-    if (allocated(self%raw_text)) then
-      text = self%raw_text
-    else if (allocated(self%string_value)) then
+    if (allocated(self%string_value)) then
       text = self%string_value
     else
       allocate(val(0))
@@ -225,9 +219,7 @@ contains
     integer :: io_stat
 
     ! Get source text
-    if (allocated(self%raw_text)) then
-      text = self%raw_text
-    else if (allocated(self%string_value)) then
+    if (allocated(self%string_value)) then
       text = self%string_value
     else
       allocate(val(0))
@@ -247,9 +239,7 @@ contains
     character(len=:), allocatable :: text, tokens(:)
     integer :: i, n
 
-    if (allocated(self%raw_text)) then
-      text = self%raw_text
-    else if (allocated(self%string_value)) then
+    if (allocated(self%string_value)) then
       text = self%string_value
     else
       allocate(val(0))
@@ -285,9 +275,7 @@ contains
     integer :: io_stat
 
     ! Get source text
-    if (allocated(self%raw_text)) then
-      text = self%raw_text
-    else if (allocated(self%string_value)) then
+    if (allocated(self%string_value)) then
       text = self%string_value
     else
       allocate(val(0))
@@ -306,9 +294,7 @@ contains
 
     character(len=:), allocatable :: text
 
-    if (allocated(self%raw_text)) then
-      text = self%raw_text
-    else if (allocated(self%string_value)) then
+    if (allocated(self%string_value)) then
       text = self%string_value
     else
       allocate(character(len=1) :: val(0))
@@ -332,9 +318,7 @@ contains
     character(len=:), allocatable :: text
     integer :: io_stat
 
-    if (allocated(self%raw_text)) then
-      text = self%raw_text
-    else if (allocated(self%string_value)) then
+    if (allocated(self%string_value)) then
       text = self%string_value
     else
       allocate(val(0,0))
@@ -355,9 +339,7 @@ contains
     character(len=:), allocatable :: text
     integer :: io_stat
 
-    if (allocated(self%raw_text)) then
-      text = self%raw_text
-    else if (allocated(self%string_value)) then
+    if (allocated(self%string_value)) then
       text = self%string_value
     else
       allocate(val(0,0))
@@ -379,9 +361,7 @@ contains
     character(len=:), allocatable :: text
     integer :: io_stat
 
-    if (allocated(self%raw_text)) then
-      text = self%raw_text
-    else if (allocated(self%string_value)) then
+    if (allocated(self%string_value)) then
       text = self%string_value
     else
       allocate(val(0,0))
@@ -406,7 +386,6 @@ contains
     if (allocated(self%name)) deallocate(self%name)
     if (allocated(self%attrib)) deallocate(self%attrib)
     if (allocated(self%string_value)) deallocate(self%string_value)
-    if (allocated(self%raw_text)) deallocate(self%raw_text)
 
     self%value_type = VALUE_TYPE_NONE
 

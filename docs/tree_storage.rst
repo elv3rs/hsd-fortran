@@ -132,29 +132,29 @@ Type enumeration
      - ``string_value`` (``character(:), allocatable``)
    * - ``VALUE_TYPE_INTEGER``
      - 2
-     - ``string_value`` (stores formatted integer) for scalars; ``raw_text`` for arrays/matrices.
+     - ``string_value`` (stores formatted integer) for scalars and arrays/matrices.
    * - ``VALUE_TYPE_REAL``
      - 3
-     - ``string_value`` (stores formatted real) for scalars; ``raw_text`` for arrays/matrices.
+     - ``string_value`` (stores formatted real) for scalars and arrays/matrices.
    * - ``VALUE_TYPE_LOGICAL``
      - 4
-     - ``string_value`` (stores "Yes"/"No") for scalars; ``raw_text`` for arrays.
+     - ``string_value`` (stores "Yes"/"No") for scalars and arrays.
    * - ``VALUE_TYPE_ARRAY``
      - 5
-     - ``raw_text`` (``character(:), allocatable``) — unparsed text; arrays are parsed on demand.
+     - ``string_value`` (``character(:), allocatable``) — unparsed text; arrays are parsed on demand.
    * - ``VALUE_TYPE_COMPLEX``
      - 6
-     - ``string_value`` (stores formatted complex) for scalars; ``raw_text`` for arrays/matrices.
+     - ``string_value`` (stores formatted complex) for scalars and arrays/matrices.
 
 All storage fields coexist on the type but only the ones corresponding to
 ``value_type`` are meaningful. After parsing, a value node with ``value_type = VALUE_TYPE_ARRAY``
-stores only ``raw_text``.
+stores only ``string_value``.
 
 Scalar vs array storage
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 - **Scalars**: Stored as strings in ``string_value``.
-- **Arrays & Matrices**: Stored as ``raw_text`` and parsed on demand.
+- **Arrays & Matrices**: Stored as strings in ``string_value`` and parsed on demand.
 
 .. _parse_on_demand:
 
@@ -164,7 +164,7 @@ Parse-on-Demand Behavior
 Array and matrix accessor methods (e.g. ``get_int_array``, ``get_real_matrix``) follow a
 **parse-on-demand** pattern:
 
-1. Every call parses the ``raw_text`` into a temporary typed array.
+1. Every call parses the ``string_value`` into a temporary typed array.
 2. The parsed array is returned to the caller.
 3. No cached version is stored in the node.
 
