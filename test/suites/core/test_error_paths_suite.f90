@@ -620,8 +620,7 @@ contains
 
     allocate(val)
     call new_value(val)
-    allocate(val%int_array(3))
-    val%int_array = [10, 20, 30]
+    val%raw_text = "10 20 30"
     val%value_type = VALUE_TYPE_ARRAY
 
     call val%get_int_array(arr, stat)
@@ -640,8 +639,7 @@ contains
 
     allocate(val)
     call new_value(val)
-    allocate(val%real_array(3))
-    val%real_array = [1.0_dp, 2.0_dp, 3.0_dp]
+    val%raw_text = "1.0 2.0 3.0"
     val%value_type = VALUE_TYPE_ARRAY
 
     call val%get_real_array(arr, stat)
@@ -660,8 +658,7 @@ contains
 
     allocate(val)
     call new_value(val)
-    allocate(val%logical_array(2))
-    val%logical_array = [.true., .false.]
+    val%raw_text = "Yes No"
     val%value_type = VALUE_TYPE_ARRAY
 
     call val%get_logical_array(arr, stat)
@@ -680,8 +677,7 @@ contains
 
     allocate(val)
     call new_value(val)
-    allocate(val%complex_array(2))
-    val%complex_array = [(1.0_dp, 2.0_dp), (3.0_dp, 4.0_dp)]
+    val%raw_text = "1.0+2.0i 3.0+4.0i"
     val%value_type = VALUE_TYPE_ARRAY
 
     call val%get_complex_array(arr, stat)
@@ -700,8 +696,7 @@ contains
 
     allocate(val)
     call new_value(val)
-    allocate(character(len=5) :: val%string_array(2))
-    val%string_array = ["hello", "world"]
+    val%raw_text = '"hello" "world"'
     val%value_type = VALUE_TYPE_ARRAY
 
     call val%get_string_array(arr, stat)
@@ -720,10 +715,7 @@ contains
 
     allocate(val)
     call new_value(val)
-    allocate(val%int_matrix(2,3))
-    val%int_matrix = reshape([1,2,3,4,5,6], [2,3])
-    val%nrows = 2
-    val%ncols = 3
+    val%raw_text = "1 3 5" // char(10) // "2 4 6"
     val%value_type = VALUE_TYPE_ARRAY
 
     call val%get_int_matrix(mat, nrows, ncols, stat)
@@ -743,10 +735,7 @@ contains
 
     allocate(val)
     call new_value(val)
-    allocate(val%real_matrix(2,2))
-    val%real_matrix = reshape([1.0_dp, 2.0_dp, 3.0_dp, 4.0_dp], [2,2])
-    val%nrows = 2
-    val%ncols = 2
+    val%raw_text = "1.0 3.0" // char(10) // "2.0 4.0"
     val%value_type = VALUE_TYPE_ARRAY
 
     call val%get_real_matrix(mat, nrows, ncols, stat)

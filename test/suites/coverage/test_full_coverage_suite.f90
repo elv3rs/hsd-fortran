@@ -109,21 +109,6 @@ contains
             test("make_syntax_error_no_file", test_syntax_error_no_file), &
             test("make_type_error_all_args", test_type_error_all_args), &
             test("make_type_error_no_file", test_type_error_no_file), &
-            ! === Schema - value branches ===
-            test("schema_int_range_error", test_schema_int_range_err), &
-            test("schema_real_convert_error", test_schema_real_convert_err), &
-            test("schema_real_range_error", test_schema_real_range_err), &
-            test("schema_logical_error", test_schema_logical_err), &
-            test("schema_array_not_array", test_schema_array_not_array), &
-            test("schema_complex_not_complex", test_schema_complex_not_complex), &
-            test("schema_enum_reject", test_schema_enum_reject), &
-            test("schema_capacity_growth", test_schema_capacity_growth), &
-            ! === Schema - get_type_name branches ===
-            test("schema_table_as_real", test_schema_table_as_real), &
-            test("schema_table_as_logical", test_schema_table_as_logical), &
-            test("schema_table_as_array", test_schema_table_as_array), &
-            test("schema_table_as_complex", test_schema_table_as_complex), &
-            test("schema_value_as_table", test_schema_value_as_table), &
             ! === Validation ===
             test("type_name_branches", test_type_name_branches), &
             test("validate_one_of_match", test_validate_one_of_match), &
@@ -145,7 +130,6 @@ contains
             test("merge_new_value_child", test_merge_new_value_child), &
             test("merge_replace_value", test_merge_replace_value), &
             test("merge_value_with_raw_text", test_merge_raw_text), &
-            test("merge_value_with_arrays", test_merge_arrays), &
             test("clone_table_with_values", test_clone_table_values), &
             test("get_table_on_value", test_get_table_on_value), &
             ! === Parser - syntax ===
@@ -176,9 +160,6 @@ contains
             test("parse_complex_bad_imag", test_complex_bad_imag), &
             ! === Visitor ===
             test("visitor_unnamed_child", test_visitor_unnamed_child), &
-            ! === Hash table ===
-            test("hash_remove_empty", test_hash_remove_empty), &
-            test("hash_overflow_chain", test_hash_overflow_chain), &
             ! === Matrix ===
             test("matrix_int_from_table", test_matrix_int_from_table), &
             test("matrix_real_from_table", test_matrix_real_from_table), &
@@ -187,8 +168,6 @@ contains
             test("path_into_value", test_path_into_value), &
             test("matrix_int_multi_values", test_matrix_int_multi_values), &
             test("matrix_real_multi_values", test_matrix_real_multi_values), &
-            ! === Schema init without explicit call ===
-            test("schema_auto_init", test_schema_auto_init), &
             ! === Additional formatter ===
             test("dump_text_before_block", test_dump_text_before_block), &
             ! === Mutator error/edge paths ===
@@ -222,11 +201,6 @@ contains
             test("dump_escape_quotes", test_dump_escape_quotes), &
             test("dump_unnamed_table_str", test_dump_unnamed_str), &
             test("dump_single_child_tbl", test_dump_single_child_tbl), &
-            ! === Hash table ===
-            test("hash_auto_init", test_hash_auto_init), &
-            test("hash_overflow_update", test_hash_overflow_update), &
-            test("hash_promote_remove", test_hash_promote_remove), &
-            test("hash_remove_chain", test_hash_remove_chain_entry), &
             ! === Error module ===
             test("error_msg_all_codes", test_error_msg_all_codes), &
             test("error_print_variants", test_error_print_variants), &
@@ -245,10 +219,6 @@ contains
             test("get_keys_not_found", test_get_keys_not_found), &
             test("remove_through_value", test_remove_through_value), &
             test("child_through_value", test_child_through_value), &
-            ! === Schema extras ===
-            test("schema_description", test_schema_description), &
-            test("schema_logical_type", test_schema_logical_type), &
-            test("schema_type_name_str", test_schema_type_name_str), &
             ! === Parser ===
             test("parse_with_filename", test_parse_with_filename), &
             ! === Utils/Lexer ===
@@ -290,8 +260,6 @@ contains
   ! ===========================================================================
 
   subroutine test_error_messages()
-    call check(error_message(HSD_STAT_SCHEMA_ERROR) == "Schema validation error", &
-        msg="Schema error msg")
     call check(error_message(999) == "Unknown error", msg="Unknown code")
     call check(error_message(-1) == "Unknown error", msg="Negative code")
   end subroutine test_error_messages
@@ -322,200 +290,6 @@ contains
     call check(err%filename == "<unknown>", msg="Default filename")
   end subroutine test_type_error_no_file
 
-  ! ===========================================================================
-  ! Schema - value-specific branches
-  ! ===========================================================================
-
-  subroutine test_schema_int_range_err()
-    type(hsd_schema_t) :: schema
-    type(hsd_table) :: root
-    type(hsd_error_t), allocatable :: errors(:), parse_err
-
-    call hsd_load_string("Value = 999", root, parse_err)
-    call schema_init(schema)
-    call schema_add_field(schema, "Value", FIELD_REQUIRED, &
-        FIELD_TYPE_INTEGER, min_int=1, max_int=100)
-    call schema_validate(schema, root, errors)
-    call check(size(errors) == 1, msg="Out of range")
-    call schema_destroy(schema)
-    call root%destroy()
-  end subroutine test_schema_int_range_err
-
-  subroutine test_schema_real_convert_err()
-    type(hsd_schema_t) :: schema
-    type(hsd_table) :: root
-    type(hsd_error_t), allocatable :: errors(:), parse_err
-
-    call hsd_load_string("Value = notreal", root, parse_err)
-    call schema_init(schema)
-    call schema_add_field(schema, "Value", FIELD_REQUIRED, FIELD_TYPE_REAL)
-    call schema_validate(schema, root, errors)
-    call check(size(errors) == 1, msg="Cannot convert to real")
-    call schema_destroy(schema)
-    call root%destroy()
-  end subroutine test_schema_real_convert_err
-
-  subroutine test_schema_real_range_err()
-    type(hsd_schema_t) :: schema
-    type(hsd_table) :: root
-    type(hsd_error_t), allocatable :: errors(:), parse_err
-
-    call hsd_load_string("Value = 999.0", root, parse_err)
-    call schema_init(schema)
-    call schema_add_field(schema, "Value", FIELD_REQUIRED, &
-        FIELD_TYPE_REAL, min_real=0.0_dp, max_real=100.0_dp)
-    call schema_validate(schema, root, errors)
-    call check(size(errors) == 1, msg="Real out of range")
-    call schema_destroy(schema)
-    call root%destroy()
-  end subroutine test_schema_real_range_err
-
-  subroutine test_schema_logical_err()
-    type(hsd_schema_t) :: schema
-    type(hsd_table) :: root
-    type(hsd_error_t), allocatable :: errors(:), parse_err
-
-    call hsd_load_string("Value = notabool", root, parse_err)
-    call schema_init(schema)
-    call schema_add_field(schema, "Value", FIELD_REQUIRED, FIELD_TYPE_LOGICAL)
-    call schema_validate(schema, root, errors)
-    call check(size(errors) == 1, msg="Invalid logical")
-    call schema_destroy(schema)
-    call root%destroy()
-  end subroutine test_schema_logical_err
-
-  subroutine test_schema_array_not_array()
-    type(hsd_schema_t) :: schema
-    type(hsd_table) :: root
-    type(hsd_error_t), allocatable :: errors(:), parse_err
-
-    call hsd_load_string("Value = 42", root, parse_err)
-    call schema_init(schema)
-    call schema_add_field(schema, "Value", FIELD_REQUIRED, FIELD_TYPE_ARRAY)
-    call schema_validate(schema, root, errors)
-    call check(size(errors) == 1, msg="Not an array")
-    call schema_destroy(schema)
-    call root%destroy()
-  end subroutine test_schema_array_not_array
-
-  subroutine test_schema_complex_not_complex()
-    type(hsd_schema_t) :: schema
-    type(hsd_table) :: root
-    type(hsd_error_t), allocatable :: errors(:), parse_err
-
-    call hsd_load_string("Value = hello", root, parse_err)
-    call schema_init(schema)
-    call schema_add_field(schema, "Value", FIELD_REQUIRED, FIELD_TYPE_COMPLEX)
-    call schema_validate(schema, root, errors)
-    call check(size(errors) == 1, msg="Not complex")
-    call schema_destroy(schema)
-    call root%destroy()
-  end subroutine test_schema_complex_not_complex
-
-  subroutine test_schema_enum_reject()
-    type(hsd_schema_t) :: schema
-    type(hsd_table) :: root
-    type(hsd_error_t), allocatable :: errors(:), parse_err
-
-    call hsd_load_string("Color = purple", root, parse_err)
-    call schema_init(schema)
-    call schema_add_field_enum(schema, "Color", FIELD_REQUIRED, &
-        [character(len=10) :: "red", "green", "blue"])
-    call schema_validate(schema, root, errors)
-    call check(size(errors) == 1, msg="Invalid enum")
-    call schema_destroy(schema)
-    call root%destroy()
-  end subroutine test_schema_enum_reject
-
-  subroutine test_schema_capacity_growth()
-    type(hsd_schema_t) :: schema
-    integer :: ii
-    character(len=32) :: name
-
-    call schema_init(schema)
-    do ii = 1, 20
-      write(name, '(A,I0)') "field_", ii
-      call schema_add_field(schema, trim(name), FIELD_OPTIONAL, FIELD_TYPE_STRING)
-    end do
-    call check(schema%num_fields == 20, msg="20 fields")
-    call schema_destroy(schema)
-  end subroutine test_schema_capacity_growth
-
-  ! ===========================================================================
-  ! Schema - get_type_name branches via "is a table, expected X" error
-  ! ===========================================================================
-
-  subroutine test_schema_table_as_real()
-    type(hsd_schema_t) :: schema
-    type(hsd_table) :: root
-    type(hsd_error_t), allocatable :: errors(:), parse_err
-
-    call hsd_load_string("Sect { x = 1 }", root, parse_err)
-    call schema_init(schema)
-    call schema_add_field(schema, "Sect", FIELD_REQUIRED, FIELD_TYPE_REAL)
-    call schema_validate(schema, root, errors)
-    call check(size(errors) == 1, msg="Table not real")
-    call schema_destroy(schema)
-    call root%destroy()
-  end subroutine test_schema_table_as_real
-
-  subroutine test_schema_table_as_logical()
-    type(hsd_schema_t) :: schema
-    type(hsd_table) :: root
-    type(hsd_error_t), allocatable :: errors(:), parse_err
-
-    call hsd_load_string("Sect { x = 1 }", root, parse_err)
-    call schema_init(schema)
-    call schema_add_field(schema, "Sect", FIELD_REQUIRED, FIELD_TYPE_LOGICAL)
-    call schema_validate(schema, root, errors)
-    call check(size(errors) == 1, msg="Table not logical")
-    call schema_destroy(schema)
-    call root%destroy()
-  end subroutine test_schema_table_as_logical
-
-  subroutine test_schema_table_as_array()
-    type(hsd_schema_t) :: schema
-    type(hsd_table) :: root
-    type(hsd_error_t), allocatable :: errors(:), parse_err
-
-    call hsd_load_string("Sect { x = 1 }", root, parse_err)
-    call schema_init(schema)
-    call schema_add_field(schema, "Sect", FIELD_REQUIRED, FIELD_TYPE_ARRAY)
-    call schema_validate(schema, root, errors)
-    call check(size(errors) == 1, msg="Table not array")
-    call schema_destroy(schema)
-    call root%destroy()
-  end subroutine test_schema_table_as_array
-
-  subroutine test_schema_table_as_complex()
-    type(hsd_schema_t) :: schema
-    type(hsd_table) :: root
-    type(hsd_error_t), allocatable :: errors(:), parse_err
-
-    call hsd_load_string("Sect { x = 1 }", root, parse_err)
-    call schema_init(schema)
-    call schema_add_field(schema, "Sect", FIELD_REQUIRED, FIELD_TYPE_COMPLEX)
-    call schema_validate(schema, root, errors)
-    call check(size(errors) == 1, msg="Table not complex")
-    call schema_destroy(schema)
-    call root%destroy()
-  end subroutine test_schema_table_as_complex
-
-  subroutine test_schema_value_as_table()
-    type(hsd_schema_t) :: schema
-    type(hsd_table) :: root
-    type(hsd_error_t), allocatable :: errors(:), parse_err
-
-    call hsd_load_string("Value = 42", root, parse_err)
-    call schema_init(schema)
-    call schema_add_field(schema, "Value", FIELD_REQUIRED, FIELD_TYPE_TABLE)
-    call schema_validate(schema, root, errors)
-    call check(size(errors) == 1, msg="Value not table")
-    call schema_destroy(schema)
-    call root%destroy()
-  end subroutine test_schema_value_as_table
-
-  ! ===========================================================================
   ! Validation
   ! ===========================================================================
 
@@ -824,34 +598,6 @@ contains
     call overlay%destroy()
   end subroutine test_merge_raw_text
 
-  subroutine test_merge_arrays()
-    type(hsd_table) :: base, overlay
-    type(hsd_value) :: v1, v2
-    integer :: stat
-
-    call new_table(base, "root")
-    call new_value(v1, "Data")
-    v1%value_type = VALUE_TYPE_ARRAY
-    allocate(v1%int_array(3))
-    v1%int_array = [1, 2, 3]
-    allocate(v1%real_array(3))
-    v1%real_array = [1.0_dp, 2.0_dp, 3.0_dp]
-    call base%add_child(v1)
-
-    call new_table(overlay, "root")
-    call new_value(v2, "Data")
-    v2%value_type = VALUE_TYPE_ARRAY
-    allocate(v2%int_array(2))
-    v2%int_array = [10, 20]
-    allocate(v2%real_array(2))
-    v2%real_array = [10.0_dp, 20.0_dp]
-    call overlay%add_child(v2)
-
-    call hsd_merge(base, overlay, stat)
-    call check(stat == HSD_STAT_OK, msg="Array merge ok")
-    call base%destroy()
-    call overlay%destroy()
-  end subroutine test_merge_arrays
 
   subroutine test_clone_table_values()
     type(hsd_table) :: source, dest
@@ -1231,46 +977,7 @@ contains
   ! Hash table
   ! ===========================================================================
 
-  subroutine test_hash_remove_empty()
-    type(hsd_table) :: root
-    integer :: stat
 
-    call new_table(root, "empty")
-    call root%remove_child_by_name("nonexistent", stat)
-    call check(stat /= HSD_STAT_OK, msg="Remove from empty ok")
-    call root%destroy()
-  end subroutine test_hash_remove_empty
-
-  subroutine test_hash_overflow_chain()
-    type(hsd_table) :: root
-    type(hsd_value) :: val
-    integer :: ii, stat
-    character(len=32) :: name
-    class(hsd_node), pointer :: child
-
-    call new_table(root, "root")
-
-    do ii = 1, 200
-      write(name, '(A,I0)') "item_", ii
-      call new_value(val, trim(name))
-      call val%set_integer(ii)
-      call root%add_child(val)
-    end do
-
-    do ii = 1, 50
-      write(name, '(A,I0)') "item_", ii
-      call root%remove_child_by_name(trim(name), stat)
-      call check(stat == HSD_STAT_OK, msg="Remove " // trim(name))
-    end do
-
-    do ii = 51, 200
-      write(name, '(A,I0)') "item_", ii
-      call root%get_child_by_name(trim(name), child)
-      call check(associated(child), msg="Found " // trim(name))
-    end do
-
-    call root%destroy()
-  end subroutine test_hash_overflow_chain
 
   ! ===========================================================================
   ! Matrix from table
@@ -1383,13 +1090,6 @@ contains
     call root%destroy()
   end subroutine test_matrix_real_multi_values
 
-  subroutine test_schema_auto_init()
-    type(hsd_schema_t) :: schema
-    ! Don't call schema_init - let add_field trigger auto-init (line 200)
-    call schema_add_field(schema, "test", FIELD_OPTIONAL, FIELD_TYPE_STRING)
-    call check(schema%num_fields == 1, msg="Auto-init worked")
-    call schema_destroy(schema)
-  end subroutine test_schema_auto_init
 
   subroutine test_dump_text_before_block()
     type(hsd_table) :: root, child
@@ -2024,109 +1724,12 @@ contains
   ! ===========================================================================
 
   !> Test hash auto-initialization
-  subroutine test_hash_auto_init()
-    type(hsd_table) :: root
-    type(hsd_error_t), allocatable :: error
-
-    ! Loading enough children forces hash table auto-init
-    call hsd_load_string( &
-        "A = 1" // char(10) // "B = 2" // char(10) // &
-        "C = 3" // char(10) // "D = 4" // char(10) // &
-        "E = 5" // char(10) // "F = 6" // char(10) // &
-        "G = 7" // char(10) // "H = 8" // char(10) // &
-        "I = 9" // char(10) // "J = 10" // char(10) // &
-        "K = 11" // char(10) // "L = 12" // char(10) // &
-        "M = 13" // char(10) // "N = 14", root, error)
-    call check(.not. allocated(error), msg="Parse ok")
-    call check(hsd_has_child(root, "n"), msg="Lookup after auto-init")
-  end subroutine test_hash_auto_init
 
   !> Test updating a key in overflow chain
-  subroutine test_hash_overflow_update()
-    type(hsd_table) :: root
-    integer :: stat, ival
-
-    call new_table(root, "root")
-    ! Add many children to trigger rehash and potential overflow
-    block
-      type(hsd_value), pointer :: val
-      integer :: i
-      character(len=8) :: name
-      do i = 1, 30
-        allocate(val)
-        write(name, '(A,I0)') "k", i
-        call new_value(val, trim(name))
-        val%value_type = VALUE_TYPE_INTEGER
-        val%string_value = "0"
-        call root%add_child(val)
-      end do
-    end block
-    ! Update existing keys
-    call hsd_set(root, "k15", 99, stat)
-    call check(stat == HSD_STAT_OK, msg="Update existing")
-    call hsd_get(root, "k15", ival, stat)
-    call check(ival == 99, msg="Updated value correct")
-  end subroutine test_hash_overflow_update
 
   !> Test promote from chain on remove
-  subroutine test_hash_promote_remove()
-    type(hsd_table) :: root
-    type(hsd_error_t), allocatable :: error
-    integer :: stat
-
-    ! Build table with many children to get hash collisions
-    call hsd_load_string( &
-        "Alpha = 1" // char(10) // "Beta = 2" // char(10) // &
-        "Gamma = 3" // char(10) // "Delta = 4" // char(10) // &
-        "Epsilon = 5" // char(10) // "Zeta = 6" // char(10) // &
-        "Eta = 7" // char(10) // "Theta = 8" // char(10) // &
-        "Iota = 9" // char(10) // "Kappa = 10" // char(10) // &
-        "Lambda = 11" // char(10) // "Mu = 12" // char(10) // &
-        "Nu = 13" // char(10) // "Xi = 14" // char(10) // &
-        "Omicron = 15" // char(10) // "Pi = 16" // char(10) // &
-        "Rho = 17" // char(10) // "Sigma = 18" // char(10) // &
-        "Tau = 19" // char(10) // "Upsilon = 20", root, error)
-    call check(.not. allocated(error), msg="Parse ok")
-    ! Remove several to trigger chain promotion
-    call hsd_remove_child(root, "alpha", stat)
-    call hsd_remove_child(root, "gamma", stat)
-    call hsd_remove_child(root, "epsilon", stat)
-    call hsd_remove_child(root, "eta", stat)
-    call hsd_remove_child(root, "iota", stat)
-    ! Verify remaining keys still accessible
-    call check(hsd_has_child(root, "beta"), msg="Beta survives")
-    call check(hsd_has_child(root, "sigma"), msg="Sigma survives")
-  end subroutine test_hash_promote_remove
 
   !> Test removing key from overflow chain
-  subroutine test_hash_remove_chain_entry()
-    type(hsd_table) :: root
-    type(hsd_error_t), allocatable :: error
-    integer :: stat
-
-    ! Build large table
-    call hsd_load_string( &
-        "aa = 1" // char(10) // "bb = 2" // char(10) // &
-        "cc = 3" // char(10) // "dd = 4" // char(10) // &
-        "ee = 5" // char(10) // "ff = 6" // char(10) // &
-        "gg = 7" // char(10) // "hh = 8" // char(10) // &
-        "ii = 9" // char(10) // "jj = 10" // char(10) // &
-        "kk = 11" // char(10) // "ll = 12" // char(10) // &
-        "mm = 13" // char(10) // "nn = 14" // char(10) // &
-        "oo = 15" // char(10) // "pp = 16" // char(10) // &
-        "qq = 17" // char(10) // "rr = 18" // char(10) // &
-        "ss = 19" // char(10) // "tt = 20" // char(10) // &
-        "uu = 21" // char(10) // "vv = 22" // char(10) // &
-        "ww = 23" // char(10) // "xx = 24" // char(10) // &
-        "yy = 25" // char(10) // "zz = 26", root, error)
-    call check(.not. allocated(error), msg="Parse ok")
-    ! Remove from middle of potential chains
-    call hsd_remove_child(root, "mm", stat)
-    call hsd_remove_child(root, "qq", stat)
-    call hsd_remove_child(root, "uu", stat)
-    call check(hsd_has_child(root, "nn"), msg="nn survives")
-    call check(.not. hsd_has_child(root, "mm"), msg="mm removed")
-  end subroutine test_hash_remove_chain_entry
 
   ! ===========================================================================
   ! Error module
@@ -2376,49 +1979,11 @@ contains
   ! Schema extras
   ! ===========================================================================
 
-  !> Test schema field with description
-  subroutine test_schema_description()
-    type(hsd_schema_t) :: schema
-    type(hsd_table) :: root
-    type(hsd_error_t), allocatable :: error, val_errors(:)
+  !> Test type field with description
 
-    call schema_init(schema)
-    call schema_add_field(schema, "Name", FIELD_REQUIRED, FIELD_TYPE_STRING, &
-        description="A person's name")
-    call hsd_load_string("Name = Alice", root, error)
-    call schema_validate(schema, root, val_errors)
-    call check(size(val_errors) == 0, msg="Schema with desc ok")
-    call schema_destroy(schema)
-  end subroutine test_schema_description
+  !> Test type with logical field type
 
-  !> Test schema with logical field type
-  subroutine test_schema_logical_type()
-    type(hsd_schema_t) :: schema
-    type(hsd_table) :: root
-    type(hsd_error_t), allocatable :: error, val_errors(:)
-
-    call schema_init(schema)
-    call schema_add_field(schema, "Flag", FIELD_REQUIRED, FIELD_TYPE_LOGICAL)
-    call hsd_load_string("Flag = Yes", root, error)
-    call schema_validate(schema, root, val_errors)
-    call check(size(val_errors) == 0, msg="Logical schema ok")
-    call schema_destroy(schema)
-  end subroutine test_schema_logical_type
-
-  !> Test schema get_type_name for STRING type
-  subroutine test_schema_type_name_str()
-    type(hsd_schema_t) :: schema
-    type(hsd_table) :: root
-    type(hsd_error_t), allocatable :: error, val_errors(:)
-
-    call schema_init(schema)
-    call schema_add_field(schema, "Name", FIELD_REQUIRED, FIELD_TYPE_STRING)
-    ! Feed it a table instead of a string to trigger type name lookup
-    call hsd_load_string("Name { x = 1 }", root, error)
-    call schema_validate(schema, root, val_errors)
-    call check(size(val_errors) > 0, msg="String type mismatch")
-    call schema_destroy(schema)
-  end subroutine test_schema_type_name_str
+  !> Test type get_type_name for STRING type
 
   ! ===========================================================================
   ! Parser

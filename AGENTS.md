@@ -3,7 +3,7 @@
 ## Main directive
 
 The project has reached **v1.0.0 release** status.  All specification phases
-(parser, accessors, mutators, schema validation, visitor pattern, unit-aware
+(parser, accessors, mutators, visitor pattern, unit-aware
 accessors, documentation) are complete.
 
 When making changes: ensure builds pass, `fortitude check` is clean, all tests
@@ -80,11 +80,10 @@ hsd-fortran/
 │   │   ├── hsd_mutators.f90    # hsd_set
 │   │   ├── hsd_query.f90       # hsd_has_child, hsd_is_table, hsd_merge, etc.
 │   │   ├── hsd_validation.f90  # hsd_require, hsd_validate_range
-│   │   ├── hsd_schema.f90      # Declarative schema validation
 │   │   └── hsd_visitor.f90     # Visitor pattern for tree traversal
 │   ├── core/                   # Core infrastructure
 │   │   ├── hsd_constants.f90   # dp, sp precision constants
-│   │   ├── hsd_error.f90       # Error types, status codes (incl. HSD_STAT_SCHEMA_ERROR)
+│   │   ├── hsd_error.f90       # Error types, status codes
 │   │   └── hsd_utils.f90       # String utilities (to_lower, string_buffer_t)
 │   └── io/                     # Parsing and serialization
 │       ├── hsd_lexer.f90       # Tokenizer
@@ -102,7 +101,6 @@ hsd-fortran/
 │   └── inputs/                 # Test data files
 ├── example/                    # Usage examples
 │   ├── simple_read.f90         # Feature showcase
-│   ├── config_demo.f90         # Configuration & Schema validation
 │   ├── matrix_demo.f90         # Array and Matrix operations
 │   └── sample_input.hsd        # Example HSD file
 ├── docs/                       # Documentation
@@ -123,7 +121,7 @@ Tests are organized into categories under `test/suites/`:
 
 | Directory | Contents |
 |-----------|----------|
-| `api/` | High-level API tests (accessors, schema, validation) |
+| `api/` | High-level API tests (accessors, validation) |
 | `core/` | Array parsing, error paths, edge cases |
 | `io/` | Lexer, parser, formatter tests |
 | `coverage/` | Additional tests for code coverage |
@@ -199,7 +197,6 @@ This ensures tests work regardless of where CTest runs from.
 | `hsd_mutators` | Value modification (`hsd_set`) |
 | `hsd_query` | Tree introspection (type checks, child enumeration) |
 | `hsd_validation` | Value validation helpers |
-| `hsd_schema` | Declarative schema-based validation |
 | `hsd_visitor` | Visitor pattern for tree traversal |
 
 ### Generic Tree Utilities (in `hsd_query`)
@@ -286,4 +283,3 @@ See `utils/fuzz/README.md` for full documentation.
 | `HSD_STAT_IO_ERROR` | 9 | I/O operation failed |
 | `HSD_STAT_TYPE_ERROR` | 10 | Type conversion failed |
 | `HSD_STAT_NOT_FOUND` | 11 | Key not found in tree |
-| `HSD_STAT_SCHEMA_ERROR` | 20 | Schema validation failed |

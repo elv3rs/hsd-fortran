@@ -4,6 +4,7 @@
 !> introspecting node types, and performing tree operations like merging
 !> and cloning.
 module hsd_query
+  use hsd_constants, only: dp
   use hsd_utils, only: to_lower
   use hsd_error, only: HSD_STAT_OK, HSD_STAT_NOT_FOUND, HSD_STAT_TYPE_ERROR
   use hsd_types, only: hsd_node, hsd_table, hsd_value, new_table, new_value, &
@@ -1086,7 +1087,7 @@ contains
         equal = (a%int_value == b%int_value)
 
       case (VALUE_TYPE_REAL)
-        equal = (a%real_value == b%real_value)
+        equal = (abs(a%real_value - b%real_value) < epsilon(1.0_dp))
 
       case (VALUE_TYPE_LOGICAL)
         equal = (a%logical_value .eqv. b%logical_value)
@@ -1098,7 +1099,7 @@ contains
         end if
 
       case (VALUE_TYPE_COMPLEX)
-        equal = (a%complex_value == b%complex_value)
+        equal = (abs(a%complex_value - b%complex_value) < epsilon(1.0_dp))
 
       case default
         equal = .false.

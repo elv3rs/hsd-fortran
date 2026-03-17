@@ -28,7 +28,6 @@ This library provides:
 - **Serialization** of data structures back to HSD format
 - **Include support** with cycle detection (`<<+` for HSD, `<<<` for text)
 - **Path-based accessors** for convenient data retrieval (`"section/subsection/value"`)
-- **Schema validation** for declarative input validation
 - **Type introspection** to query node types before access
 - **Tree operations** including merge, clone, and visitor pattern traversal
 
@@ -113,7 +112,6 @@ cmake --install build --prefix /path/to/install
 
 The `example/` directory contains demonstration programs showcasing various features:
 
-- **`config_demo.f90`**: Complete configuration file parsing with schema validation, type checking, and default values.
 - **`matrix_demo.f90`**: Handling arrays and matrices, including reading from various HSD array formats.
 - **`simple_read.f90`**: Basic feature showcase including file loading, value access, and output.
 
@@ -182,7 +180,6 @@ fpm run --example simple_read
 | `hsd_require(root, path, value, error)` | Get required value or error |
 | `hsd_validate_range(value, min, max, error)` | Validate numeric range |
 | `hsd_validate_one_of(value, options, error)` | Validate against allowed values |
-| `schema_validate(schema, root, error)` | Validate against schema |
 
 ## HSD Format Reference
 

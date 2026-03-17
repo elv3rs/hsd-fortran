@@ -208,7 +208,7 @@ contains
     call new_value(val, name="Temps")
     val%attrib = "Kelvin"
     val%value_type = VALUE_TYPE_ARRAY
-    val%real_array = [300.0_dp, 373.15_dp, 273.15_dp]
+    val%raw_text = "300.0 373.15 273.15"
     call root%add_child(val)
 
     call hsd_get_array_with_unit(root, "Temps", arr, "Celsius", kelvin_to_celsius, stat)
@@ -233,7 +233,7 @@ contains
     ! Create a value node WITHOUT attrib — should assume target unit (no conversion)
     call new_value(val, name="Temps")
     val%value_type = VALUE_TYPE_ARRAY
-    val%real_array = [100.0_dp, 200.0_dp]
+    val%raw_text = "100.0 200.0"
     call root%add_child(val)
 
     call hsd_get_array_with_unit(root, "Temps", arr, "Celsius", kelvin_to_celsius, stat)
@@ -257,10 +257,7 @@ contains
     call new_value(val, name="Data")
     val%attrib = "Kelvin"
     val%value_type = VALUE_TYPE_ARRAY
-    val%real_matrix = reshape([300.0_dp, 373.15_dp, &
-        273.15_dp, 400.0_dp, 500.0_dp, 600.0_dp], [2, 3])
-    val%nrows = 2
-    val%ncols = 3
+    val%raw_text = "300.0 273.15 500.0" // char(10) // "373.15 400.0 600.0"
     call root%add_child(val)
 
     call hsd_get_matrix_with_unit(root, "Data", mat, nrows, ncols, &

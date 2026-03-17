@@ -8,7 +8,6 @@
 !> - hsd_mutators: Data modification (hsd_set)
 !> - hsd_query: Navigation and tree operations (hsd_get_child, hsd_merge, hsd_clone)
 !> - hsd_validation: Data validation (hsd_require, hsd_validate_*)
-!> - hsd_schema: Declarative schema validation
 !>
 !> ## Thread Safety
 !>

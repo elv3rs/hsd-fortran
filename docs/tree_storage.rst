@@ -141,44 +141,35 @@ Type enumeration
      - ``logical_value`` (``logical``) for scalars; ``logical_array(:)`` for arrays.
    * - ``VALUE_TYPE_ARRAY``
      - 5
-     - ``raw_text`` (``character(:), allocatable``) — unparsed text; typed arrays populated on first access.
+     - ``raw_text`` (``character(:), allocatable``) — unparsed text; arrays are parsed on demand.
    * - ``VALUE_TYPE_COMPLEX``
      - 6
-     - ``complex_value`` (``complex(dp)``) for scalars; ``complex_array(:)`` and ``complex_matrix(:,:)`` for arrays/matrices.
+     - ``complex_value`` (``complex(dp)``) for scalars; arrays/matrices are parsed from ``raw_text``.
 
 All storage fields coexist on the type but only the ones corresponding to
 ``value_type`` are meaningful. After parsing, a value node with ``value_type = VALUE_TYPE_ARRAY``
-initially stores only ``raw_text``. The typed array fields are populated lazily on first
-accessor call (see :ref:`cache_on_read` below).
+stores only ``raw_text``.
 
 Scalar vs array storage
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 - **Scalars**: Stored directly (``int_value``, ``real_value``, ``logical_value``, ``complex_value``, ``string_value``).
-- **Rank-1 arrays**: ``int_array(:)``, ``real_array(:)``, ``logical_array(:)``, ``string_array(:)``, ``complex_array(:)``.
-- **Rank-2 matrices**: ``int_matrix(:,:)``, ``real_matrix(:,:)``, ``complex_matrix(:,:)`` with ``nrows`` and ``ncols`` tracking dimensions.
+- **Arrays & Matrices**: Stored as ``raw_text`` and parsed on demand.
 
-All array/matrix fields are ``allocatable``.
+.. _parse_on_demand:
 
-
-.. _cache_on_read:
-
-Cache-on-Read Behavior
-~~~~~~~~~~~~~~~~~~~~~~
+Parse-on-Demand Behavior
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 Array and matrix accessor methods (e.g. ``get_int_array``, ``get_real_matrix``) follow a
-**cache-on-read** pattern:
+**parse-on-demand** pattern:
 
-1. On the **first call**, the raw text (``raw_text``) is parsed into the appropriate
-   typed array (e.g. ``int_array``) and the result is stored.
-2. On **subsequent calls**, the cached array is returned directly without reparsing.
+1. Every call parses the ``raw_text`` into a temporary typed array.
+2. The parsed array is returned to the caller.
+3. No cached version is stored in the node.
 
-This means these accessor methods require ``intent(inout)`` even though they are
-logically read-only — they mutate internal cache state.
-
-**Thread safety implication**: concurrent first-access to the same ``hsd_value``
-from multiple threads is a data race. Once all caches are populated (by a single-threaded
-warmup pass), concurrent reads are safe. See :doc:`thread_safety` for details.
+This means these accessor methods are truly read-only (``intent(in)``) and thread-safe
+for concurrent access, at the cost of reparsing overhead on repeated access.
 
 
 .. _processed_flag:

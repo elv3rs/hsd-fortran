@@ -528,7 +528,6 @@ contains
           block
             character(len=:), allocatable :: child_tag_name
             logical :: child_is_amendment
-            type(hsd_table), pointer :: target_table
 
             child_tag_name = to_lower(trim(saved_token%value))
             child_is_amendment = .false.

@@ -66,14 +66,6 @@ Iterator for traversing table children.
 
    type(hsd_iterator) :: iter
 
-``hsd_schema_t``
-^^^^^^^^^^^^^^^^
-
-Schema definition for input validation.
-
-.. code-block:: fortran
-
-   type(hsd_schema_t) :: schema
 
 ``hsd_visitor_t``
 ^^^^^^^^^^^^^^^^^
@@ -126,26 +118,6 @@ Error Codes
    integer, parameter :: HSD_STAT_IO_ERROR       = 9   ! I/O operation failed
    integer, parameter :: HSD_STAT_TYPE_ERROR     = 10  ! Type conversion failed
    integer, parameter :: HSD_STAT_NOT_FOUND      = 11  ! Key not found in tree
-   integer, parameter :: HSD_STAT_SCHEMA_ERROR   = 20  ! Schema validation failed
-
-Schema Constants
-~~~~~~~~~~~~~~~~
-
-.. code-block:: fortran
-
-   ! Required/optional
-   integer, parameter :: FIELD_REQUIRED = 1
-   integer, parameter :: FIELD_OPTIONAL = 0
-
-   ! Field types
-   integer, parameter :: FIELD_TYPE_ANY     = 0
-   integer, parameter :: FIELD_TYPE_STRING  = 1
-   integer, parameter :: FIELD_TYPE_INTEGER = 2
-   integer, parameter :: FIELD_TYPE_REAL    = 3
-   integer, parameter :: FIELD_TYPE_LOGICAL = 4
-   integer, parameter :: FIELD_TYPE_TABLE   = 5
-   integer, parameter :: FIELD_TYPE_ARRAY   = 6
-   integer, parameter :: FIELD_TYPE_COMPLEX = 7
 
 I/O Procedures
 --------------
@@ -615,91 +587,7 @@ Get a value with unit conversion via a user-supplied converter function.
      integer, intent(out), optional :: stat
    end subroutine
 
-Schema Validation
------------------
 
-schema_init
-~~~~~~~~~~~
-
-Initialize a schema.
-
-.. code-block:: fortran
-
-   subroutine schema_init(schema)
-     type(hsd_schema_t), intent(out) :: schema
-   end subroutine
-
-schema_destroy
-~~~~~~~~~~~~~~
-
-Clean up a schema.
-
-.. code-block:: fortran
-
-   subroutine schema_destroy(schema)
-     type(hsd_schema_t), intent(inout) :: schema
-   end subroutine
-
-schema_add_field
-~~~~~~~~~~~~~~~~
-
-Add a field definition to the schema.
-
-.. code-block:: fortran
-
-   subroutine schema_add_field(schema, path, requirement, field_type, &
-       min_int, max_int, min_real, max_real, description)
-     type(hsd_schema_t), intent(inout) :: schema
-     character(len=*), intent(in) :: path
-     integer, intent(in) :: requirement         ! FIELD_REQUIRED or FIELD_OPTIONAL
-     integer, intent(in), optional :: field_type ! FIELD_TYPE_* constant
-     integer, intent(in), optional :: min_int, max_int
-     real(dp), intent(in), optional :: min_real, max_real
-     character(len=*), intent(in), optional :: description
-   end subroutine
-
-schema_add_field_enum
-~~~~~~~~~~~~~~~~~~~~~
-
-Add a field with enumerated allowed values.
-
-.. code-block:: fortran
-
-   subroutine schema_add_field_enum(schema, path, allowed_values, required)
-     type(hsd_schema_t), intent(inout) :: schema
-     character(len=*), intent(in) :: path
-     character(len=*), intent(in) :: allowed_values(:)
-     integer, intent(in) :: required
-   end subroutine
-
-schema_validate
-~~~~~~~~~~~~~~~
-
-Validate a tree against the schema. Returns an array of all validation errors.
-
-.. code-block:: fortran
-
-   subroutine schema_validate(schema, root, errors)
-     type(hsd_schema_t), intent(in) :: schema
-     type(hsd_table), intent(in), target :: root
-     type(hsd_error_t), allocatable, intent(out) :: errors(:)
-   end subroutine
-
-schema_validate_strict
-~~~~~~~~~~~~~~~~~~~~~~
-
-Strict validation (also checks for unknown fields not in the schema).
-
-.. note:: Currently delegates to ``schema_validate`` — unknown-field checking
-   is not yet implemented.
-
-.. code-block:: fortran
-
-   subroutine schema_validate_strict(schema, root, errors)
-     type(hsd_schema_t), intent(in) :: schema
-     type(hsd_table), intent(in), target :: root
-     type(hsd_error_t), allocatable, intent(out) :: errors(:)
-   end subroutine
 
 Visitor Pattern
 ---------------
