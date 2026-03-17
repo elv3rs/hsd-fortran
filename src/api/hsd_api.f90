@@ -198,6 +198,50 @@ module hsd_api
 
   end function normalize_path
 
+  !> Resolve a path into parent table + leaf name.
+  subroutine resolve_path_parent_(table, path, parent_table, child_name, stat)
+    type(hsd_table), intent(in), target :: table
+    character(len=*), intent(in) :: path
+    type(hsd_table), pointer, intent(out) :: parent_table
+    character(len=:), allocatable, intent(out) :: child_name
+    integer, intent(out) :: stat
+
+    class(hsd_node), pointer :: parent_node
+    character(len=:), allocatable :: norm, parent_path
+    integer :: last_slash, local_stat
+
+    nullify(parent_table)
+    child_name = ""
+    norm = normalize_path(path)
+    if (len(norm) == 0) then
+      stat = HSD_STAT_NOT_FOUND
+      return
+    end if
+
+    last_slash = index(norm, "/", back=.true.)
+    if (last_slash > 0) then
+      parent_path = norm(1:last_slash-1)
+      child_name = norm(last_slash+1:)
+      call hsd_get_child(table, parent_path, parent_node, local_stat)
+      if (local_stat /= HSD_STAT_OK .or. .not. associated(parent_node)) then
+        stat = HSD_STAT_NOT_FOUND
+        return
+      end if
+      select type (parent_node)
+      type is (hsd_table)
+        parent_table => parent_node
+      class default
+        stat = HSD_STAT_TYPE_ERROR
+        return
+      end select
+    else
+      parent_table => table
+      child_name = norm
+    end if
+
+    stat = HSD_STAT_OK
+  end subroutine resolve_path_parent_
+
   !> Check if a table has a child with given name
   function hsd_has_child(table, name, case_insensitive) result(has)
     type(hsd_table), intent(in), target :: table
@@ -223,50 +267,23 @@ module hsd_api
   !> Supports path-based navigation with "/" separator for nested tables.
   !> The last component of the path is the child to remove.
   subroutine hsd_remove_child(table, path, stat, case_insensitive)
-    type(hsd_table), intent(inout) :: table
+    type(hsd_table), intent(inout), target :: table
     character(len=*), intent(in) :: path
     integer, intent(out), optional :: stat
     logical, intent(in), optional :: case_insensitive
 
-    class(hsd_node), pointer :: parent_node
     type(hsd_table), pointer :: parent_table
-    character(len=:), allocatable :: child_name, parent_path, norm
-    integer :: last_slash, local_stat
+    character(len=:), allocatable :: child_name
+    integer :: local_stat
 
-    norm = normalize_path(path)
-    if (len(norm) == 0) then
-      if (present(stat)) stat = HSD_STAT_NOT_FOUND
+    call resolve_path_parent_(table, path, parent_table, child_name, local_stat)
+    if (local_stat /= HSD_STAT_OK) then
+      if (present(stat)) stat = local_stat
       return
     end if
 
-    ! Find the last slash to separate parent path from child name
-    last_slash = index(norm, "/", back=.true.)
-
-    if (last_slash > 0) then
-      parent_path = norm(1:last_slash-1)
-      child_name = norm(last_slash+1:)
-
-      ! Get the parent table
-      call hsd_get_child(table, parent_path, parent_node, local_stat)
-      if (local_stat /= HSD_STAT_OK .or. .not. associated(parent_node)) then
-        if (present(stat)) stat = HSD_STAT_NOT_FOUND
-        return
-      end if
-
-      select type (parent_node)
-      type is (hsd_table)
-        parent_table => parent_node
-        call parent_table%remove_child_by_name(child_name, local_stat, case_insensitive)
-        if (present(stat)) stat = local_stat
-      class default
-        if (present(stat)) stat = HSD_STAT_TYPE_ERROR
-      end select
-    else
-      ! No path separator - remove directly from the root table
-      child_name = norm
-      call table%remove_child_by_name(child_name, local_stat, case_insensitive)
-      if (present(stat)) stat = local_stat
-    end if
+    call parent_table%remove_child_by_name(child_name, local_stat, case_insensitive)
+    if (present(stat)) stat = local_stat
 
   end subroutine hsd_remove_child
 
@@ -618,44 +635,18 @@ module hsd_api
     logical, intent(in), optional :: case_insensitive
 
     class(hsd_node), pointer :: child
-    integer :: last_slash, local_stat
+    integer :: local_stat
     type(hsd_table), pointer :: parent_table
-    class(hsd_node), pointer :: parent_node
-    character(len=:), allocatable :: parent_path, child_old_name, norm
+    character(len=:), allocatable :: child_old_name
     logical :: ci
 
     ci = .true.
     if (present(case_insensitive)) ci = case_insensitive
 
-    norm = normalize_path(old_name)
-    if (len(norm) == 0) then
-      if (present(stat)) stat = HSD_STAT_NOT_FOUND
+    call resolve_path_parent_(table, old_name, parent_table, child_old_name, local_stat)
+    if (local_stat /= HSD_STAT_OK) then
+      if (present(stat)) stat = local_stat
       return
-    end if
-
-    ! Support path-based navigation: parent/old_name -> parent/new_name
-    last_slash = index(norm, "/", back=.true.)
-
-    if (last_slash > 0) then
-      parent_path = norm(1:last_slash-1)
-      child_old_name = norm(last_slash+1:)
-
-      call hsd_get_child(table, parent_path, parent_node, local_stat)
-      if (local_stat /= 0 .or. .not. associated(parent_node)) then
-        if (present(stat)) stat = HSD_STAT_NOT_FOUND
-        return
-      end if
-
-      select type (parent_node)
-      type is (hsd_table)
-        parent_table => parent_node
-      class default
-        if (present(stat)) stat = HSD_STAT_TYPE_ERROR
-        return
-      end select
-    else
-      parent_table => table
-      child_old_name = norm
     end if
 
     ! Find the child by name
@@ -763,44 +754,17 @@ module hsd_api
     type(hsd_child_ptr), allocatable, intent(out) :: children(:)
     integer, intent(out), optional :: stat
 
-    character(len=:), allocatable :: norm, parent_path, child_name
-    class(hsd_node), pointer :: parent_node, child
+    character(len=:), allocatable :: child_name
+    class(hsd_node), pointer :: child
     type(hsd_table), pointer :: parent_table
-    integer :: last_slash, local_stat, i, count
+    integer :: local_stat, i, count
     character(len=:), allocatable :: lower_name
 
-    norm = normalize_path(path)
-    if (len(norm) == 0) then
+    call resolve_path_parent_(table, path, parent_table, child_name, local_stat)
+    if (local_stat /= HSD_STAT_OK) then
       allocate(children(0))
-      if (present(stat)) stat = HSD_STAT_NOT_FOUND
+      if (present(stat)) stat = local_stat
       return
-    end if
-
-    ! Split into parent path + leaf name
-    last_slash = index(norm, "/", back=.true.)
-
-    if (last_slash > 0) then
-      parent_path = norm(1:last_slash-1)
-      child_name = norm(last_slash+1:)
-
-      call hsd_get_child(table, parent_path, parent_node, local_stat)
-      if (local_stat /= HSD_STAT_OK .or. .not. associated(parent_node)) then
-        allocate(children(0))
-        if (present(stat)) stat = HSD_STAT_NOT_FOUND
-        return
-      end if
-
-      select type (parent_node)
-      type is (hsd_table)
-        parent_table => parent_node
-      class default
-        allocate(children(0))
-        if (present(stat)) stat = HSD_STAT_TYPE_ERROR
-        return
-      end select
-    else
-      parent_table => table
-      child_name = norm
     end if
 
     lower_name = to_lower(child_name)
@@ -848,44 +812,17 @@ module hsd_api
     type(hsd_table_ptr), allocatable, intent(out) :: children(:)
     integer, intent(out), optional :: stat
 
-    character(len=:), allocatable :: norm, parent_path, child_name
-    class(hsd_node), pointer :: parent_node, child
+    character(len=:), allocatable :: child_name
+    class(hsd_node), pointer :: child
     type(hsd_table), pointer :: parent_table
-    integer :: last_slash, local_stat, i, count
+    integer :: local_stat, i, count
     character(len=:), allocatable :: lower_name
 
-    norm = normalize_path(path)
-    if (len(norm) == 0) then
+    call resolve_path_parent_(table, path, parent_table, child_name, local_stat)
+    if (local_stat /= HSD_STAT_OK) then
       allocate(children(0))
-      if (present(stat)) stat = HSD_STAT_NOT_FOUND
+      if (present(stat)) stat = local_stat
       return
-    end if
-
-    ! Split into parent path + leaf name
-    last_slash = index(norm, "/", back=.true.)
-
-    if (last_slash > 0) then
-      parent_path = norm(1:last_slash-1)
-      child_name = norm(last_slash+1:)
-
-      call hsd_get_child(table, parent_path, parent_node, local_stat)
-      if (local_stat /= HSD_STAT_OK .or. .not. associated(parent_node)) then
-        allocate(children(0))
-        if (present(stat)) stat = HSD_STAT_NOT_FOUND
-        return
-      end if
-
-      select type (parent_node)
-      type is (hsd_table)
-        parent_table => parent_node
-      class default
-        allocate(children(0))
-        if (present(stat)) stat = HSD_STAT_TYPE_ERROR
-        return
-      end select
-    else
-      parent_table => table
-      child_name = norm
     end if
 
     lower_name = to_lower(child_name)
@@ -1315,33 +1252,6 @@ module hsd_api
     end if
 
   end subroutine hsd_get_name
-
-
-
-  !> Get inline text content from a table node.
-  !>
-  !> Looks for a child named "#text" (the convention for inline text).
-  !> If found, extracts the string value; otherwise returns NOT_FOUND.
-  subroutine get_inline_text_(table, val, stat)
-    type(hsd_table), intent(in), target :: table
-    character(len=:), allocatable, intent(out) :: val
-    integer, intent(out) :: stat
-
-    class(hsd_node), pointer :: child
-
-    call table%get_child_by_name("#text", child, case_insensitive=.true.)
-    if (associated(child)) then
-      select type (child)
-      type is (hsd_value)
-        call child%get_string(val, stat)
-        return
-      end select
-    end if
-
-    val = ""
-    stat = HSD_STAT_NOT_FOUND
-
-  end subroutine get_inline_text_
 
   !> Get the inline text VALUE node from a table node.
   !>
