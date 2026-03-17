@@ -284,48 +284,6 @@ To process all children of a table, including duplicate keys, use the ``hsd_iter
 
 This is particularly useful when handling duplicate keys, as ``hsd_get`` only returns the last occurrence.
 
-Schema Validation
------------------
-
-Define and validate input schemas:
-
-.. code-block:: fortran
-
-   use hsd
-   implicit none
-
-   type(hsd_schema_t) :: schema
-   type(hsd_error_t), allocatable :: errors(:)
-
-   ! Initialize schema
-   call schema_init(schema)
-
-   ! Add required fields (note: requirement comes before field_type)
-   call schema_add_field(schema, "Driver/MaxSteps", &
-     FIELD_REQUIRED, field_type=FIELD_TYPE_INTEGER)
-
-   call schema_add_field(schema, "Hamiltonian/DFTB/SCC", &
-     FIELD_REQUIRED, field_type=FIELD_TYPE_LOGICAL)
-
-   ! Add optional field with allowed values
-   call schema_add_field_enum(schema, "Driver/Method", &
-     allowed_values=[character(len=20) :: &
-       "ConjugateGradient", "SteepestDescent", "FIRE"], &
-     required=FIELD_OPTIONAL)
-
-   ! Validate (returns array of errors)
-   call schema_validate(schema, root, errors)
-   if (size(errors) > 0) then
-     print *, "Validation failed:", errors(1)%message
-   end if
-
-   ! Strict validation (fails on unknown fields)
-   ! Note: currently equivalent to schema_validate
-   call schema_validate_strict(schema, root, errors)
-
-   ! Cleanup
-   call schema_destroy(schema)
-
 Validation Helpers
 ~~~~~~~~~~~~~~~~~~
 
@@ -397,7 +355,7 @@ Best Practices
 --------------
 
 1. **Always check for errors** after parsing and validation
-2. **Use schemas** for complex input validation
+2. **Validate inputs using hsd_require and hsd_validate_*
 3. **Clone trees** before modifying if you need the original
 4. **Use path notation** for cleaner code instead of manual tree traversal
 5. **Validate ranges** for numeric inputs
@@ -409,7 +367,6 @@ Best Practices
    these features can be found under ``example/``:
 
    - ``simple_read.f90`` — loading, accessing, modifying, merging, validation
-   - ``config_demo.f90`` — schema-based validation
    - ``matrix_demo.f90`` — arrays and matrices
    - ``visitor_demo.f90`` — visitor pattern for tree traversal
 
@@ -424,27 +381,11 @@ Example: Complete Configuration Parser
      type(hsd_error_t), allocatable, intent(out) :: error
 
      type(hsd_table) :: root
-     type(hsd_schema_t) :: schema
-     type(hsd_error_t), allocatable :: errors(:)
      integer :: stat
 
      ! Load file
      call hsd_load(filename, root, error)
      if (allocated(error)) return
-
-     ! Setup schema (requirement before field_type)
-     call schema_init(schema)
-     call schema_add_field(schema, "MaxIterations", FIELD_REQUIRED, FIELD_TYPE_INTEGER)
-     call schema_add_field(schema, "Tolerance", FIELD_OPTIONAL, FIELD_TYPE_REAL)
-     call schema_add_field(schema, "Method", FIELD_OPTIONAL, FIELD_TYPE_STRING)
-
-     ! Validate (returns errors array)
-     call schema_validate(schema, root, errors)
-     call schema_destroy(schema)
-     if (size(errors) > 0) then
-       allocate(error, source=errors(1))
-       return
-     end if
 
      ! Extract values
      call hsd_get(root, "MaxIterations", config%max_iter, stat)

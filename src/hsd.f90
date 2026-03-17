@@ -14,8 +14,7 @@
 !> The HSD library is designed for single-threaded use but supports certain
 !> concurrent access patterns:
 !>
-!> - **Thread-safe**: Parsing different files concurrently, validating with
-!>   a shared schema
+!> - **Thread-safe**: Parsing different files concurrently
 !> - **NOT thread-safe**: Reading from a shared tree (first access to
 !>   `hsd_value` getters mutates internal caches), modifying a shared tree,
 !>   using shared iterators, parsing to the same tree
