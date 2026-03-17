@@ -85,7 +85,6 @@ hsd-fortran/
 │   ├── core/                   # Core infrastructure
 │   │   ├── hsd_constants.f90   # dp, sp precision constants
 │   │   ├── hsd_error.f90       # Error types, status codes (incl. HSD_STAT_SCHEMA_ERROR)
-│   │   ├── hsd_hash_table.f90  # O(1) child lookup
 │   │   └── hsd_utils.f90       # String utilities (to_lower, string_buffer_t)
 │   └── io/                     # Parsing and serialization
 │       ├── hsd_lexer.f90       # Tokenizer
@@ -235,7 +234,7 @@ These functions were upstreamed from DFTB+ and are part of the public API:
 - **Booleans**: Reads `Yes/No`, `On/Off`, `1/0`, optionally `True/False`; writes `Yes/No`
 - **Includes**: `<<< "file"` (text), `<<+ "file.hsd"` (parsed); cycle detection enabled
 - **Formatting**: Dumps use consistent 2-space indent and `{}` block syntax
-- **Hash Table**: O(1) child lookup for all tables using persistent hash indexing
+- **Child Lookup**: Linear search over children array (simple and sufficient for config files)
 - **Thread Safety**: NOT fully thread-safe for concurrent reads — `hsd_value` getters mutate internal caches on first access (see `hsd_types.f90` header). Safe after all caches are populated; modifications always require external synchronization
 - **Duplicate Keys**: Are preserved in the tree; `hsd_get` returns the **last** occurrence (override behavior); iteration sees all
 - **Status Parameters**: Optional `stat` parameters use `intent(out)` and must be set on ALL code paths (see `docs/error_handling.md`)

@@ -81,16 +81,7 @@ Internal storage
      - Array of pointers to child nodes (polymorphic: each can be ``hsd_table`` or ``hsd_value``).
    * - ``num_children``
      - ``integer``
-     - Number of children currently stored (≤ ``capacity``).
-   * - ``capacity``
-     - ``integer``
-     - Allocated length of the ``children`` array. Grows by doubling when full.
-   * - ``name_index``
-     - ``hsd_name_index_t``
-     - Hash table mapping lowercase child names → array indices. Enables O(1) lookup by name.
-   * - ``index_active``
-     - ``logical``
-     - Whether the hash index is currently valid. Invalidated by add/remove operations.
+     - Number of children currently stored (≤ ``size(children)``).
 
 The ``children`` array stores ``hsd_node_ptr`` wrappers (a type containing a single
 ``class(hsd_node), pointer`` component). Pointers are used rather than allocatables so that
@@ -100,21 +91,20 @@ when the children array is reallocated during growth, existing pointers obtained
 Growth strategy
 ~~~~~~~~~~~~~~~
 
-When a child is added and ``num_children == capacity``:
+When a child is added and ``num_children == size(children)``:
 
-1. A new array with doubled capacity is allocated.
+1. A new array with doubled size is allocated.
 2. Existing pointer entries are copied (pointer assignment, not deep copy).
 3. The old array is deallocated.
 
-Initial capacity starts at 4 and doubles: 4 → 8 → 16 → 32 → ...
+Initial array size starts at 4 and doubles: 4 → 8 → 16 → 32 → ...
 
-Hash index
-~~~~~~~~~~
+Child lookup
+~~~~~~~~~~~~
 
-For tables with more than a handful of children, lookup by name uses a hash table
-(``hsd_name_index_t``) that maps **lowercase** node names to their index in the
-``children`` array. The index is built lazily on the first name-based lookup and
-invalidated when children are added or removed.
+Lookup by name uses a simple **linear search** over the children array, comparing
+node names directly. This is appropriate for configuration file parsing where tables
+typically have a small number of children.
 
 
 Value Nodes: ``hsd_value``

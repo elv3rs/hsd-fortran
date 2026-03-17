@@ -16,7 +16,7 @@ program bench_lookup
 
   call system_clock(count_rate=rate)
 
-  print '(A15, A20, A15)', "Num Children", "Time/Lookup (ns)", "Hash Active?"
+  print '(A15, A20)', "Num Children", "Time/Lookup (ns)"
 
   do i = 1, size(n_children_list)
     n = n_children_list(i)
@@ -44,7 +44,7 @@ program bench_lookup
 
     dt = real(t2 - t1, 8) / real(rate, 8) / real(N_TRIALS, 8) * 1.0d9  ! ns per lookup
 
-    print '(I15, F20.2, L15)', n, dt, root%index_active
+    print '(I15, F20.2)', n, dt
 
     call root%destroy()
   end do

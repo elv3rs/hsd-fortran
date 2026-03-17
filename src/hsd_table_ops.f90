@@ -8,70 +8,26 @@ submodule (hsd_types) hsd_table_ops
 
 contains
 
-  !> Build the hash index for O(1) child lookup
-  !>
-  !> This is called automatically when adding children.
-  !> Can also be called explicitly to pre-build the index.
-  module procedure table_build_index
-
-    integer :: i
-
-    call self%name_index%init(self%num_children * 2)
-
-    do i = 1, self%num_children
-      if (associated(self%children(i)%node)) then
-        if (allocated(self%children(i)%node%name)) then
-          call self%name_index%insert(self%children(i)%node%name, i)
-        end if
-      end if
-    end do
-
-    self%index_active = .true.
-
-  end procedure table_build_index
-
-  !> Invalidate the hash index (called when children are removed)
-  module procedure table_invalidate_index
-
-    if (self%index_active) then
-      call self%name_index%clear()
-      self%index_active = .false.
-    end if
-
-  end procedure table_invalidate_index
-
   !> Add a child node to the table
   !>
   !> Creates a deep copy of the child node and adds it to the table.
   !> The table takes ownership of the copy and will deallocate it when
   !> the table is destroyed or the child is removed.
-  !>
-  !> @param[inout] self  The table to add the child to
-  !> @param[in]    child The child node to copy and add
-  !>
-  !> @note The caller retains ownership of the original `child` argument.
-  !>       The copy mechanism uses `allocate(source=child)` which performs
-  !>       a deep copy of all components, including allocatable arrays.
-  !>
-  !> ## Performance
-  !>
-  !> Uses a hash index for O(1) name lookups.
   module procedure table_add_child
 
     type(hsd_node_ptr), allocatable :: tmp(:)
-    integer :: new_capacity, ii
+    integer :: new_size, ii
 
     ! Initialize if table was never set up via new_table
-    if (self%capacity == 0) then
-      self%capacity = 4
-      allocate(self%children(self%capacity))
+    if (.not. allocated(self%children)) then
+      allocate(self%children(4))
       self%num_children = 0
     end if
 
     ! Grow array if needed
-    if (self%num_children >= self%capacity) then
-      new_capacity = self%capacity * 2
-      allocate(tmp(new_capacity))
+    if (self%num_children >= size(self%children)) then
+      new_size = size(self%children) * 2
+      allocate(tmp(new_size))
       ! Move pointers (shallow copy) — node objects stay at same address
       do ii = 1, self%num_children
         tmp(ii)%node => self%children(ii)%node
@@ -79,19 +35,11 @@ contains
       end do
       deallocate(self%children)
       call move_alloc(tmp, self%children)
-      self%capacity = new_capacity
     end if
 
     ! Add child (allocate a copy on the heap, store pointer)
     self%num_children = self%num_children + 1
     allocate(self%children(self%num_children)%node, source=child)
-
-    ! Update hash index
-    if (.not. self%index_active) then
-      call self%build_index()
-    else if (allocated(child%name)) then
-      call self%name_index%insert(child%name, self%num_children)
-    end if
 
   end procedure table_add_child
 
@@ -100,10 +48,6 @@ contains
   !> Returns a pointer to the child at the given index. The pointer is
   !> owned by the table - do NOT deallocate it. The pointer becomes
   !> invalid if the child is removed or the table is destroyed.
-  !>
-  !> @param[in]  self   The table to search
-  !> @param[in]  index  1-based index (1 to num_children)
-  !> @param[out] child  Pointer to child, or null() if out of range
   module procedure table_get_child
 
     child => null()
@@ -115,15 +59,7 @@ contains
 
   end procedure table_get_child
 
-  !> Get child by name
-  !>
-  !> Returns a pointer to the first child with the given name.
-  !> Uses O(1) hash lookup for all table sizes.
-  !>
-  !> @param[in]  self             The table to search
-  !> @param[in]  name             Name to search for
-  !> @param[out] child            Pointer to child, or null()
-  !> @param[in]  case_insensitive If .true., ignore case
+  !> Get child by name (linear search, returns last match for override behavior)
   module procedure table_get_child_by_name
 
     integer :: idx
@@ -133,36 +69,21 @@ contains
     ignore_case = .false.
     if (present(case_insensitive)) ignore_case = case_insensitive
 
-    if (self%index_active) then
-      ! O(1) hash-based lookup
+    ! Search from end to return last occurrence (override semantics)
+    do idx = self%num_children, 1, -1
+      if (.not. associated(self%children(idx)%node)) cycle
+      if (.not. allocated(self%children(idx)%node%name)) cycle
       if (ignore_case) then
-        idx = self%name_index%lookup_case_insensitive(name, found)
+        found = to_lower(self%children(idx)%node%name) &
+            & == to_lower(name)
       else
-        idx = self%name_index%lookup(name, found)
+        found = self%children(idx)%node%name == name
       end if
-
-      if (found .and. idx >= 1 .and. idx <= self%num_children) then
-        if (associated(self%children(idx)%node)) then
-          child => self%children(idx)%node
-        end if
+      if (found) then
+        child => self%children(idx)%node
+        return
       end if
-    else
-      ! Linear fallback when hash index is not active
-      do idx = 1, self%num_children
-        if (.not. associated(self%children(idx)%node)) cycle
-        if (.not. allocated(self%children(idx)%node%name)) cycle
-        if (ignore_case) then
-          found = to_lower(self%children(idx)%node%name) &
-              & == to_lower(name)
-        else
-          found = self%children(idx)%node%name == name
-        end if
-        if (found) then
-          child => self%children(idx)%node
-          return
-        end if
-      end do
-    end if
+    end do
 
   end procedure table_get_child_by_name
 
@@ -219,10 +140,6 @@ contains
   !> Removes and deallocates the child at the given index. Children
   !> after the removed one are shifted to fill the gap. Any pointers
   !> to the removed child become invalid after this call.
-  !>
-  !> @param[inout] self   The table to modify
-  !> @param[in]    index  1-based index of the child to remove
-  !> @param[out]   stat   Optional status code
   module procedure table_remove_child
 
     integer :: i
@@ -246,18 +163,11 @@ contains
 
     self%num_children = self%num_children - 1
 
-    ! Rebuild index as indices have shifted
-    if (self%num_children > 0) then
-      call self%build_index()
-    else
-      call self%invalidate_index()
-    end if
-
     if (present(stat)) stat = HSD_STAT_OK
 
   end procedure table_remove_child
 
-  !> Remove child by name
+  !> Remove child by name (linear search, removes last match)
   module procedure table_remove_child_by_name
 
     integer :: idx
@@ -266,33 +176,21 @@ contains
     ignore_case = .false.
     if (present(case_insensitive)) ignore_case = case_insensitive
 
-    if (self%index_active) then
+    ! Search from end to match last occurrence (override semantics)
+    do idx = self%num_children, 1, -1
+      if (.not. associated(self%children(idx)%node)) cycle
+      if (.not. allocated(self%children(idx)%node%name)) cycle
       if (ignore_case) then
-        idx = self%name_index%lookup_case_insensitive(name, found)
+        found = to_lower(self%children(idx)%node%name) &
+            & == to_lower(name)
       else
-        idx = self%name_index%lookup(name, found)
+        found = self%children(idx)%node%name == name
       end if
       if (found) then
         call self%remove_child(idx, stat)
         return
       end if
-    else
-      ! Linear fallback when hash index is not active
-      do idx = 1, self%num_children
-        if (.not. associated(self%children(idx)%node)) cycle
-        if (.not. allocated(self%children(idx)%node%name)) cycle
-        if (ignore_case) then
-          found = to_lower(self%children(idx)%node%name) &
-              & == to_lower(name)
-        else
-          found = self%children(idx)%node%name == name
-        end if
-        if (found) then
-          call self%remove_child(idx, stat)
-          return
-        end if
-      end do
-    end if
+    end do
 
     if (present(stat)) stat = HSD_STAT_NOT_FOUND
 
@@ -306,10 +204,6 @@ contains
 
     integer :: i
 
-    ! Destroy hash index
-    call self%name_index%destroy()
-    self%index_active = .false.
-
     do i = 1, self%num_children
       if (associated(self%children(i)%node)) then
         call self%children(i)%node%destroy()
@@ -322,7 +216,6 @@ contains
     if (allocated(self%attrib)) deallocate(self%attrib)
 
     self%num_children = 0
-    self%capacity = 0
 
   end procedure table_destroy
 

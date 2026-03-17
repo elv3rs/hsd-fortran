@@ -3,7 +3,6 @@
 module test_coverage_gaps_suite
   use hsd
   use hsd_constants, only: dp, sp
-  use hsd_hash_table, only: hsd_name_index_t
   use fortuno_serial, only: is_equal, test => serial_case_item, &
       & check => serial_check, suite => serial_suite_item, test_list
   implicit none (type, external)
@@ -121,9 +120,6 @@ contains
             test("get_children_not_found", test_get_children_not_found), &
             test("get_children_type_error", test_get_children_type_error), &
             test("get_choice_not_found", test_get_choice_not_found), &
-            ! P19: Hash table — overflow remove
-            test("hash_table_overflow_remove", test_hash_table_overflow_remove), &
-            test("hash_table_chain_promote", test_hash_table_chain_promote), &
             ! P20: Parser — amendment equals syntax (+Tag = +ChildTag / ChildTag)
             test("amend_equals_child_amend", test_amend_equals_child_amend), &
             test("amend_equals_new_child", test_amend_equals_new_child), &
@@ -1722,88 +1718,6 @@ contains
   end subroutine test_get_choice_not_found
 
   ! ============================================================
-  ! P19: Hash table — overflow chain removal
-  ! ============================================================
-
-  !> Force hash collisions by inserting many keys, then remove from overflow chain
-  subroutine test_hash_table_overflow_remove()
-    type(hsd_name_index_t) :: ht
-    integer :: i, val
-    logical :: found
-    character(len=10) :: key
-
-    call ht%init(4)  ! Small bucket count to force collisions
-
-    ! Insert 20 keys to force overflow chains
-    do i = 1, 20
-      write(key, '(A,I0)') "k", i
-      call ht%insert(trim(key), i)
-    end do
-
-    ! Remove some keys that are likely in overflow chains
-    do i = 2, 20, 3
-      write(key, '(A,I0)') "k", i
-      call ht%remove(trim(key))
-    end do
-
-    ! Verify removed keys are gone
-    do i = 2, 20, 3
-      write(key, '(A,I0)') "k", i
-      val = ht%lookup(trim(key), found)
-      call check(.not. found, msg="removed overflow key not found: " // trim(key))
-    end do
-
-    ! Verify remaining keys still exist
-    do i = 1, 20, 3
-      write(key, '(A,I0)') "k", i
-      val = ht%lookup(trim(key), found)
-      call check(found, msg="remaining key found: " // trim(key))
-      call check(is_equal(val, i), msg="remaining key value correct")
-    end do
-
-  end subroutine test_hash_table_overflow_remove
-
-  !> Remove from a bucket that has a chain (promotes first chain entry)
-  subroutine test_hash_table_chain_promote()
-    type(hsd_name_index_t) :: ht
-    integer :: val
-    logical :: found
-
-    call ht%init(2)  ! Very small to force chains
-
-    ! Insert keys that will collide
-    call ht%insert("a", 1)
-    call ht%insert("b", 2)
-    call ht%insert("c", 3)
-    call ht%insert("d", 4)
-    call ht%insert("e", 5)
-    call ht%insert("f", 6)
-
-    ! Remove "a" — should promote from chain
-    call ht%remove("a")
-    val = ht%lookup("a", found)
-    call check(.not. found, msg="a removed")
-
-    ! Other keys should still be there
-    val = ht%lookup("b", found)
-    call check(found, msg="b still present after a removed")
-    val = ht%lookup("c", found)
-    call check(found, msg="c still present")
-    val = ht%lookup("d", found)
-    call check(found, msg="d still present")
-
-    ! Remove "b" and "c" too
-    call ht%remove("b")
-    call ht%remove("c")
-    val = ht%lookup("d", found)
-    call check(found, msg="d still present after b,c removed")
-    val = ht%lookup("e", found)
-    call check(found, msg="e still present")
-    val = ht%lookup("f", found)
-    call check(found, msg="f still present")
-
-  end subroutine test_hash_table_chain_promote
-
   ! ============================================================
   ! P20: Parser — amendment equals syntax (+Tag = +ChildTag { ... })
   ! ============================================================

@@ -7,7 +7,6 @@ program testapp
   use test_formatter_suite, only: formatter_tests => tests
   use test_array_suite, only: array_tests => tests
   use test_error_suite, only: error_tests => tests
-  use test_hash_table_suite, only: hash_table_tests => tests
   use test_api_suite, only: api_tests => tests
   use test_formatter_extended_suite, only: formatter_ext_tests => tests
   use test_file_ops_suite, only: file_ops_tests => tests
@@ -33,7 +32,6 @@ program testapp
       formatter_tests(), &
       array_tests(), &
       error_tests(), &
-      hash_table_tests(), &
       api_tests(), &
       formatter_ext_tests(), &
       file_ops_tests(), &

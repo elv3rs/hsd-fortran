@@ -636,9 +636,7 @@ contains
     end do
 
     table%num_children = 0
-    table%capacity = 0
     if (allocated(table%children)) deallocate(table%children)
-    call table%invalidate_index()
 
   end subroutine hsd_clear_children
 

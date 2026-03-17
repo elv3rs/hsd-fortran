@@ -562,8 +562,6 @@ contains
 
     ! Rename it
     child%name = new_name
-    ! Invalidate the hash index so next lookup rebuilds it
-    call parent_table%invalidate_index()
 
     if (present(stat)) stat = HSD_STAT_OK
 

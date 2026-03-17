@@ -69,7 +69,6 @@ module hsd_types
   use hsd_utils, only: to_lower
   use hsd_error, only: HSD_STAT_OK, HSD_STAT_TYPE_ERROR, &
       & HSD_STAT_NOT_FOUND
-  use hsd_hash_table, only: hsd_name_index_t
   implicit none (type, external)
   private
 
@@ -143,15 +142,7 @@ module hsd_types
     type(hsd_node_ptr), allocatable :: children(:)
     !> Number of children
     integer :: num_children = 0
-    !> Allocated capacity
-    integer :: capacity = 0
-    !> Hash index for O(1) child lookup
-    type(hsd_name_index_t) :: name_index
-    !> Whether the hash index is active
-    logical :: index_active = .false.
   contains
-    procedure :: build_index => table_build_index
-    procedure :: invalidate_index => table_invalidate_index
     procedure :: add_child => table_add_child
     procedure :: get_child => table_get_child
     procedure :: get_child_by_name => table_get_child_by_name
@@ -229,16 +220,6 @@ module hsd_types
   interface
 
     ! --- Table operations (submodule hsd_table_ops) ---
-
-    module subroutine table_build_index(self)
-      implicit none (type, external)
-      class(hsd_table), intent(inout) :: self
-    end subroutine table_build_index
-
-    module subroutine table_invalidate_index(self)
-      implicit none (type, external)
-      class(hsd_table), intent(inout) :: self
-    end subroutine table_invalidate_index
 
     module subroutine table_add_child(self, child)
       implicit none (type, external)
@@ -514,8 +495,7 @@ contains
     end if
     if (present(line)) table%line = line
 
-    table%capacity = 4
-    allocate(table%children(table%capacity))
+    allocate(table%children(4))
     table%num_children = 0
 
   end subroutine new_table

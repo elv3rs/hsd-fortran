@@ -16,7 +16,6 @@ set(TEST_CORE_SUITES
   suites/core/test_error_paths_suite.f90
   suites/core/test_array_suite.f90
   suites/core/test_edge_cases_suite.f90
-  suites/core/test_hash_table_suite.f90
 )
 
 set(TEST_IO_SUITES

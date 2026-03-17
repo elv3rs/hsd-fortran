@@ -1183,9 +1183,6 @@ contains
     call hsd_load_string("a = 1" // char(10) // "b = 2" // char(10) // "c = 3", root, error)
     call check(.not. allocated(error), msg="Parse OK")
 
-    ! Invalidate the hash index to force linear fallback path
-    call root%invalidate_index()
-
     ! Remove by name using linear scan
     call hsd_remove_child(root, "b", stat)
     call check(is_equal(stat, 0), msg="remove b via linear scan succeeds")
@@ -1199,13 +1196,13 @@ contains
     call root%destroy()
   end subroutine test_remove_child_no_index
 
-  !> Test add_child on an uninitialized (zero-capacity) table
+  !> Test add_child on an uninitialized table
   subroutine test_add_child_uninit()
     type(hsd_table) :: root
     type(hsd_value) :: val
     integer :: count
 
-    ! root is default-initialized (capacity=0, num_children=0)
+    ! root is default-initialized (no children array, num_children=0)
     val%name = "x"
     val%value_type = VALUE_TYPE_INTEGER
     val%int_value = 42

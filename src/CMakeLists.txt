@@ -4,7 +4,6 @@ set(HSD_CORE_SOURCES
   core/hsd_constants.f90
   core/hsd_utils.f90
   core/hsd_error.f90
-  core/hsd_hash_table.f90
   core/hsd_build_env.f90
 )
 

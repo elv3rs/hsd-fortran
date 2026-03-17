@@ -281,7 +281,7 @@ contains
 
   end subroutine test_set_all_types
 
-  !> Test table capacity growth
+  !> Test table children array growth
   subroutine test_table_grow_capacity()
     type(hsd_table) :: root
     type(hsd_value) :: val
@@ -289,7 +289,7 @@ contains
 
     call new_table(root)
 
-    ! Add many children to force capacity growth
+    ! Add many children to force array growth
     do i = 1, 100
       call new_value(val, "item" // char(ichar('0') + mod(i, 10)))
       call val%set_integer(i)
@@ -297,7 +297,7 @@ contains
     end do
 
     call check(root%num_children == 100, msg="Added 100 children")
-    call check(root%capacity >= 100, msg="Capacity >= 100")
+    call check(size(root%children) >= 100, msg="Array size >= 100")
 
     call root%destroy()
 

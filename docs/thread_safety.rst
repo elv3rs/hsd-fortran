@@ -93,13 +93,12 @@ Unsafe Operations (Require External Synchronization)
     type(hsd_iterator) :: my_iterator  ! Thread-local
     call my_iterator%init(shared_table)
 
-**3. Building/invalidating hash index**
+**3. Adding/removing children**
 
-The hash index used for O(1) child lookup is modified during:
+The children array is modified during:
 
-- ``add_child()`` which modifies the data structure and hash index
-- ``remove_child()`` (invalidates index)
-- ``build_index()`` (explicit rebuild)
+- ``add_child()`` which modifies the data structure
+- ``remove_child()`` (shifts children)
 
 Module-Specific Notes
 ---------------------
@@ -114,7 +113,6 @@ hsd_types
   subsequent reads are safe.
 - ``hsd_table`` read operations (``get_child``, ``child_count``, etc.) are
   thread-safe if no concurrent writes
-- The internal hash index (``name_index``) is NOT thread-safe
 
 hsd_parser
 ~~~~~~~~~~
@@ -135,12 +133,6 @@ hsd_schema
 - Schema objects can be safely shared for validation (read-only)
 - ``schema_validate()`` is thread-safe for read-only trees and schemas
 - Schema modification (add_field) is NOT thread-safe
-
-hsd_hash_table
-~~~~~~~~~~~~~~
-
-- All operations are NOT thread-safe
-- The hash table is an internal implementation detail
 
 OpenMP Considerations
 ---------------------
@@ -213,18 +205,3 @@ Why No Built-in Synchronization?
 2. **Flexibility**: Users can choose their synchronization strategy
 3. **Fortran compatibility**: Standard Fortran has limited synchronization primitives
 4. **Use case**: Most HSD use is configuration parsing (single-threaded)
-
-Hash Table Thread Safety
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-The O(1) child lookup hash table is implemented in ``hsd_hash_table.f90``. It is intentionally NOT thread-safe because:
-
-1. Hash table modifications (insert/remove) are rare after parsing
-2. Synchronization would penalize the common read-only case
-3. Users who need concurrent modification should clone the tree
-
-If thread-safe modification is required, users should:
-
-1. Use external mutex/lock around modification operations
-2. Clone the tree for each thread
-3. Rebuild the tree from thread-local modifications
