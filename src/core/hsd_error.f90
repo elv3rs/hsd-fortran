@@ -210,36 +210,9 @@ contains
     character(len=*), intent(in), optional :: actual
     character(len=*), intent(in), optional :: hint
 
-    allocate(error)
-    error%code = HSD_STAT_SYNTAX_ERROR
-    error%message = message
-
-    if (present(filename)) then
-      error%filename = filename
-    else
-      error%filename = "<unknown>"
-    end if
-
-    if (present(line)) then
-      error%line_start = line
-      error%line_end = line
-    end if
-
-    if (present(column)) then
-      error%column = column
-    end if
-
-    if (present(expected)) then
-      error%expected = expected
-    end if
-
-    if (present(actual)) then
-      error%actual = actual
-    end if
-
-    if (present(hint)) then
-      error%hint = hint
-    end if
+    call make_error(error, HSD_STAT_SYNTAX_ERROR, message, filename, &
+        line_start=line, line_end=line, column=column, &
+        expected=expected, actual=actual, hint=hint)
 
   end subroutine make_syntax_error
 
@@ -253,32 +226,9 @@ contains
     character(len=*), intent(in), optional :: actual
     character(len=*), intent(in), optional :: hint
 
-    allocate(error)
-    error%code = HSD_STAT_TYPE_ERROR
-    error%message = message
-
-    if (present(filename)) then
-      error%filename = filename
-    else
-      error%filename = "<unknown>"
-    end if
-
-    if (present(line)) then
-      error%line_start = line
-      error%line_end = line
-    end if
-
-    if (present(expected)) then
-      error%expected = expected
-    end if
-
-    if (present(actual)) then
-      error%actual = actual
-    end if
-
-    if (present(hint)) then
-      error%hint = hint
-    end if
+    call make_error(error, HSD_STAT_TYPE_ERROR, message, filename, &
+        line_start=line, line_end=line, &
+        expected=expected, actual=actual, hint=hint)
 
   end subroutine make_type_error
 

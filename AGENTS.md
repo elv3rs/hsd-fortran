@@ -3,8 +3,8 @@
 ## Main directive
 
 The project has reached **v1.0.0 release** status.  All specification phases
-(parser, accessors, mutators, unit-aware
-accessors, documentation) are complete.
+(parser, accessors, mutators, unit-aware accessors, documentation) are complete.
+Refactoring for simplicity is also complete (unified API, string-only storage).
 
 When making changes: ensure builds pass, `fortitude check` is clean, all tests
 pass, and Sphinx docs build without warnings.  Commit atomically with clear
@@ -82,7 +82,8 @@ hsd-fortran/
 │   ├── core/                   # Core infrastructure
 │   │   ├── hsd_constants.f90   # dp, sp precision constants
 │   │   ├── hsd_error.f90       # Error types, status codes
-│   │   └── hsd_utils.f90       # String utilities (to_lower, string_buffer_t)
+│   │   ├── hsd_utils.f90       # String utilities (to_lower, string_buffer_t)
+│   │   └── hsd_build_env.f90   # CMake build environment (generated)
 │   └── io/                     # Parsing and serialization
 │       ├── hsd_lexer.f90       # Tokenizer
 │       ├── hsd_token.f90       # Token types
@@ -219,7 +220,7 @@ These functions were upstreamed from DFTB+ and are part of the public API:
 |--------|---------|
 | `hsd_node` | Abstract base for all nodes |
 | `hsd_table` | Container node with children |
-| `hsd_value` | Leaf node with scalar/array data |
+| `hsd_value` | Leaf node with string data (parsed on demand) |
 | `hsd_iterator` | Stateful tree iteration |
 
 ## Design Notes
@@ -228,7 +229,7 @@ These functions were upstreamed from DFTB+ and are part of the public API:
 - **Includes**: `<<< "file"` (text), `<<+ "file.hsd"` (parsed); cycle detection enabled
 - **Formatting**: Dumps use consistent 2-space indent and `{}` block syntax
 - **Child Lookup**: Linear search over children array (simple and sufficient for config files)
-- **Thread Safety**: NOT fully thread-safe for concurrent reads — `hsd_value` getters mutate internal caches on first access (see `hsd_types.f90` header). Safe after all caches are populated; modifications always require external synchronization
+- **Thread Safety**: **Thread-safe for read-only access**. `hsd_value` no longer uses internal caching, so getters do not mutate the tree. Modification requires external synchronization.
 - **Duplicate Keys**: Are preserved in the tree; `hsd_get` returns the **last** occurrence (override behavior); iteration sees all
 - **Status Parameters**: Optional `stat` parameters use `intent(out)` and must be set on ALL code paths (see `docs/error_handling.md`)
 
@@ -246,22 +247,6 @@ The project uses Sphinx for user-facing documentation and guides:
 
 - Configuration: `docs/conf.py`
 - Output: `public//index.html`
-
-## Fuzz Testing
-
-The `utils/fuzz/` directory contains AFL++ fuzzing infrastructure:
-
-```bash
-# Build fuzz target
-cmake -B build-fuzz -S utils/fuzz
-cmake --build build-fuzz
-
-# Run AFL++ with QEMU mode (using relative path to corpus)
-cd build-fuzz
-afl-fuzz -Q -i ../utils/fuzz/corpus -o findings -x hsd.dict -- ./hsd_fuzz_stdin
-```
-
-See `utils/fuzz/README.md` for full documentation.
 
 ## Error Codes
 
