@@ -345,54 +345,13 @@ contains
     type(hsd_value), intent(in) :: val
     character(len=:), allocatable :: str
 
-    character(len=64) :: buffer
-
-    select case (val%value_type)
-    case (VALUE_TYPE_LOGICAL)
-      if (val%logical_value) then
-        str = "Yes"
-      else
-        str = "No"
-      end if
-
-    case (VALUE_TYPE_INTEGER)
-      write(buffer, '(I0)') val%int_value
-      str = trim(adjustl(buffer))
-
-    case (VALUE_TYPE_REAL)
-      write(buffer, '(G0)') val%real_value
-      str = trim(adjustl(buffer))
-      ! Ensure we have a decimal point for whole numbers
-      if (index(str, ".") == 0 .and. index(str, "E") == 0 .and. index(str, "e") == 0) then
-        str = str // ".0"
-      end if
-
-    case (VALUE_TYPE_COMPLEX)
-      block
-        character(len=64) :: re_buf, im_buf
-        write(re_buf, '(G0)') real(val%complex_value)
-        write(im_buf, '(G0)') aimag(val%complex_value)
-        str = "(" // trim(adjustl(re_buf)) // "," // trim(adjustl(im_buf)) // ")"
-      end block
-
-    case (VALUE_TYPE_STRING)
-      if (allocated(val%string_value)) then
-        str = quote_if_needed(val%string_value)
-      else if (allocated(val%raw_text)) then
-        str = val%raw_text
-      else
-        str = ""
-      end if
-
-    case default
-      if (allocated(val%string_value)) then
-        str = quote_if_needed(val%string_value)
-      else if (allocated(val%raw_text)) then
-        str = val%raw_text
-      else
-        str = ""
-      end if
-    end select
+    if (allocated(val%string_value)) then
+      str = quote_if_needed(val%string_value)
+    else if (allocated(val%raw_text)) then
+      str = val%raw_text
+    else
+      str = ""
+    end if
 
   end function format_value
 

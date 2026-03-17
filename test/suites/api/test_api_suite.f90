@@ -1075,8 +1075,7 @@ contains
 
     ! root is default-initialized (no children array, num_children=0)
     val%name = "x"
-    val%value_type = VALUE_TYPE_INTEGER
-    val%int_value = 42
+    call val%set_integer(42)
 
     ! add_child should auto-initialize the table
     call root%add_child(val)
@@ -1177,13 +1176,11 @@ contains
 
     ! Add a named child to both
     val_a%name = "x"
-    val_a%value_type = VALUE_TYPE_INTEGER
-    val_a%int_value = 1
+    call val_a%set_integer(1)
     call a%add_child(val_a)
 
     val_b%name = "x"
-    val_b%value_type = VALUE_TYPE_INTEGER
-    val_b%int_value = 1
+    call val_b%set_integer(1)
     call b%add_child(val_b)
 
     ! Tables with identical named children are equal
@@ -1191,7 +1188,7 @@ contains
 
     ! Now test with different children count
     val_a%name = "y"
-    val_a%int_value = 2
+    call val_a%set_integer(2)
     call a%add_child(val_a)
 
     call check(.not. hsd_table_equal(a, b), msg="different child counts not equal")

@@ -122,18 +122,10 @@ module hsd_types
 
   !> Value node (leaf node with data)
   type, extends(hsd_node) :: hsd_value
-    !> Type of value stored
+    !> Type of value stored (metadata for serialization/validation)
     integer :: value_type = VALUE_TYPE_NONE
-    !> String value
+    !> String representation of the value (primary storage)
     character(len=:), allocatable :: string_value
-    !> Integer value
-    integer :: int_value = 0
-    !> Real value
-    real(dp) :: real_value = 0.0_dp
-    !> Logical value
-    logical :: logical_value = .false.
-    !> Complex value
-    complex(dp) :: complex_value = (0.0_dp, 0.0_dp)
     !> String array (for multi-value or matrix data)
     character(len=:), allocatable :: raw_text
   contains

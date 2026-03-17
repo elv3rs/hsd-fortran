@@ -538,8 +538,7 @@ contains
 
     allocate(val)
     call new_value(val)
-    val%int_value = 42
-    val%value_type = VALUE_TYPE_INTEGER
+    call val%set_integer(42)
 
     call val%get_real(r, stat)
     call check(stat == HSD_STAT_OK, msg="Get real from int OK")

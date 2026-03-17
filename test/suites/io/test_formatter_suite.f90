@@ -169,7 +169,8 @@ contains
 
     call check(index(output, "temperature") > 0, msg="Output contains 'temperature'")
     call check(index(output, "[Kelvin]") > 0, msg="Output contains '[Kelvin]' attribute")
-    call check(index(output, "300") > 0, msg="Output contains '300'")
+    ! Check for 3.0 (scientific notation 3.000...E+02)
+    call check(index(output, "3.0") > 0, msg="Output contains '3.0'")
 
     call root%destroy()
 

@@ -995,10 +995,6 @@ module hsd_api
             ! Copy new values from clone
             if (allocated(cloned_value%string_value)) &
                 & base_child%string_value = cloned_value%string_value
-            base_child%int_value = cloned_value%int_value
-            base_child%real_value = cloned_value%real_value
-            base_child%logical_value = cloned_value%logical_value
-            base_child%complex_value = cloned_value%complex_value
             if (allocated(cloned_value%raw_text)) &
                 & base_child%raw_text = cloned_value%raw_text
           class default
@@ -1051,11 +1047,6 @@ module hsd_api
     dest%value_type = source%value_type
 
     if (allocated(source%string_value)) dest%string_value = source%string_value
-    dest%int_value = source%int_value
-    dest%real_value = source%real_value
-    dest%logical_value = source%logical_value
-    dest%complex_value = source%complex_value
-
     if (allocated(source%raw_text)) dest%raw_text = source%raw_text
 
   end subroutine clone_value
@@ -1145,73 +1136,23 @@ module hsd_api
       ! Must have the same value type
       if (a%value_type /= b%value_type) return
 
-      ! Compare based on value type
-      select case (a%value_type)
-      case (VALUE_TYPE_NONE)
-        equal = .true.
+      ! Compare raw_text
+      if (allocated(a%raw_text) .and. allocated(b%raw_text)) then
+        if (a%raw_text /= b%raw_text) return
+      else if (allocated(a%raw_text) .neqv. allocated(b%raw_text)) then
+        return
+      end if
 
-      case default
-        ! For all typed values, compare the raw_text or string_value
-        ! as canonical representation. This avoids needing to compare
-        ! every possible cached field.
-        if (allocated(a%raw_text) .and. allocated(b%raw_text)) then
-          equal = (a%raw_text == b%raw_text)
-          return
-        end if
-        if (allocated(a%string_value) .and. allocated(b%string_value)) then
-          equal = (a%string_value == b%string_value)
-          return
-        end if
-        ! Compare scalar fields for typed values set programmatically
-        equal = scalars_equal(a, b)
-      end select
+      ! Compare string_value
+      if (allocated(a%string_value) .and. allocated(b%string_value)) then
+        if (a%string_value /= b%string_value) return
+      else if (allocated(a%string_value) .neqv. allocated(b%string_value)) then
+        return
+      end if
+
+      equal = .true.
 
     end function values_equal
-
-    !> Compare scalar fields of two value nodes
-    function scalars_equal(a, b) result(equal)
-      type(hsd_value), intent(in) :: a
-      type(hsd_value), intent(in) :: b
-      logical :: equal
-
-      equal = .false.
-
-      select case (a%value_type)
-      case (VALUE_TYPE_NONE)
-        equal = .true.
-
-      case (VALUE_TYPE_STRING)
-        if (allocated(a%string_value) .and. allocated(b%string_value)) then
-          equal = (a%string_value == b%string_value)
-        else
-          equal = (.not. allocated(a%string_value)) .and. &
-              & (.not. allocated(b%string_value))
-        end if
-
-      case (VALUE_TYPE_INTEGER)
-        equal = (a%int_value == b%int_value)
-
-      case (VALUE_TYPE_REAL)
-        equal = (abs(a%real_value - b%real_value) < epsilon(1.0_dp))
-
-      case (VALUE_TYPE_LOGICAL)
-        equal = (a%logical_value .eqv. b%logical_value)
-
-      case (VALUE_TYPE_ARRAY)
-        ! Arrays: compare raw_text if available
-        if (allocated(a%raw_text) .and. allocated(b%raw_text)) then
-          equal = (a%raw_text == b%raw_text)
-        end if
-
-      case (VALUE_TYPE_COMPLEX)
-        equal = (abs(a%complex_value - b%complex_value) < epsilon(1.0_dp))
-
-      case default
-        equal = .false.
-
-      end select
-
-    end function scalars_equal
 
 
   !> Replace a value child with a table containing a #text child.

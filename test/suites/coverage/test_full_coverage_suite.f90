@@ -1433,8 +1433,7 @@ contains
       type(hsd_value), pointer :: val
       allocate(val)
       call new_value(val, "cval")
-      val%value_type = VALUE_TYPE_COMPLEX
-      val%complex_value = (3.0_dp, 4.0_dp)
+      call val%set_complex((3.0_dp, 4.0_dp))
       call root%add_child(val)
     end block
     call hsd_get(root, "cval", cval, stat)

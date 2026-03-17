@@ -132,19 +132,19 @@ Type enumeration
      - ``string_value`` (``character(:), allocatable``)
    * - ``VALUE_TYPE_INTEGER``
      - 2
-     - ``int_value`` (``integer``) for scalars; ``int_array(:)`` and ``int_matrix(:,:)`` for arrays/matrices.
+     - ``string_value`` (stores formatted integer) for scalars; ``raw_text`` for arrays/matrices.
    * - ``VALUE_TYPE_REAL``
      - 3
-     - ``real_value`` (``real(dp)``) for scalars; ``real_array(:)`` and ``real_matrix(:,:)`` for arrays/matrices.
+     - ``string_value`` (stores formatted real) for scalars; ``raw_text`` for arrays/matrices.
    * - ``VALUE_TYPE_LOGICAL``
      - 4
-     - ``logical_value`` (``logical``) for scalars; ``logical_array(:)`` for arrays.
+     - ``string_value`` (stores "Yes"/"No") for scalars; ``raw_text`` for arrays.
    * - ``VALUE_TYPE_ARRAY``
      - 5
      - ``raw_text`` (``character(:), allocatable``) — unparsed text; arrays are parsed on demand.
    * - ``VALUE_TYPE_COMPLEX``
      - 6
-     - ``complex_value`` (``complex(dp)``) for scalars; arrays/matrices are parsed from ``raw_text``.
+     - ``string_value`` (stores formatted complex) for scalars; ``raw_text`` for arrays/matrices.
 
 All storage fields coexist on the type but only the ones corresponding to
 ``value_type`` are meaningful. After parsing, a value node with ``value_type = VALUE_TYPE_ARRAY``
@@ -153,7 +153,7 @@ stores only ``raw_text``.
 Scalar vs array storage
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-- **Scalars**: Stored directly (``int_value``, ``real_value``, ``logical_value``, ``complex_value``, ``string_value``).
+- **Scalars**: Stored as strings in ``string_value``.
 - **Arrays & Matrices**: Stored as ``raw_text`` and parsed on demand.
 
 .. _parse_on_demand:

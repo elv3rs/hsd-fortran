@@ -21,26 +21,37 @@ contains
 
   !> Set integer value
   module procedure value_set_integer
+    character(len=30) :: buf
+    write(buf, '(i0)') val
     self%value_type = VALUE_TYPE_INTEGER
-    self%int_value = val
+    self%string_value = trim(buf)
   end procedure value_set_integer
 
   !> Set real value
   module procedure value_set_real
+    character(len=40) :: buf
+    ! ES25.17 preserves full double precision (17 digits)
+    write(buf, '(es25.17)') val
     self%value_type = VALUE_TYPE_REAL
-    self%real_value = val
+    self%string_value = trim(adjustl(buf))
   end procedure value_set_real
 
   !> Set logical value
   module procedure value_set_logical
     self%value_type = VALUE_TYPE_LOGICAL
-    self%logical_value = val
+    if (val) then
+      self%string_value = "Yes"
+    else
+      self%string_value = "No"
+    end if
   end procedure value_set_logical
 
   !> Set complex value
   module procedure value_set_complex
+    character(len=80) :: buf
+    write(buf, '("(", es25.17, ",", es25.17, ")")') real(val, dp), aimag(val)
     self%value_type = VALUE_TYPE_COMPLEX
-    self%complex_value = val
+    self%string_value = trim(adjustl(buf))
   end procedure value_set_complex
 
   !> Set raw text (for arrays/matrices)
@@ -89,8 +100,6 @@ contains
   !> value is serialized to a string on the fly.
   module procedure value_get_string
 
-    character(len=40) :: buf
-
     if (allocated(self%string_value)) then
       val = self%string_value
       if (present(stat)) stat = HSD_STAT_OK
@@ -98,32 +107,8 @@ contains
       val = self%raw_text
       if (present(stat)) stat = HSD_STAT_OK
     else
-      ! Serialize natively-typed values to string
-      select case (self%value_type)
-      case (VALUE_TYPE_INTEGER)
-        write(buf, '(i0)') self%int_value
-        val = trim(buf)
-        if (present(stat)) stat = HSD_STAT_OK
-      case (VALUE_TYPE_REAL)
-        write(buf, '(es23.15)') self%real_value
-        val = trim(adjustl(buf))
-        if (present(stat)) stat = HSD_STAT_OK
-      case (VALUE_TYPE_LOGICAL)
-        if (self%logical_value) then
-          val = "Yes"
-        else
-          val = "No"
-        end if
-        if (present(stat)) stat = HSD_STAT_OK
-      case (VALUE_TYPE_COMPLEX)
-        write(buf, '(es23.15,sp,es23.15,"i")') &
-            & real(self%complex_value), aimag(self%complex_value)
-        val = trim(adjustl(buf))
-        if (present(stat)) stat = HSD_STAT_OK
-      case default
-        val = ""
-        if (present(stat)) stat = HSD_STAT_NOT_FOUND
-      end select
+      val = ""
+      if (present(stat)) stat = HSD_STAT_NOT_FOUND
     end if
 
   end procedure value_get_string
@@ -133,12 +118,10 @@ contains
 
     integer :: io_stat
 
-    if (self%value_type == VALUE_TYPE_INTEGER) then
-      val = self%int_value
-      if (present(stat)) stat = HSD_STAT_OK
-    else if (allocated(self%string_value)) then
+    if (allocated(self%string_value)) then
       read(self%string_value, *, iostat=io_stat) val
       if (io_stat /= 0) then
+        val = 0
         if (present(stat)) stat = HSD_STAT_TYPE_ERROR
       else
         if (present(stat)) stat = HSD_STAT_OK
@@ -155,15 +138,10 @@ contains
 
     integer :: io_stat
 
-    if (self%value_type == VALUE_TYPE_REAL) then
-      val = self%real_value
-      if (present(stat)) stat = HSD_STAT_OK
-    else if (self%value_type == VALUE_TYPE_INTEGER) then
-      val = real(self%int_value, dp)
-      if (present(stat)) stat = HSD_STAT_OK
-    else if (allocated(self%string_value)) then
+    if (allocated(self%string_value)) then
       read(self%string_value, *, iostat=io_stat) val
       if (io_stat /= 0) then
+        val = 0.0_dp
         if (present(stat)) stat = HSD_STAT_TYPE_ERROR
       else
         if (present(stat)) stat = HSD_STAT_OK
@@ -180,16 +158,13 @@ contains
 
     character(len=:), allocatable :: lower_val
 
-    if (self%value_type == VALUE_TYPE_LOGICAL) then
-      val = self%logical_value
-      if (present(stat)) stat = HSD_STAT_OK
-    else if (allocated(self%string_value)) then
+    if (allocated(self%string_value)) then
       lower_val = to_lower(trim(self%string_value))
       select case (lower_val)
-      case ("yes")
+      case ("yes", "true", ".true.", "1")
         val = .true.
         if (present(stat)) stat = HSD_STAT_OK
-      case ("no")
+      case ("no", "false", ".false.", "0")
         val = .false.
         if (present(stat)) stat = HSD_STAT_OK
       case default
@@ -207,10 +182,7 @@ contains
   !> Parses formats: 4.0+9.0i, 2.0-3.0i, (1.0,2.0), 5.0+2.0j
   module procedure value_get_complex
 
-    if (self%value_type == VALUE_TYPE_COMPLEX) then
-      val = self%complex_value
-      if (present(stat)) stat = HSD_STAT_OK
-    else if (allocated(self%string_value)) then
+    if (allocated(self%string_value)) then
       call parse_complex(trim(self%string_value), val, stat)
     else
       val = (0.0_dp, 0.0_dp)
