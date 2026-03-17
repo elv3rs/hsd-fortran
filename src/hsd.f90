@@ -49,7 +49,7 @@ module hsd
     HSD_STAT_OK, HSD_STAT_SYNTAX_ERROR, HSD_STAT_UNCLOSED_TAG, &
     HSD_STAT_UNCLOSED_ATTRIB, HSD_STAT_UNCLOSED_QUOTE, HSD_STAT_ORPHAN_TEXT, &
     HSD_STAT_INCLUDE_CYCLE, HSD_STAT_INCLUDE_DEPTH, HSD_STAT_FILE_NOT_FOUND, &
-    HSD_STAT_IO_ERROR, HSD_STAT_TYPE_ERROR, HSD_STAT_NOT_FOUND, HSD_STAT_SCHEMA_ERROR
+    HSD_STAT_IO_ERROR, HSD_STAT_TYPE_ERROR, HSD_STAT_NOT_FOUND
   use hsd_types, only: hsd_node, hsd_table, hsd_value, hsd_node_ptr, hsd_iterator, &
     new_table, new_value, &
     VALUE_TYPE_NONE, VALUE_TYPE_STRING, VALUE_TYPE_INTEGER, &
@@ -74,13 +74,6 @@ module hsd
     hsd_get_with_unit, hsd_get_array_with_unit, hsd_get_matrix_with_unit, &
     hsd_node_context, hsd_format_error, hsd_format_warning, &
     hsd_warn_unprocessed, MAX_WARNING_LEN
-  use hsd_schema, only: hsd_schema_t, hsd_field_def_t, &
-    FIELD_REQUIRED, FIELD_OPTIONAL, &
-    FIELD_TYPE_ANY, FIELD_TYPE_STRING, FIELD_TYPE_INTEGER, &
-    FIELD_TYPE_REAL, FIELD_TYPE_LOGICAL, FIELD_TYPE_TABLE, &
-    FIELD_TYPE_ARRAY, FIELD_TYPE_COMPLEX, &
-    schema_init, schema_destroy, schema_add_field, schema_add_field_enum, &
-    schema_validate, schema_validate_strict
 
   implicit none (type, external)
   private
@@ -130,15 +123,6 @@ module hsd
   public :: hsd_get_array_with_unit, hsd_get_matrix_with_unit
   public :: hsd_node_context, hsd_format_error, hsd_format_warning
   public :: hsd_warn_unprocessed, MAX_WARNING_LEN
-
-  ! Re-export schema validation (from hsd_schema)
-  public :: hsd_schema_t, hsd_field_def_t
-  public :: FIELD_REQUIRED, FIELD_OPTIONAL
-  public :: FIELD_TYPE_ANY, FIELD_TYPE_STRING, FIELD_TYPE_INTEGER
-  public :: FIELD_TYPE_REAL, FIELD_TYPE_LOGICAL, FIELD_TYPE_TABLE
-  public :: FIELD_TYPE_ARRAY, FIELD_TYPE_COMPLEX, HSD_STAT_SCHEMA_ERROR
-  public :: schema_init, schema_destroy, schema_add_field, schema_add_field_enum
-  public :: schema_validate, schema_validate_strict
 
   ! Re-export visitor pattern
   public :: hsd_visitor_t, hsd_accept

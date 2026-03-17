@@ -11,7 +11,7 @@ module hsd_error
   public :: HSD_STAT_UNCLOSED_ATTRIB, HSD_STAT_UNCLOSED_QUOTE
   public :: HSD_STAT_ORPHAN_TEXT, HSD_STAT_INCLUDE_CYCLE, HSD_STAT_INCLUDE_DEPTH
   public :: HSD_STAT_FILE_NOT_FOUND, HSD_STAT_IO_ERROR, HSD_STAT_TYPE_ERROR
-  public :: HSD_STAT_NOT_FOUND, HSD_STAT_SCHEMA_ERROR
+  public :: HSD_STAT_NOT_FOUND
   public :: make_error, error_message
   public :: make_syntax_error, make_type_error
 
@@ -28,7 +28,6 @@ module hsd_error
   integer, parameter :: HSD_STAT_IO_ERROR = 9
   integer, parameter :: HSD_STAT_TYPE_ERROR = 10
   integer, parameter :: HSD_STAT_NOT_FOUND = 11
-  integer, parameter :: HSD_STAT_SCHEMA_ERROR = 20
 
   !> Error type with detailed information
   type :: hsd_error_t
@@ -138,8 +137,6 @@ contains
       msg = "Type conversion error"
     case (HSD_STAT_NOT_FOUND)
       msg = "Key not found"
-    case (HSD_STAT_SCHEMA_ERROR)
-      msg = "Schema validation error"
     case default
       msg = "Unknown error"
     end select

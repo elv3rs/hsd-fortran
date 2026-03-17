@@ -7,40 +7,6 @@
 !> - hsd_value  - Value (leaf) node for scalar and array data
 !> - hsd_iterator - Iterator for traversing table children
 !>
-!> ## Cache-on-Read Mutation Behavior
-!>
-!> **IMPORTANT:** Some "read" operations on `hsd_value` (such as
-!> `value_get_int_array`, `value_get_real_array`, etc.) use
-!> `intent(inout)` and mutate the internal state by caching parsed
-!> array results.
-!>
-!> - The first call parses the raw text and stores it in a cache
-!>   (e.g., `self%int_array`).
-!> - Subsequent calls return the cached array without reparsing.
-!> - This means these logically read-only operations have side effects,
-!>   requiring `intent(inout)`.
-!>
-!> ### Thread Safety Implications
-!>
-!> - **Not thread-safe for concurrent reads:** If multiple threads
-!>   access the same `hsd_value` concurrently, a race may occur on
-!>   first access (cache population).
-!> - **Safe after first access:** Once populated, concurrent reads are
-!>   safe (immutable).
-!> - **Workaround:** If thread safety is required, populate caches in
-!>   a single-threaded context before concurrent access, or use
-!>   external synchronization.
-!>
-!> ### Rationale
-!>
-!> - This design avoids repeated parsing and improves performance for
-!>   repeated access.
-!> - Purely read-only (side-effect-free) variants could be added in
-!>   the future if needed.
-!>
-!> See also: [AGENTS.md](../AGENTS.md) for design notes and thread
-!> safety summary.
-!>
 !> ## Memory Ownership Semantics
 !>
 !> The HSD tree uses a **copy-on-add** ownership model:
@@ -168,28 +134,8 @@ module hsd_types
     logical :: logical_value = .false.
     !> Complex value
     complex(dp) :: complex_value = (0.0_dp, 0.0_dp)
-    !> Complex array values
-    complex(dp), allocatable :: complex_array(:)
     !> String array (for multi-value or matrix data)
     character(len=:), allocatable :: raw_text
-    !> Integer array values
-    integer, allocatable :: int_array(:)
-    !> Real array values
-    real(dp), allocatable :: real_array(:)
-    !> Logical array values
-    logical, allocatable :: logical_array(:)
-    !> String array values
-    character(len=:), allocatable :: string_array(:)
-    !> 2D integer matrix
-    integer, allocatable :: int_matrix(:,:)
-    !> 2D real matrix
-    real(dp), allocatable :: real_matrix(:,:)
-    !> 2D complex matrix
-    complex(dp), allocatable :: complex_matrix(:,:)
-    !> Number of rows (for matrix data)
-    integer :: nrows = 0
-    !> Number of columns (for matrix data)
-    integer :: ncols = 0
   contains
     procedure :: set_string => value_set_string
     procedure :: set_integer => value_set_integer
@@ -391,35 +337,35 @@ module hsd_types
 
     module subroutine value_get_int_array(self, val, stat)
       implicit none (type, external)
-      class(hsd_value), intent(inout) :: self
+      class(hsd_value), intent(in) :: self
       integer, allocatable, intent(out) :: val(:)
       integer, intent(out), optional :: stat
     end subroutine value_get_int_array
 
     module subroutine value_get_real_array(self, val, stat)
       implicit none (type, external)
-      class(hsd_value), intent(inout) :: self
+      class(hsd_value), intent(in) :: self
       real(dp), allocatable, intent(out) :: val(:)
       integer, intent(out), optional :: stat
     end subroutine value_get_real_array
 
     module subroutine value_get_logical_array(self, val, stat)
       implicit none (type, external)
-      class(hsd_value), intent(inout) :: self
+      class(hsd_value), intent(in) :: self
       logical, allocatable, intent(out) :: val(:)
       integer, intent(out), optional :: stat
     end subroutine value_get_logical_array
 
     module subroutine value_get_string_array(self, val, stat)
       implicit none (type, external)
-      class(hsd_value), intent(inout) :: self
+      class(hsd_value), intent(in) :: self
       character(len=:), allocatable, intent(out) :: val(:)
       integer, intent(out), optional :: stat
     end subroutine value_get_string_array
 
     module subroutine value_get_complex_array(self, val, stat)
       implicit none (type, external)
-      class(hsd_value), intent(inout) :: self
+      class(hsd_value), intent(in) :: self
       complex(dp), allocatable, intent(out) :: val(:)
       integer, intent(out), optional :: stat
     end subroutine value_get_complex_array
@@ -429,7 +375,7 @@ module hsd_types
     module subroutine value_get_int_matrix( &
         & self, val, nrows, ncols, stat)
       implicit none (type, external)
-      class(hsd_value), intent(inout) :: self
+      class(hsd_value), intent(in) :: self
       integer, allocatable, intent(out) :: val(:,:)
       integer, intent(out) :: nrows, ncols
       integer, intent(out), optional :: stat
@@ -438,7 +384,7 @@ module hsd_types
     module subroutine value_get_real_matrix( &
         & self, val, nrows, ncols, stat)
       implicit none (type, external)
-      class(hsd_value), intent(inout) :: self
+      class(hsd_value), intent(in) :: self
       real(dp), allocatable, intent(out) :: val(:,:)
       integer, intent(out) :: nrows, ncols
       integer, intent(out), optional :: stat
@@ -447,7 +393,7 @@ module hsd_types
     module subroutine value_get_complex_matrix( &
         & self, val, nrows, ncols, stat)
       implicit none (type, external)
-      class(hsd_value), intent(inout) :: self
+      class(hsd_value), intent(in) :: self
       complex(dp), allocatable, intent(out) :: val(:,:)
       integer, intent(out) :: nrows, ncols
       integer, intent(out), optional :: stat

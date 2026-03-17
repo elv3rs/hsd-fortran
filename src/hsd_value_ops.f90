@@ -220,22 +220,14 @@ contains
   end procedure value_get_complex
 
   ! ===================================================================
-  ! Array getters (with caching)
+  ! Array getters
   ! ===================================================================
 
   !> Get integer array from raw text
-  !> Caches the parsed result for subsequent calls
   module procedure value_get_int_array
 
     character(len=:), allocatable :: text
     integer :: io_stat
-
-    ! If already parsed, return cached array
-    if (allocated(self%int_array)) then
-      val = self%int_array
-      if (present(stat)) stat = HSD_STAT_OK
-      return
-    end if
 
     ! Get source text
     if (allocated(self%raw_text)) then
@@ -252,26 +244,13 @@ contains
     call parse_int_array(text, val, io_stat)
     if (present(stat)) stat = io_stat
 
-    ! Cache result for next access
-    if (io_stat == 0) then
-      self%int_array = val
-    end if
-
   end procedure value_get_int_array
 
   !> Get real array from raw text
-  !> Caches the parsed result for subsequent calls
   module procedure value_get_real_array
 
     character(len=:), allocatable :: text
     integer :: io_stat
-
-    ! If already parsed, return cached array
-    if (allocated(self%real_array)) then
-      val = self%real_array
-      if (present(stat)) stat = HSD_STAT_OK
-      return
-    end if
 
     ! Get source text
     if (allocated(self%raw_text)) then
@@ -288,26 +267,13 @@ contains
     call parse_real_array(text, val, io_stat)
     if (present(stat)) stat = io_stat
 
-    ! Cache result for next access
-    if (io_stat == 0) then
-      self%real_array = val
-    end if
-
   end procedure value_get_real_array
 
   !> Get logical array from raw text
-  !> Caches the parsed result for subsequent calls
   module procedure value_get_logical_array
 
     character(len=:), allocatable :: text, tokens(:)
     integer :: i, n
-    logical :: parse_ok
-
-    if (allocated(self%logical_array)) then
-      val = self%logical_array
-      if (present(stat)) stat = HSD_STAT_OK
-      return
-    end if
 
     if (allocated(self%raw_text)) then
       text = self%raw_text
@@ -322,7 +288,6 @@ contains
     call tokenize_string(text, tokens)
     n = size(tokens)
     allocate(val(n))
-    parse_ok = .true.
 
     do i = 1, n
       select case (to_lower(trim(tokens(i))))
@@ -332,7 +297,6 @@ contains
         val(i) = .false.
       case default
         val(i) = .false.
-        parse_ok = .false.
         if (present(stat)) stat = HSD_STAT_TYPE_ERROR
         return
       end select
@@ -340,26 +304,13 @@ contains
 
     if (present(stat)) stat = HSD_STAT_OK
 
-    ! Cache result for next access
-    if (parse_ok) then
-      self%logical_array = val
-    end if
-
   end procedure value_get_logical_array
 
   !> Get complex array from raw text
-  !> Caches the parsed result for subsequent calls
   module procedure value_get_complex_array
 
     character(len=:), allocatable :: text
     integer :: io_stat
-
-    ! If already parsed, return cached array
-    if (allocated(self%complex_array)) then
-      val = self%complex_array
-      if (present(stat)) stat = HSD_STAT_OK
-      return
-    end if
 
     ! Get source text
     if (allocated(self%raw_text)) then
@@ -376,24 +327,12 @@ contains
     call parse_complex_array(text, val, io_stat)
     if (present(stat)) stat = io_stat
 
-    ! Cache result for next access
-    if (io_stat == 0) then
-      self%complex_array = val
-    end if
-
   end procedure value_get_complex_array
 
   !> Get string array from raw text (quoted strings preserved)
-  !> Caches the parsed result for subsequent calls
   module procedure value_get_string_array
 
     character(len=:), allocatable :: text
-
-    if (allocated(self%string_array)) then
-      val = self%string_array
-      if (present(stat)) stat = HSD_STAT_OK
-      return
-    end if
 
     if (allocated(self%raw_text)) then
       text = self%raw_text
@@ -408,30 +347,18 @@ contains
     call tokenize_quoted_string(text, val)
     if (present(stat)) stat = HSD_STAT_OK
 
-    ! Cache result for next access
-    self%string_array = val
-
   end procedure value_get_string_array
 
   ! ===================================================================
-  ! Matrix getters (with caching)
+  ! Matrix getters
   ! ===================================================================
 
   !> Get 2D integer matrix from raw text
   !> Rows separated by newlines or semicolons.
-  !> Caches the parsed result for subsequent calls.
   module procedure value_get_int_matrix
 
     character(len=:), allocatable :: text
     integer :: io_stat
-
-    if (allocated(self%int_matrix)) then
-      val = self%int_matrix
-      nrows = self%nrows
-      ncols = self%ncols
-      if (present(stat)) stat = HSD_STAT_OK
-      return
-    end if
 
     if (allocated(self%raw_text)) then
       text = self%raw_text
@@ -448,29 +375,13 @@ contains
     call parse_int_matrix(text, val, nrows, ncols, io_stat)
     if (present(stat)) stat = io_stat
 
-    ! Cache result for next access
-    if (io_stat == 0) then
-      self%int_matrix = val
-      self%nrows = nrows
-      self%ncols = ncols
-    end if
-
   end procedure value_get_int_matrix
 
   !> Get 2D real matrix from raw text
-  !> Caches the parsed result for subsequent calls.
   module procedure value_get_real_matrix
 
     character(len=:), allocatable :: text
     integer :: io_stat
-
-    if (allocated(self%real_matrix)) then
-      val = self%real_matrix
-      nrows = self%nrows
-      ncols = self%ncols
-      if (present(stat)) stat = HSD_STAT_OK
-      return
-    end if
 
     if (allocated(self%raw_text)) then
       text = self%raw_text
@@ -487,30 +398,14 @@ contains
     call parse_real_matrix(text, val, nrows, ncols, io_stat)
     if (present(stat)) stat = io_stat
 
-    ! Cache result for next access
-    if (io_stat == 0) then
-      self%real_matrix = val
-      self%nrows = nrows
-      self%ncols = ncols
-    end if
-
   end procedure value_get_real_matrix
 
   !> Get 2D complex matrix from raw text
   !> Rows separated by newlines or semicolons.
-  !> Caches the parsed result for subsequent calls.
   module procedure value_get_complex_matrix
 
     character(len=:), allocatable :: text
     integer :: io_stat
-
-    if (allocated(self%complex_matrix)) then
-      val = self%complex_matrix
-      nrows = self%nrows
-      ncols = self%ncols
-      if (present(stat)) stat = HSD_STAT_OK
-      return
-    end if
 
     if (allocated(self%raw_text)) then
       text = self%raw_text
@@ -527,13 +422,6 @@ contains
     call parse_complex_matrix(text, val, nrows, ncols, io_stat)
     if (present(stat)) stat = io_stat
 
-    ! Cache result for next access
-    if (io_stat == 0) then
-      self%complex_matrix = val
-      self%nrows = nrows
-      self%ncols = ncols
-    end if
-
   end procedure value_get_complex_matrix
 
   ! ===================================================================
@@ -547,18 +435,8 @@ contains
     if (allocated(self%attrib)) deallocate(self%attrib)
     if (allocated(self%string_value)) deallocate(self%string_value)
     if (allocated(self%raw_text)) deallocate(self%raw_text)
-    if (allocated(self%int_array)) deallocate(self%int_array)
-    if (allocated(self%real_array)) deallocate(self%real_array)
-    if (allocated(self%logical_array)) deallocate(self%logical_array)
-    if (allocated(self%string_array)) deallocate(self%string_array)
-    if (allocated(self%complex_array)) deallocate(self%complex_array)
-    if (allocated(self%int_matrix)) deallocate(self%int_matrix)
-    if (allocated(self%real_matrix)) deallocate(self%real_matrix)
-    if (allocated(self%complex_matrix)) deallocate(self%complex_matrix)
 
     self%value_type = VALUE_TYPE_NONE
-    self%nrows = 0
-    self%ncols = 0
 
   end procedure value_destroy
 

@@ -886,20 +886,6 @@ contains
                 & deallocate(base_child%string_value)
             if (allocated(base_child%raw_text)) &
                 & deallocate(base_child%raw_text)
-            if (allocated(base_child%int_array)) &
-                & deallocate(base_child%int_array)
-            if (allocated(base_child%real_array)) &
-                & deallocate(base_child%real_array)
-            if (allocated(base_child%logical_array)) &
-                & deallocate(base_child%logical_array)
-            if (allocated(base_child%string_array)) &
-                & deallocate(base_child%string_array)
-            if (allocated(base_child%complex_array)) &
-                & deallocate(base_child%complex_array)
-            if (allocated(base_child%int_matrix)) &
-                & deallocate(base_child%int_matrix)
-            if (allocated(base_child%real_matrix)) &
-                & deallocate(base_child%real_matrix)
             ! Copy new values from clone
             if (allocated(cloned_value%string_value)) &
                 & base_child%string_value = cloned_value%string_value
@@ -909,27 +895,6 @@ contains
             base_child%complex_value = cloned_value%complex_value
             if (allocated(cloned_value%raw_text)) &
                 & base_child%raw_text = cloned_value%raw_text
-            if (allocated(cloned_value%int_array)) &
-                & allocate(base_child%int_array, source=cloned_value%int_array)
-            if (allocated(cloned_value%real_array)) &
-                & allocate(base_child%real_array, source=cloned_value%real_array)
-            if (allocated(cloned_value%logical_array)) &
-                & allocate( &
-                & base_child%logical_array, source=cloned_value%logical_array)
-            if (allocated(cloned_value%string_array)) &
-                & allocate( &
-                & base_child%string_array, source=cloned_value%string_array)
-            if (allocated(cloned_value%complex_array)) &
-                & allocate( &
-                & base_child%complex_array, source=cloned_value%complex_array)
-            if (allocated(cloned_value%int_matrix)) &
-                & allocate( &
-                & base_child%int_matrix, source=cloned_value%int_matrix)
-            if (allocated(cloned_value%real_matrix)) &
-                & allocate( &
-                & base_child%real_matrix, source=cloned_value%real_matrix)
-            base_child%nrows = cloned_value%nrows
-            base_child%ncols = cloned_value%ncols
           class default
             ! Type mismatch - skip
           end select
@@ -986,15 +951,6 @@ contains
     dest%complex_value = source%complex_value
 
     if (allocated(source%raw_text)) dest%raw_text = source%raw_text
-    if (allocated(source%int_array)) allocate(dest%int_array, source=source%int_array)
-    if (allocated(source%real_array)) allocate(dest%real_array, source=source%real_array)
-    if (allocated(source%logical_array)) allocate(dest%logical_array, source=source%logical_array)
-    if (allocated(source%string_array)) allocate(dest%string_array, source=source%string_array)
-    if (allocated(source%complex_array)) allocate(dest%complex_array, source=source%complex_array)
-    if (allocated(source%int_matrix)) allocate(dest%int_matrix, source=source%int_matrix)
-    if (allocated(source%real_matrix)) allocate(dest%real_matrix, source=source%real_matrix)
-    dest%nrows = source%nrows
-    dest%ncols = source%ncols
 
   end subroutine clone_value
 

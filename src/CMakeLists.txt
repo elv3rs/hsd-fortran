@@ -23,7 +23,6 @@ set(HSD_API_SOURCES
   api/hsd_accessors.f90
   api/hsd_mutators.f90
   api/hsd_validation.f90
-  api/hsd_schema.f90
 )
 
 # Type modules (data structures)

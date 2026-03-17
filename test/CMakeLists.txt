@@ -30,7 +30,6 @@ set(TEST_IO_SUITES
 
 set(TEST_API_SUITES
   suites/api/test_api_suite.f90
-  suites/api/test_schema_suite.f90
   suites/api/test_validation_mutator_coverage_suite.f90
   suites/api/test_new_apis_suite.f90
   suites/api/test_set_processed_suite.f90

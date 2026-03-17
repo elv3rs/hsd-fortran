@@ -13,7 +13,6 @@ program testapp
   use test_edge_cases_suite, only: edge_cases_tests => tests
   use test_error_paths_suite, only: error_paths_tests
   use test_validation_mutator_coverage_suite, only: validation_mutator_coverage_tests
-  use test_schema_suite, only: schema_tests => tests
   use count_visitor_mod, only: count_visitor
   use test_full_coverage_suite, only: full_coverage_tests => tests
   use test_dftb_integration_suite, only: dftb_integration_tests => tests
@@ -38,7 +37,6 @@ program testapp
       edge_cases_tests(), &
       error_paths_tests(), &
       validation_mutator_coverage_tests(), &
-      schema_tests(), &
       full_coverage_tests(), &
       dftb_integration_tests(), &
       new_apis_tests(), &
