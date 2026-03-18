@@ -75,7 +75,11 @@ endif()
 
 # Benchmarks
 if(HSD_BUILD_BENCHMARKS)
-  add_subdirectory(utils/bench)
+  if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/utils/bench/CMakeLists.txt")
+    add_subdirectory(utils/bench)
+  else()
+    message(STATUS "HSD_BUILD_BENCHMARKS=ON but utils/bench is missing; skipping benchmarks")
+  endif()
 endif()
 
 # Installation
