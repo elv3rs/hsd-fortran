@@ -120,8 +120,8 @@ Build and run examples:
 ```bash
 cmake -B build -S .
 cmake --build build
-# Run config demo
-(cd example && ../build/example/config_demo)
+# Run simple_read example
+(cd example && ../build/example/simple_read)
 ```
 
 ### Build with fpm
@@ -256,7 +256,6 @@ Full documentation is available at [https://elv3rs.github.io/hsd-fortran](https:
 - [HSD Format](docs/hsd_format.rst) — Format specification
 - [Error Handling](docs/error_handling.rst) — Error types and handling
 - [Thread Safety](docs/thread_safety.rst) — Concurrency guidelines
-- [Fuzz Testing](utils/fuzz/README.md) — AFL++ fuzzing guide
 
 ### Building Documentation Locally
 

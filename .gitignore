@@ -1,7 +1,6 @@
 # Build directories
 build/
 _build/
-build-fuzz/
 
 # CMake cache files
 CMakeCache.txt
