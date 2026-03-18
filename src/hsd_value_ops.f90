@@ -445,68 +445,28 @@ contains
 
   end subroutine parse_real_array
 
-  !> Append a token to a dynamically-sized string array.
-  subroutine append_string_token_(tokens, count, capacity, max_len, token)
-    character(len=:), allocatable, intent(inout) :: tokens(:)
-    integer, intent(inout) :: count, capacity, max_len
-    character(len=*), intent(in) :: token
-
-    character(len=:), allocatable :: tmp(:)
-    integer :: new_capacity, new_len
-
-    new_len = max(1, len(token))
-    if (count >= capacity .or. new_len > max_len) then
-      new_capacity = max(max(8, capacity * 2), count + 1)
-      max_len = max(max_len, new_len)
-      allocate(character(len=max_len) :: tmp(new_capacity))
-      tmp = ""
-      if (count > 0) tmp(1:count) = tokens(1:count)
-      call move_alloc(tmp, tokens)
-      capacity = new_capacity
-    end if
-
-    count = count + 1
-    tokens(count) = token
-  end subroutine append_string_token_
-
-  !> Trim dynamic token buffer down to exact output size.
-  subroutine trim_token_buffer_(tokens, count, max_len)
-    character(len=:), allocatable, intent(inout) :: tokens(:)
-    integer, intent(in) :: count, max_len
-
-    character(len=:), allocatable :: tmp(:)
-
-    if (count == 0) then
-      if (allocated(tokens)) deallocate(tokens)
-      allocate(character(len=1) :: tokens(0))
-      return
-    end if
-
-    allocate(character(len=max_len) :: tmp(count))
-    tmp = tokens(1:count)
-    call move_alloc(tmp, tokens)
-  end subroutine trim_token_buffer_
-
   !> Tokenize string by whitespace and commas.
+  !>
+  !> Uses a two-pass approach (count then fill) to avoid move_alloc on
+  !> deferred-length character arrays, which triggers an Intel ifx bug.
   subroutine tokenize_string(text, tokens)
     character(len=*), intent(in) :: text
     character(len=:), allocatable, intent(out) :: tokens(:)
 
-    integer :: i, start, tlen, token_count, capacity, max_len
+    integer :: i, start, max_len, token_count
     logical :: in_token
 
-    tlen = len(text)
+    ! First pass: count tokens and find max length
     token_count = 0
-    capacity = 0
-    max_len = 1
+    max_len = 0
     in_token = .false.
     start = 1
-    allocate(character(len=1) :: tokens(0))
 
-    do i = 1, tlen
+    do i = 1, len(text)
       if (is_separator(text(i:i))) then
         if (in_token) then
-          call append_string_token_(tokens, token_count, capacity, max_len, text(start:i-1))
+          token_count = token_count + 1
+          max_len = max(max_len, i - start)
           in_token = .false.
         end if
       else
@@ -518,40 +478,72 @@ contains
     end do
 
     if (in_token) then
-      call append_string_token_(tokens, token_count, capacity, max_len, text(start:tlen))
+      token_count = token_count + 1
+      max_len = max(max_len, len(text) - start + 1)
     end if
 
-    call trim_token_buffer_(tokens, token_count, max_len)
+    if (token_count == 0 .or. max_len == 0) then
+      allocate(character(len=1) :: tokens(0))
+      return
+    end if
+
+    ! Allocate result array
+    allocate(character(len=max_len) :: tokens(token_count))
+
+    ! Second pass: extract tokens
+    token_count = 0
+    in_token = .false.
+
+    do i = 1, len(text)
+      if (is_separator(text(i:i))) then
+        if (in_token) then
+          token_count = token_count + 1
+          tokens(token_count) = text(start:i-1)
+          in_token = .false.
+        end if
+      else
+        if (.not. in_token) then
+          start = i
+          in_token = .true.
+        end if
+      end if
+    end do
+
+    if (in_token) then
+      token_count = token_count + 1
+      tokens(token_count) = text(start:len(text))
+    end if
+
   end subroutine tokenize_string
 
-  !> Tokenize string preserving quoted sections
+  !> Tokenize string preserving quoted sections.
+  !>
+  !> Uses a two-pass approach to avoid move_alloc on deferred-length
+  !> character arrays, which triggers an Intel ifx bug.
   subroutine tokenize_quoted_string(text, tokens)
     character(len=*), intent(in) :: text
     character(len=:), allocatable, intent(out) :: tokens(:)
 
-    integer :: i, start, token_count, tlen, capacity, max_len
+    integer :: i, start, max_len, token_count, tlen
     character(len=1) :: quote_char
     logical :: in_token, in_quote
 
     tlen = len_trim(text)
+
+    ! First pass: count tokens and find max length
     token_count = 0
-    capacity = 0
-    max_len = 1
+    max_len = 0
     in_token = .false.
     in_quote = .false.
     quote_char = ' '
     start = 1
-    allocate(character(len=1) :: tokens(0))
 
     i = 1
     do while (i <= tlen)
       if (in_quote) then
         if (text(i:i) == quote_char) then
-          if (i > start + 1) then
-            call append_string_token_(tokens, token_count, capacity, max_len, text(start+1:i-1))
-          else
-            call append_string_token_(tokens, token_count, capacity, max_len, "")
-          end if
+          token_count = token_count + 1
+          max_len = max(max_len, i - start - 1)
           in_quote = .false.
           in_token = .false.
         end if
@@ -562,7 +554,8 @@ contains
         in_token = .true.
       else if (is_separator(text(i:i))) then
         if (in_token) then
-          call append_string_token_(tokens, token_count, capacity, max_len, text(start:i-1))
+          token_count = token_count + 1
+          max_len = max(max_len, i - start)
           in_token = .false.
         end if
       else
@@ -575,10 +568,62 @@ contains
     end do
 
     if (in_token .and. .not. in_quote) then
-      call append_string_token_(tokens, token_count, capacity, max_len, text(start:tlen))
+      token_count = token_count + 1
+      max_len = max(max_len, tlen - start + 1)
     end if
 
-    call trim_token_buffer_(tokens, token_count, max_len)
+    if (token_count == 0 .or. max_len == 0) then
+      allocate(character(len=1) :: tokens(0))
+      return
+    end if
+
+    ! Allocate result array
+    allocate(character(len=max_len) :: tokens(token_count))
+
+    ! Second pass: extract tokens
+    token_count = 0
+    in_token = .false.
+    in_quote = .false.
+    quote_char = ' '
+
+    i = 1
+    do while (i <= tlen)
+      if (in_quote) then
+        if (text(i:i) == quote_char) then
+          token_count = token_count + 1
+          if (i > start + 1) then
+            tokens(token_count) = text(start+1:i-1)
+          else
+            tokens(token_count) = ""
+          end if
+          in_quote = .false.
+          in_token = .false.
+        end if
+      else if (text(i:i) == '"' .or. text(i:i) == "'") then
+        quote_char = text(i:i)
+        in_quote = .true.
+        start = i
+        in_token = .true.
+      else if (is_separator(text(i:i))) then
+        if (in_token) then
+          token_count = token_count + 1
+          tokens(token_count) = text(start:i-1)
+          in_token = .false.
+        end if
+      else
+        if (.not. in_token) then
+          start = i
+          in_token = .true.
+        end if
+      end if
+      i = i + 1
+    end do
+
+    if (in_token .and. .not. in_quote) then
+      token_count = token_count + 1
+      tokens(token_count) = text(start:tlen)
+    end if
+
   end subroutine tokenize_quoted_string
 
   !> Parse 2D integer matrix (rows by newlines or semicolons)
@@ -731,42 +776,65 @@ contains
   end subroutine count_matrix_dims
 
   !> Split text by newlines or semicolons.
+  !>
+  !> Uses a two-pass approach to avoid move_alloc on deferred-length
+  !> character arrays, which triggers an Intel ifx bug.
   subroutine split_by_newlines(text, lines)
     character(len=*), intent(in) :: text
     character(len=:), allocatable, intent(out) :: lines(:)
 
-    integer :: i, start, line_count, max_len, tlen, capacity
+    integer :: i, start, line_count, max_len, tlen
 
     tlen = len(text)
+
+    ! First pass: count lines and find max length
     line_count = 0
-    capacity = 0
-    max_len = 1
+    max_len = 0
     start = 1
-    allocate(character(len=1) :: lines(0))
 
     do i = 1, tlen
       if (text(i:i) == char(10) .or. text(i:i) == ';') then
+        line_count = line_count + 1
+        max_len = max(max_len, i - start)
+        start = i + 1
+      end if
+    end do
+
+    if (start <= tlen) then
+      line_count = line_count + 1
+      max_len = max(max_len, tlen - start + 1)
+    end if
+
+    if (line_count == 0 .or. max_len == 0) then
+      allocate(character(len=max(1, len(text))) :: lines(1))
+      lines(1) = text
+      return
+    end if
+
+    ! Allocate result array
+    allocate(character(len=max_len) :: lines(line_count))
+
+    ! Second pass: extract lines
+    line_count = 0
+    start = 1
+
+    do i = 1, tlen
+      if (text(i:i) == char(10) .or. text(i:i) == ';') then
+        line_count = line_count + 1
         if (i > start) then
-          call append_string_token_(lines, line_count, capacity, max_len, text(start:i-1))
+          lines(line_count) = text(start:i-1)
         else
-          call append_string_token_(lines, line_count, capacity, max_len, "")
+          lines(line_count) = ""
         end if
         start = i + 1
       end if
     end do
 
     if (start <= tlen) then
-      call append_string_token_(lines, line_count, capacity, max_len, text(start:tlen))
+      line_count = line_count + 1
+      lines(line_count) = text(start:tlen)
     end if
 
-    if (line_count == 0) then
-      deallocate(lines)
-      allocate(character(len=max(1, len(text))) :: lines(1))
-      lines(1) = text
-      return
-    end if
-
-    call trim_token_buffer_(lines, line_count, max_len)
   end subroutine split_by_newlines
 
   !> Parse 2D complex matrix
