@@ -51,7 +51,7 @@ module hsd
     NODE_TYPE_TABLE, NODE_TYPE_VALUE, &
     VALUE_TYPE_NONE, VALUE_TYPE_STRING, VALUE_TYPE_INTEGER, &
     VALUE_TYPE_REAL, VALUE_TYPE_LOGICAL, VALUE_TYPE_ARRAY, VALUE_TYPE_COMPLEX
-  use hsd_parser, only: hsd_parse, hsd_parse_string
+  use hsd_parser, only: hsd_load_file, hsd_load_string
   use hsd_formatter, only: hsd_dump, hsd_dump_to_string
 
   ! Unified API module
@@ -119,28 +119,5 @@ module hsd
   public :: hsd_get_array_with_unit, hsd_get_matrix_with_unit
   public :: hsd_node_context, hsd_format_error, hsd_format_warning
   public :: hsd_warn_unprocessed, MAX_WARNING_LEN
-
-contains
-
-  !> Load HSD from a file
-  subroutine hsd_load_file(filename, root, error)
-    character(len=*), intent(in) :: filename
-    type(hsd_node), intent(out) :: root
-    type(hsd_error_t), allocatable, intent(out), optional :: error
-
-    call hsd_parse(filename, root, error)
-
-  end subroutine hsd_load_file
-
-  !> Load HSD from a string
-  subroutine hsd_load_string(source, root, error, filename)
-    character(len=*), intent(in) :: source
-    type(hsd_node), intent(out) :: root
-    type(hsd_error_t), allocatable, intent(out), optional :: error
-    character(len=*), intent(in), optional :: filename
-
-    call hsd_parse_string(source, root, error, filename)
-
-  end subroutine hsd_load_string
 
 end module hsd

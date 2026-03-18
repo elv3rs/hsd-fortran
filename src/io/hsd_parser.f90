@@ -21,7 +21,7 @@ module hsd_parser
   implicit none (type, external)
   private
 
-  public :: hsd_parse, hsd_parse_string
+  public :: hsd_load_file, hsd_load_string
 
   !> Include stack item for cycle detection
   type :: include_item
@@ -52,8 +52,8 @@ module hsd_parser
 
 contains
 
-  !> Parse an HSD file into a tree structure
-  subroutine hsd_parse(filename, root, error)
+  !> Load HSD from a file
+  subroutine hsd_load_file(filename, root, error)
     character(len=*), intent(in) :: filename
     type(hsd_node), intent(out) :: root
     type(hsd_error_t), allocatable, intent(out), optional :: error
@@ -100,10 +100,10 @@ contains
       if (present(error)) call move_alloc(local_error, error)
     end if
 
-  end subroutine hsd_parse
+  end subroutine hsd_load_file
 
-  !> Parse HSD from a string
-  subroutine hsd_parse_string(source, root, error, filename)
+  !> Load HSD from a string
+  subroutine hsd_load_string(source, root, error, filename)
     character(len=*), intent(in) :: source
     type(hsd_node), intent(out) :: root
     type(hsd_error_t), allocatable, intent(out), optional :: error
@@ -138,7 +138,7 @@ contains
       if (present(error)) call move_alloc(local_error, error)
     end if
 
-  end subroutine hsd_parse_string
+  end subroutine hsd_load_string
 
   !> Get next meaningful token (skipping whitespace)
   subroutine parser_next_token(self)

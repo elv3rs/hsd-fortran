@@ -218,7 +218,7 @@ The HSD tree uses a **copy-on-add** ownership model:
    type(hsd_error_t), allocatable :: err
 
    ! Parse creates a tree — caller owns root
-   call hsd_parse("input.hsd", root, err)
+   call hsd_load_file("input.hsd", root, err)
 
    ! ... use the tree ...
 

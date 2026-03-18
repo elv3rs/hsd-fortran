@@ -108,7 +108,7 @@ hsd_types
 hsd_parser
 ~~~~~~~~~~
 
-- ``hsd_parse()`` and ``hsd_parse_string()`` are thread-safe for different output trees
+- ``hsd_load_file()`` and ``hsd_load_string()`` are thread-safe for different output trees
 - Include file processing is NOT thread-safe if files share the same include paths
 
 hsd_formatter
