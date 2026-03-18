@@ -1,3 +1,0 @@
-Outer = Inner {
-  key = 42
-}

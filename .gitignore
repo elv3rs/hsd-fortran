@@ -54,3 +54,6 @@ venv/
 # Test artifacts
 Testing/
 public
+
+# Intel ifx build directory
+build-ifx/

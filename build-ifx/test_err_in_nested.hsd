@@ -1,3 +1,0 @@
-Ham = DFTB {
-  <<< "/nonexistent/file.txt"
-}

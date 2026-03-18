@@ -1,4 +1,0 @@
-Data {
-  <<< "/home/ubuntu/Desktop/shared/hsd-fortran/build-ifx/test_tinc_a.txt"
-  <<< "/home/ubuntu/Desktop/shared/hsd-fortran/build-ifx/test_tinc_b.txt"
-}
