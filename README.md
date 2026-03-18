@@ -1,11 +1,5 @@
 # hsd-fortran
 
-[![License](https://img.shields.io/badge/license-BSD--2--Clause--Patent-blue.svg)](LICENSE)
-[![Fortitude](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/PlasmaFAIR/fortitude/main/docs/assets/badge/v0.json)](https://github.com/PlasmaFAIR/fortitude)
-[![Tests](https://github.com/elv3rs/hsd-fortran/actions/workflows/tests.yml/badge.svg)](https://github.com/elv3rs/hsd-fortran/actions/workflows/tests.yml)
-[![Linting](https://github.com/elv3rs/hsd-fortran/actions/workflows/lint.yml/badge.svg)](https://github.com/elv3rs/hsd-fortran/actions/workflows/lint.yml)
-[![Docs & Coverage](https://github.com/elv3rs/hsd-fortran/actions/workflows/docs.yml/badge.svg)](https://github.com/elv3rs/hsd-fortran/actions/workflows/docs.yml)
-[![Coverage](https://elv3rs.github.io/hsd-fortran/coverage/coverage.svg)](https://elv3rs.github.io/hsd-fortran/coverage/index.html)
 
 > **⚠️ Agentic Coding Proof of Concept**
 >
@@ -16,7 +10,7 @@
 
 A lightweight, dependency-free HSD (Human-friendly Structured Data) parser for Fortran.
 
-**📖 [Full Documentation](https://elv3rs.github.io/hsd-fortran/)** · **[Coverage Report](https://elv3rs.github.io/hsd-fortran/coverage/)**
+**[Documentation](https://elv3rs.github.io/hsd-fortran/)** · **[Coverage Report](https://elv3rs.github.io/hsd-fortran/coverage/)**
 
 ## Overview
 
@@ -48,12 +42,11 @@ Driver = ConjugateGradient {
 
 ## Installation
 
-Requires a Fortran 2008 compiler (gfortran ≥ 7, ifort ≥ 18, ifx) and CMake ≥ 3.14.
+Requires a Fortran 2008 compiler.
 
 ```bash
 cmake -B build && cmake --build build
 ctest --test-dir build
-cmake --install build --prefix /path/to/install
 ```
 
 Also available via [fpm](https://fpm.fortran-lang.org/):
@@ -62,18 +55,6 @@ Also available via [fpm](https://fpm.fortran-lang.org/):
 fpm build && fpm test
 ```
 
-## Documentation
-
-Full docs at **[https://elv3rs.github.io/hsd-fortran](https://elv3rs.github.io/hsd-fortran)** — API reference, format spec, error handling, and examples.
-
-```bash
-pip install -r docs/requirements.txt
-sphinx-build -b html docs public
-```
-
-## License
-
-BSD 2-Clause Plus Patent License. See [LICENSE](LICENSE) for details.
 
 ## Related Projects
 
