@@ -41,6 +41,10 @@ set(TEST_COVERAGE_SUITES
   suites/coverage/test_coverage_gaps_suite.f90
 )
 
+set(TEST_COMPAT_SUITES
+  suites/compat/test_compat_suite.f90
+)
+
 # Fortuno-based unit tests
 add_executable(hsd_testapp
   testapp.f90
@@ -48,6 +52,7 @@ add_executable(hsd_testapp
   ${TEST_IO_SUITES}
   ${TEST_API_SUITES}
   ${TEST_COVERAGE_SUITES}
+  ${TEST_COMPAT_SUITES}
 )
 target_link_libraries(hsd_testapp PRIVATE hsd Fortuno::fortuno_serial build_env)
 target_include_directories(hsd_testapp PRIVATE ${CMAKE_BINARY_DIR}/modules)

@@ -20,6 +20,7 @@ program testapp
   use test_tree_utils_suite, only: tree_utils_tests => tests
   use test_edge_cases_io_suite, only: io_edge_cases_tests => tests
   use test_coverage_gaps_suite, only: coverage_gaps_tests => tests
+  use test_compat_suite, only: compat_tests => tests
   implicit none (type, external)
 
   ! Initialize build environment paths (no-op for CMake, sets getcwd for fpm)
@@ -42,7 +43,8 @@ program testapp
       set_processed_tests(), &
       tree_utils_tests(), &
       io_edge_cases_tests(), &
-      coverage_gaps_tests() &
+      coverage_gaps_tests(), &
+      compat_tests() &
   ]))
 
 end program testapp

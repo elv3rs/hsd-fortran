@@ -30,6 +30,11 @@ set(HSD_TYPE_SOURCES
   hsd_value_ops.f90
 )
 
+# Compatibility layer (DFTB+ API compat)
+set(HSD_COMPAT_SOURCES
+  compat/hsd_compat.f90
+)
+
 # Main facade module
 set(HSD_FACADE_SOURCES
   hsd.f90
@@ -42,6 +47,7 @@ set(HSD_SOURCES
   ${HSD_IO_SOURCES}
   ${HSD_API_SOURCES}
   ${HSD_FACADE_SOURCES}
+  ${HSD_COMPAT_SOURCES}
 )
 
 add_library(hsd ${HSD_SOURCES})
