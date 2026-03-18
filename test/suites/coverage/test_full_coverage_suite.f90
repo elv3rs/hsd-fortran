@@ -3,9 +3,7 @@ module test_full_coverage_suite
   use hsd
   use hsd_error, only: make_syntax_error, make_type_error, make_error, &
       & error_message
-  use hsd_token, only: token_name, TOKEN_NEWLINE, &
-      & TOKEN_LBRACKET, TOKEN_RBRACKET, TOKEN_SEMICOLON, TOKEN_INCLUDE_TXT, &
-      & TOKEN_INCLUDE_HSD, TOKEN_EOF, hsd_token_t
+  use hsd_lexer, only: TOKEN_EOF, hsd_token_t
   use fortuno_serial, only: test => serial_case_item, &
       & check => serial_check, suite => serial_suite_item, test_list
   use build_env, only: build_dir
@@ -127,7 +125,6 @@ contains
             test("error_msg_all_codes", test_error_msg_all_codes), &
             test("error_print_variants", test_error_print_variants), &
             ! === Token ===
-            test("token_name_all", test_token_name_all), &
             test("token_is_valid_fn", test_token_is_valid_fn), &
             ! === Validation ===
             test("type_name_none", test_type_name_none), &
@@ -1670,21 +1667,6 @@ contains
   ! ===========================================================================
   ! Token
   ! ===========================================================================
-
-  !> Test token_name for all token types
-  subroutine test_token_name_all()
-    call check(token_name(TOKEN_NEWLINE) == "newline", msg="Newline name")
-    call check(token_name(TOKEN_LBRACKET) == "opening bracket", &
-        msg="Lbracket name")
-    call check(token_name(TOKEN_RBRACKET) == "closing bracket", &
-        msg="Rbracket name")
-    call check(token_name(TOKEN_SEMICOLON) == "semicolon", &
-        msg="Semicolon name")
-    call check(token_name(TOKEN_INCLUDE_TXT) == "text include", &
-        msg="Include txt name")
-    call check(token_name(TOKEN_INCLUDE_HSD) == "HSD include", &
-        msg="Include hsd name")
-  end subroutine test_token_name_all
 
   !> Test token_is_valid function
   subroutine test_token_is_valid_fn()

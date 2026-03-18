@@ -9,7 +9,6 @@ set(HSD_CORE_SOURCES
 
 # I/O modules (parsing and serialization)
 set(HSD_IO_SOURCES
-  io/hsd_token.f90
   io/hsd_lexer.f90
   io/hsd_parser.f90
   io/hsd_formatter.f90

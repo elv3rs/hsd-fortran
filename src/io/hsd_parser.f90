@@ -5,11 +5,11 @@
 !> Includes cycle detection for <<+ includes.
 module hsd_parser
   use hsd_constants, only: dp, hsd_max_include_depth, CHAR_NEWLINE
-  use hsd_token, only: hsd_token_t, TOKEN_EOF, TOKEN_STRING, &
+  use hsd_lexer, only: hsd_lexer_t, new_lexer_from_file, new_lexer_from_string, &
+    hsd_token_t, TOKEN_EOF, TOKEN_STRING, &
     TOKEN_LBRACE, TOKEN_RBRACE, TOKEN_EQUAL, TOKEN_LBRACKET, TOKEN_RBRACKET, &
     TOKEN_INCLUDE_TXT, TOKEN_INCLUDE_HSD, TOKEN_SEMICOLON, &
     TOKEN_TEXT, TOKEN_NEWLINE
-  use hsd_lexer, only: hsd_lexer_t, new_lexer_from_file, new_lexer_from_string
   use hsd_types, only: hsd_node_t, hsd_node_ptr_t, &
     new_table, new_value, VALUE_TYPE_NONE, VALUE_TYPE_ARRAY, &
     VALUE_TYPE_STRING, NODE_TYPE_TABLE, NODE_TYPE_VALUE

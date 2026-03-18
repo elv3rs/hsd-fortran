@@ -2,8 +2,6 @@
 module test_error_suite
   use hsd
   use hsd_error, only : error_message, make_error
-  use hsd_token, only : token_name, TOKEN_EOF, TOKEN_LBRACE, TOKEN_RBRACE, &
-      & TOKEN_EQUAL, TOKEN_STRING, TOKEN_TEXT, TOKEN_INVALID
   use fortuno_serial, only : is_equal, test => serial_case_item, check => serial_check, &
       & suite => serial_suite_item, test_list
   implicit none (type, external)
@@ -30,7 +28,6 @@ contains
             test("set_nested_value", test_set_nested_value), &
             test("large_output", test_large_output), &
             test("error_messages", test_error_messages), &
-            test("token_names", test_token_names), &
             test("error_print", test_error_print), &
             test("error_helpers", test_error_helpers) &
         ])) &
@@ -310,37 +307,6 @@ contains
     call check(index(msg, "nknown") > 0, msg="Unknown error message")
 
   end subroutine test_error_messages
-
-  !> Test token_name function for all token types
-  subroutine test_token_names()
-    character(len=:), allocatable :: name
-
-    name = token_name(TOKEN_EOF)
-    call check(len(name) > 0, msg="EOF token has name")
-
-    name = token_name(TOKEN_LBRACE)
-    call check(index(name, "brace") > 0, msg="LBRACE token name contains brace")
-
-    name = token_name(TOKEN_RBRACE)
-    call check(index(name, "brace") > 0, msg="RBRACE token name contains brace")
-
-    name = token_name(TOKEN_EQUAL)
-    call check(index(name, "equal") > 0, msg="EQUAL token name")
-
-    name = token_name(TOKEN_STRING)
-    call check(index(name, "string") > 0, msg="STRING token name")
-
-    name = token_name(TOKEN_TEXT)
-    call check(index(name, "text") > 0, msg="TEXT token name")
-
-    name = token_name(TOKEN_INVALID)
-    call check(index(name, "invalid") > 0, msg="INVALID token name")
-
-    ! Unknown token
-    name = token_name(9999)
-    call check(index(name, "unknown") > 0, msg="Unknown token name")
-
-  end subroutine test_token_names
 
   !> Test error printing functionality
   subroutine test_error_print()

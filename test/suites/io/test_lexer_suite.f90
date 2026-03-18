@@ -1,7 +1,7 @@
 !> Lexer unit tests using Fortuno framework
 module test_lexer_suite
-  use hsd_lexer, only : hsd_lexer_t, new_lexer_from_string
-  use hsd_token, only : hsd_token_t, TOKEN_EOF, TOKEN_TEXT, TOKEN_STRING, &
+  use hsd_lexer, only : hsd_lexer_t, new_lexer_from_string, &
+      & hsd_token_t, TOKEN_EOF, TOKEN_TEXT, TOKEN_STRING, &
       & TOKEN_LBRACE, TOKEN_RBRACE, TOKEN_EQUAL, TOKEN_LBRACKET, TOKEN_RBRACKET, &
       & TOKEN_INCLUDE_TXT, TOKEN_INCLUDE_HSD
   use fortuno_serial, only : is_equal, test => serial_case_item, check => serial_check, &

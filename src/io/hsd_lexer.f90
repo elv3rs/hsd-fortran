@@ -8,10 +8,6 @@ module hsd_lexer
       & CHAR_RBRACE, CHAR_LBRACKET, CHAR_RBRACKET, CHAR_EQUAL, CHAR_SEMICOLON, &
       & CHAR_HASH, CHAR_DQUOTE, CHAR_SQUOTE, CHAR_LESS
   use hsd_utils, only: to_lower, string_buffer_t
-  use hsd_token, only: hsd_token_t, TOKEN_EOF, TOKEN_STRING, &
-    TOKEN_LBRACE, TOKEN_RBRACE, TOKEN_EQUAL, TOKEN_LBRACKET, TOKEN_RBRACKET, &
-    TOKEN_INCLUDE_TXT, TOKEN_INCLUDE_HSD, TOKEN_SEMICOLON, &
-    TOKEN_NEWLINE, TOKEN_TEXT
   use hsd_error, only: hsd_error_t, make_error, &
     HSD_STAT_OK, HSD_STAT_IO_ERROR, HSD_STAT_UNCLOSED_QUOTE, HSD_STAT_UNCLOSED_ATTRIB, &
     HSD_STAT_FILE_NOT_FOUND
@@ -19,6 +15,46 @@ module hsd_lexer
   private
 
   public :: hsd_lexer_t, new_lexer_from_file, new_lexer_from_string
+  public :: hsd_token_t
+  public :: TOKEN_INVALID, TOKEN_EOF, TOKEN_NEWLINE
+  public :: TOKEN_LBRACE, TOKEN_RBRACE, TOKEN_LBRACKET
+  public :: TOKEN_RBRACKET, TOKEN_EQUAL, TOKEN_SEMICOLON, TOKEN_STRING
+  public :: TOKEN_TEXT, TOKEN_INCLUDE_TXT, TOKEN_INCLUDE_HSD
+
+  !> Token kind constants
+  !>
+  !> TOKEN_INVALID is a sentinel value: it is never emitted by the lexer and
+  !> serves as the error sentinel for is_valid().
+  !> Whitespace and comments are silently consumed by the lexer and never
+  !> represented as tokens.
+  integer, parameter :: TOKEN_INVALID = -1
+  integer, parameter :: TOKEN_EOF = 0
+  integer, parameter :: TOKEN_NEWLINE = 1
+  integer, parameter :: TOKEN_LBRACE = 2
+  integer, parameter :: TOKEN_RBRACE = 3
+  integer, parameter :: TOKEN_LBRACKET = 4
+  integer, parameter :: TOKEN_RBRACKET = 5
+  integer, parameter :: TOKEN_EQUAL = 6
+  integer, parameter :: TOKEN_SEMICOLON = 7
+  integer, parameter :: TOKEN_STRING = 8
+  integer, parameter :: TOKEN_TEXT = 9
+  integer, parameter :: TOKEN_INCLUDE_TXT = 10
+  integer, parameter :: TOKEN_INCLUDE_HSD = 11
+
+  !> Token type with position and value
+  type :: hsd_token_t
+    !> Kind of token
+    integer :: kind = TOKEN_EOF
+    !> Token value (for strings and text)
+    character(len=:), allocatable :: value
+    !> Line number where token starts
+    integer :: line = 0
+    !> Column number where token starts
+    integer :: column = 0
+  contains
+    procedure :: is_eof => token_is_eof
+    procedure :: is_valid => token_is_valid
+  end type hsd_token_t
 
   !> Lexer state
   type :: hsd_lexer_t
@@ -52,6 +88,20 @@ module hsd_lexer
   end type hsd_lexer_t
 
 contains
+
+  !> Check if token is eof
+  pure function token_is_eof(self) result(is_eof)
+    class(hsd_token_t), intent(in) :: self
+    logical :: is_eof
+    is_eof = self%kind == TOKEN_EOF
+  end function token_is_eof
+
+  !> Check if token is valid (not invalid or eof)
+  pure function token_is_valid(self) result(is_valid)
+    class(hsd_token_t), intent(in) :: self
+    logical :: is_valid
+    is_valid = self%kind > TOKEN_EOF
+  end function token_is_valid
 
   !> Create a new lexer from a file
   subroutine new_lexer_from_file(lexer, filename, error)

@@ -565,29 +565,40 @@ contains
   end subroutine getChVal_cmplxR1
 
   ! --- Logical array ---
-  subroutine getChVal_logicalR1(node, name, val, modifier, child)
+  subroutine getChVal_logicalR1(node, name, val, default, nItem, modifier, child)
     type(hsd_node_t), intent(inout), target :: node
     character(len=*), intent(in) :: name
-    logical, allocatable, intent(out) :: val(:)
+    logical, intent(out) :: val(:)
+    logical, intent(in), optional :: default(:)
+    integer, intent(out), optional :: nItem
     type(string), intent(inout), optional :: modifier
     type(hsd_node_t), pointer, intent(out), optional :: child
 
     type(hsd_node_t), pointer :: cp
     logical :: found
     integer :: stat
+    logical, allocatable :: tmp(:)
 
     call find_child_(node, name, cp, found)
 
     if (.not. found) then
+      if (present(default)) then
+        val = default
+        if (present(nItem)) nItem = size(default)
+        if (present(child)) child => null()
+        return
+      end if
       call detailedError(node, &
           & "Missing required field: '" // name // "'")
     end if
 
-    call hsd_get(node, name, val, stat)
+    call hsd_get(node, name, tmp, stat)
     if (stat /= HSD_STAT_OK) then
       call detailedError(cp, &
           & "Invalid logical array for: '" // name // "'")
     end if
+    val(:) = tmp(:min(size(tmp), size(val)))
+    if (present(nItem)) nItem = size(tmp)
 
     if (present(modifier)) call extract_modifier_(cp, modifier)
     if (present(child)) child => cp
