@@ -441,7 +441,7 @@ contains
       if (is_amendment) then
         ! Amendment: find existing child and merge into it
         existing_child => null()
-        call parent%get_child_by_name(tag_name, existing_child, case_insensitive=.true.)
+        call parent%get_child_by_name(tag_name, existing_child)
         if (.not. associated(existing_child)) then
           if (present(error)) then
             call make_error(error, HSD_STAT_SYNTAX_ERROR, &
@@ -539,7 +539,7 @@ contains
             if (is_amendment) then
               ! +Tag = +ChildTag { ... } — amend existing Tag, then amend ChildTag inside
               existing_child => null()
-              call parent%get_child_by_name(tag_name, existing_child, case_insensitive=.true.)
+              call parent%get_child_by_name(tag_name, existing_child)
               if (.not. associated(existing_child)) then
                 if (present(error)) then
                   call make_error(error, HSD_STAT_SYNTAX_ERROR, &
@@ -563,8 +563,7 @@ contains
               if (child_is_amendment) then
                 ! Find ChildTag inside the existing Tag and merge into it
                 existing_child => null()
-                call existing_table%get_child_by_name(child_tag_name, existing_child, &
-                    case_insensitive=.true.)
+                call existing_table%get_child_by_name(child_tag_name, existing_child)
                 if (.not. associated(existing_child)) then
                   if (present(error)) then
                     call make_error(error, HSD_STAT_SYNTAX_ERROR, &

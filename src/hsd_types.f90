@@ -170,21 +170,17 @@ module hsd_types
       class(hsd_node), pointer, intent(out) :: child
     end subroutine table_get_child
 
-    module subroutine table_get_child_by_name( &
-        & self, name, child, case_insensitive)
+    module subroutine table_get_child_by_name(self, name, child)
       implicit none (type, external)
       class(hsd_table), intent(in), target :: self
       character(len=*), intent(in) :: name
       class(hsd_node), pointer, intent(out) :: child
-      logical, intent(in), optional :: case_insensitive
     end subroutine table_get_child_by_name
 
-    module function table_has_child( &
-        & self, name, case_insensitive) result(has)
+    module function table_has_child(self, name) result(has)
       implicit none (type, external)
       class(hsd_table), intent(in) :: self
       character(len=*), intent(in) :: name
-      logical, intent(in), optional :: case_insensitive
       logical :: has
     end function table_has_child
 
@@ -207,13 +203,11 @@ module hsd_types
       integer, intent(out), optional :: stat
     end subroutine table_remove_child
 
-    module subroutine table_remove_child_by_name( &
-        & self, name, stat, case_insensitive)
+    module subroutine table_remove_child_by_name(self, name, stat)
       implicit none (type, external)
       class(hsd_table), intent(inout) :: self
       character(len=*), intent(in) :: name
       integer, intent(out), optional :: stat
-      logical, intent(in), optional :: case_insensitive
     end subroutine table_remove_child_by_name
 
     recursive module subroutine table_destroy(self)
@@ -425,7 +419,7 @@ contains
     character(len=*), intent(in), optional :: attrib
     integer, intent(in), optional :: line
 
-    if (present(name)) table%name = name
+    if (present(name)) table%name = to_lower(name)
     if (present(attrib)) then
       if (len_trim(attrib) > 0) table%attrib = attrib
     end if
@@ -443,7 +437,7 @@ contains
     character(len=*), intent(in), optional :: attrib
     integer, intent(in), optional :: line
 
-    if (present(name)) val%name = name
+    if (present(name)) val%name = to_lower(name)
     if (present(attrib)) then
       if (len_trim(attrib) > 0) val%attrib = attrib
     end if

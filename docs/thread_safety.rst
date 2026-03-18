@@ -44,9 +44,11 @@ Safe Operations (No Synchronization Needed)
 .. note::
 
     Since version 1.0.0, ``hsd_value`` nodes no longer use internal caching.
-    Array values are parsed on demand from raw text. This means all getter
-    methods (``hsd_get``, etc.) are **fully thread-safe** for read-only access,
-    as they do not modify the tree structure.
+    Array values are parsed on demand from raw text. However, getter
+    methods (``hsd_get``, etc.) modify the ``processed`` flag of nodes for
+    validation purposes. While often benign, this constitutes a data race
+    if accessed concurrently. Strict thread safety requires synchronization
+    or ignoring validation results.
 
 .. code-block:: fortran
 

@@ -1464,7 +1464,7 @@ contains
         "Epsilon = 5", root, error)
     call check(.not. allocated(error), msg="Parse ok")
     ! Removing by name uses the hash index
-    call root%remove_child_by_name("beta", case_insensitive=.true.)
+    call root%remove_child_by_name("beta")
     call check(.not. hsd_has_child(root, "beta"), msg="Beta removed")
     call check(hsd_has_child(root, "alpha"), msg="Alpha kept")
   end subroutine test_table_remove_ci
@@ -2017,7 +2017,7 @@ contains
       read(unit_num, '(A)', iostat=io_stat, size=content_len, advance='no') content
       close(unit_num)
     end if
-    call check(index(content, "Inner") > 0, msg="Inner found in dump")
+    call check(index(content, "inner") > 0, msg="inner found in dump")
   end subroutine test_dump_unnamed_tbl_tbl
 
   !> Test tag = multiline value (write_tag_value multiline path)
@@ -2051,7 +2051,7 @@ contains
       read(unit_num, '(A)', iostat=io_stat, size=content_len, advance='no') content
       close(unit_num)
     end if
-    call check(index(content, "Tag") > 0, msg="Tag in multiline dump")
+    call check(index(content, "tag") > 0, msg="tag in multiline dump")
   end subroutine test_dump_tag_multiline_val
 
   ! ===========================================================================

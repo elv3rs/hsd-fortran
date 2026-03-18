@@ -244,10 +244,9 @@ module hsd_api
   end subroutine resolve_path_parent_
 
   !> Check if a table has a child with given name
-  function hsd_has_child(table, name, case_insensitive) result(has)
+  function hsd_has_child(table, name) result(has)
     type(hsd_table), intent(in), target :: table
     character(len=*), intent(in) :: name
-    logical, intent(in), optional :: case_insensitive
     logical :: has
 
     class(hsd_node), pointer :: child
@@ -258,7 +257,7 @@ module hsd_api
       call hsd_get_child(table, name, child, stat)
       has = (stat == HSD_STAT_OK .and. associated(child))
     else
-      has = table%has_child(name, case_insensitive)
+      has = table%has_child(name)
     end if
 
   end function hsd_has_child
@@ -267,11 +266,10 @@ module hsd_api
   !>
   !> Supports path-based navigation with "/" separator for nested tables.
   !> The last component of the path is the child to remove.
-  subroutine hsd_remove_child(table, path, stat, case_insensitive)
+  subroutine hsd_remove_child(table, path, stat)
     type(hsd_table), intent(inout), target :: table
     character(len=*), intent(in) :: path
     integer, intent(out), optional :: stat
-    logical, intent(in), optional :: case_insensitive
 
     type(hsd_table), pointer :: parent_table
     character(len=:), allocatable :: child_name
@@ -283,7 +281,7 @@ module hsd_api
       return
     end if
 
-    call parent_table%remove_child_by_name(child_name, local_stat, case_insensitive)
+    call parent_table%remove_child_by_name(child_name, local_stat)
     if (present(stat)) stat = local_stat
 
   end subroutine hsd_remove_child
@@ -480,7 +478,7 @@ module hsd_api
     end if
 
     ! Find child with this name
-    call table%get_child_by_name(segment, current, case_insensitive=.true.)
+    call table%get_child_by_name(segment, current)
 
     if (.not. associated(current)) then
       if (present(stat)) stat = HSD_STAT_NOT_FOUND
@@ -610,21 +608,16 @@ module hsd_api
   !> Finds the child with `old_name` and changes its name to `new_name`.
   !> The child's position in the table is preserved. The name index is
   !> invalidated and rebuilt on next lookup.
-  subroutine hsd_rename_child(table, old_name, new_name, stat, case_insensitive)
+  subroutine hsd_rename_child(table, old_name, new_name, stat)
     type(hsd_table), intent(inout), target :: table
     character(len=*), intent(in) :: old_name
     character(len=*), intent(in) :: new_name
     integer, intent(out), optional :: stat
-    logical, intent(in), optional :: case_insensitive
 
     class(hsd_node), pointer :: child
     integer :: local_stat
     type(hsd_table), pointer :: parent_table
     character(len=:), allocatable :: child_old_name
-    logical :: ci
-
-    ci = .true.
-    if (present(case_insensitive)) ci = case_insensitive
 
     call resolve_path_parent_(table, old_name, parent_table, child_old_name, local_stat)
     if (local_stat /= HSD_STAT_OK) then
@@ -633,7 +626,7 @@ module hsd_api
     end if
 
     ! Find the child by name
-    call parent_table%get_child_by_name(child_old_name, child, case_insensitive=ci)
+    call parent_table%get_child_by_name(child_old_name, child)
 
     if (.not. associated(child)) then
       if (present(stat)) stat = HSD_STAT_NOT_FOUND
@@ -754,14 +747,53 @@ module hsd_api
     type(hsd_table_ptr), allocatable, intent(out) :: children(:)
     integer, intent(out), optional :: stat
 
-    type(hsd_child_ptr), allocatable :: tmp_children(:)
-    integer :: i
+    character(len=:), allocatable :: child_name
+    class(hsd_node), pointer :: child
+    type(hsd_table), pointer :: parent_table
+    integer :: local_stat, i, count
+    character(len=:), allocatable :: lower_name
 
-    call collect_named_children_(table, path, tmp_children, stat, tables_only=.true.)
-    allocate(children(size(tmp_children)))
-    do i = 1, size(tmp_children)
-      children(i)%ptr => tmp_children(i)%ptr
+    call resolve_path_parent_(table, path, parent_table, child_name, local_stat)
+    if (local_stat /= HSD_STAT_OK) then
+      allocate(children(0))
+      if (present(stat)) stat = local_stat
+      return
+    end if
+
+    lower_name = to_lower(child_name)
+
+    ! First pass: count table matches
+    count = 0
+    do i = 1, parent_table%num_children
+      call parent_table%get_child(i, child)
+      if (.not. associated(child)) cycle
+      if (.not. allocated(child%name)) cycle
+      if (to_lower(child%name) /= lower_name) cycle
+      select type (child)
+      type is (hsd_table)
+        count = count + 1
+      end select
     end do
+
+    ! Allocate result
+    allocate(children(count))
+
+    ! Second pass: fill pointers (table children only)
+    count = 0
+    do i = 1, parent_table%num_children
+      call parent_table%get_child(i, child)
+      if (.not. associated(child)) cycle
+      if (.not. allocated(child%name)) cycle
+      if (to_lower(child%name) /= lower_name) cycle
+      select type (child)
+      type is (hsd_table)
+        count = count + 1
+        children(count)%ptr => child
+        child%processed = .true.
+      end select
+    end do
+
+    if (present(stat)) stat = HSD_STAT_OK
 
   end subroutine hsd_get_child_tables
 
@@ -790,7 +822,7 @@ module hsd_api
       if (.not. allocated(overlay_child%name)) cycle
 
       ! Check if base has this child
-      call base%get_child_by_name(overlay_child%name, base_child, case_insensitive=.true.)
+      call base%get_child_by_name(overlay_child%name, base_child)
 
       if (.not. associated(base_child)) then
         ! Child doesn't exist in base - clone and add it
@@ -924,7 +956,7 @@ module hsd_api
         if (.not. allocated(child_a%name)) return
 
         ! Look for matching child in b
-        call b%get_child_by_name(child_a%name, child_b, case_insensitive=.true.)
+        call b%get_child_by_name(child_a%name, child_b)
         if (.not. associated(child_b)) return
 
         ! Compare node types and values
@@ -1081,7 +1113,7 @@ module hsd_api
     class(hsd_node), pointer :: child
 
     nullify(val_node)
-    call table%get_child_by_name("#text", child, case_insensitive=.true.)
+    call table%get_child_by_name("#text", child)
     if (associated(child)) then
       select type (child)
       type is (hsd_value)
@@ -2877,7 +2909,7 @@ module hsd_api
       end if
 
       ! Look for existing child
-      call current_table%get_child_by_name(segment, current, case_insensitive=.true.)
+      call current_table%get_child_by_name(segment, current)
 
       if (.not. associated(current)) then
         ! Need to create node

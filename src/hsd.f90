@@ -13,11 +13,11 @@
 !> concurrent access patterns:
 !>
 !> - **Thread-safe**: Parsing different files concurrently
-!> - **NOT thread-safe**: Reading from a shared tree (first access to
-!>   `hsd_value` getters mutates internal caches), modifying a shared tree,
+!> - **NOT thread-safe**: Reading from a shared tree modifies the internal
+!>   `processed` flag used for validation, modifying a shared tree,
 !>   using shared iterators, parsing to the same tree
-!> - **Workaround**: Populate all caches in a single-threaded context before
-!>   concurrent read access.
+!> - **Workaround**: If strict thread safety is needed for validation logic,
+!>   synchronize access.
 !>
 !> For detailed thread safety information, see docs/thread_safety.rst
 !>

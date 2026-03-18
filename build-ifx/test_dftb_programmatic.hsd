@@ -1,0 +1,7 @@
+Hamiltonian = DFTB {
+  scc = Yes
+  scctolerance = 1.00000000000000008E-05
+  Filling = Fermi {
+    temperature = 3.00000000000000000E+02
+  }
+}

@@ -63,23 +63,16 @@ contains
   module procedure table_get_child_by_name
 
     integer :: idx
-    logical :: ignore_case, found
+    character(len=:), allocatable :: lower_name
 
     child => null()
-    ignore_case = .false.
-    if (present(case_insensitive)) ignore_case = case_insensitive
+    lower_name = to_lower(name)
 
     ! Search from end to return last occurrence (override semantics)
     do idx = self%num_children, 1, -1
       if (.not. associated(self%children(idx)%node)) cycle
       if (.not. allocated(self%children(idx)%node%name)) cycle
-      if (ignore_case) then
-        found = to_lower(self%children(idx)%node%name) &
-            & == to_lower(name)
-      else
-        found = self%children(idx)%node%name == name
-      end if
-      if (found) then
+      if (to_lower(self%children(idx)%node%name) == lower_name) then
         child => self%children(idx)%node
         return
       end if
@@ -92,7 +85,7 @@ contains
 
     class(hsd_node), pointer :: child
 
-    call self%get_child_by_name(name, child, case_insensitive)
+    call self%get_child_by_name(name, child)
     has = associated(child)
 
   end procedure table_has_child
@@ -171,22 +164,15 @@ contains
   module procedure table_remove_child_by_name
 
     integer :: idx
-    logical :: ignore_case, found
+    character(len=:), allocatable :: lower_name
 
-    ignore_case = .false.
-    if (present(case_insensitive)) ignore_case = case_insensitive
+    lower_name = to_lower(name)
 
     ! Search from end to match last occurrence (override semantics)
     do idx = self%num_children, 1, -1
       if (.not. associated(self%children(idx)%node)) cycle
       if (.not. allocated(self%children(idx)%node%name)) cycle
-      if (ignore_case) then
-        found = to_lower(self%children(idx)%node%name) &
-            & == to_lower(name)
-      else
-        found = self%children(idx)%node%name == name
-      end if
-      if (found) then
+      if (to_lower(self%children(idx)%node%name) == lower_name) then
         call self%remove_child(idx, stat)
         return
       end if

@@ -1,0 +1,14 @@
+Error in 'test.hsd' at lines 1-5, column 10: test error
+  Expected: expected_val
+  Got:      actual_val
+  Hint: try this
+Error in 'test.hsd' at lines 1-5, column 10: test error
+  Expected: expected_val
+  Hint: try this
+Error in 'test.hsd' at lines 1-5, column 10: test error
+  Got:      only_actual
+  Hint: try this
+Error: bare error
+Error in 'test.hsd' at line 5: no column error
+  Got:      only_actual
+  Hint: try this

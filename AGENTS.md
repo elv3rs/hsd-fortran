@@ -6,6 +6,8 @@ The project has reached **v1.0.0 release** status.  All specification phases
 (parser, accessors, mutators, unit-aware accessors, documentation) are complete.
 Refactoring for simplicity is also complete (unified API, string-only storage,
 shared accessor/mutator helper paths, unified child-pointer wrapper model).
+The primary goal is now to serve as a drop-in replacement for DFTB+'s HSD stack,
+with behavior aligned to DFTB+ ground truth (including lowercase canonical tag handling).
 
 When making changes: ensure builds pass, `fortitude check` is clean, all tests
 pass, and Sphinx docs build without warnings.  Commit atomically with clear

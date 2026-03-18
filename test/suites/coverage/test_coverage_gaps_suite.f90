@@ -453,7 +453,7 @@ contains
     call new_table(tbl, name="TestNode", line=0)
     ctx = hsd_node_context(tbl)
     call check(len(ctx) > 0, msg="context string not empty")
-    call check(index(ctx, "TestNode") > 0, msg="context contains name")
+    call check(index(ctx, "testnode") > 0, msg="context contains name")
     ! Should NOT contain "line" since line=0
     call check(index(ctx, "line") == 0, msg="no line info when line=0")
 

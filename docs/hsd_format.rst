@@ -246,7 +246,7 @@ Tag names (identifiers) must:
 
 - Start with a letter or underscore
 - Contain only letters, numbers, and underscores
-- Be case-sensitive
+- Are case-insensitive (internally normalized to lowercase)
 
 .. code-block:: text
 
@@ -255,9 +255,9 @@ Tag names (identifiers) must:
    max_steps = 100
    _private = 1
 
-   # These are different tags
+   # These refer to the same tag
    Temperature = 300
-   temperature = 300  # Different from Temperature
+   temperature = 300  # Overrides Temperature
 
 Duplicate Keys
 ~~~~~~~~~~~~~~
