@@ -132,7 +132,7 @@ contains
   end subroutine test_attributes
 
 
-  !> Test comment handling
+  !> Test comment handling (comments are now skipped silently by lexer)
   subroutine test_comments()
     type(hsd_lexer_t) :: lexer
     type(hsd_token_t) :: token
@@ -141,7 +141,7 @@ contains
 
     call lexer%next_token(token)  ! tag
     call check(is_equal(token%kind, TOKEN_TEXT), msg="Token before comment is TEXT")
-    call lexer%next_token(token)  ! next
+    call lexer%next_token(token)  ! comment is skipped, next token is "next"
     call check(is_equal(token%kind, TOKEN_TEXT), msg="Token after comment is TEXT")
 
     call check(token%value == "next", msg="Token after comment has correct value")
