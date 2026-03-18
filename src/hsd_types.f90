@@ -67,6 +67,10 @@ module hsd_types
   end type hsd_node_ptr
 
   !> Unified HSD node type (table or value)
+  !>
+  !> Component order: value fields (string_value) are placed before the
+  !> self-referential children array to work around an Intel ifx compiler
+  !> bug with component offset calculation for recursive types.
   type :: hsd_node
     !> Node name (tag name)
     character(len=:), allocatable :: name
@@ -78,14 +82,14 @@ module hsd_types
     logical :: processed = .false.
     !> Node type discriminator (NODE_TYPE_TABLE or NODE_TYPE_VALUE)
     integer :: node_type = 0
-    !> Child nodes (table only)
-    type(hsd_node_ptr), allocatable :: children(:)
-    !> Number of children (table only)
-    integer :: num_children = 0
     !> Type of value stored (value only)
     integer :: value_type = VALUE_TYPE_NONE
     !> String representation of the value (value only)
     character(len=:), allocatable :: string_value
+    !> Child nodes (table only)
+    type(hsd_node_ptr), allocatable :: children(:)
+    !> Number of children (table only)
+    integer :: num_children = 0
   contains
     ! Common
     procedure :: has_attrib => node_has_attrib
