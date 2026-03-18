@@ -40,7 +40,7 @@ contains
 
   !> Test unclosed brace error handling
   subroutine test_unclosed_brace()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
 
     call hsd_load_string("Block {" // char(10) // "  value = 1", root, error)
@@ -52,7 +52,7 @@ contains
 
   !> Test unclosed quote error handling
   subroutine test_unclosed_quote()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
 
     call hsd_load_string('name = "unclosed string', root, error)
@@ -64,7 +64,7 @@ contains
 
   !> Test accessing non-existent path
   subroutine test_missing_path()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     integer :: val, stat
 
@@ -81,7 +81,7 @@ contains
 
   !> Test type mismatch
   subroutine test_type_mismatch()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     integer :: int_val, stat
 
@@ -99,7 +99,7 @@ contains
 
   !> Test parsing empty input
   subroutine test_empty_input()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
 
     call hsd_load_string("", root, error)
@@ -113,7 +113,7 @@ contains
 
   !> Test complex number parsing
   subroutine test_complex_number()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     complex(dp) :: cval
     integer :: stat
@@ -155,7 +155,7 @@ contains
 
   !> Test complex array parsing
   subroutine test_complex_array()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     complex(dp), allocatable :: arr(:)
     integer :: stat
@@ -180,7 +180,7 @@ contains
 
   !> Test hsd_set functionality
   subroutine test_set_value()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     integer :: int_val, stat
     real(dp) :: real_val
@@ -226,7 +226,7 @@ contains
 
   !> Test hsd_set with nested paths (creating intermediate nodes)
   subroutine test_set_nested_value()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     integer :: val, stat
     character(len=:), allocatable :: output
@@ -252,7 +252,7 @@ contains
 
   !> Test that large structures don't truncate
   subroutine test_large_output()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     character(len=:), allocatable :: output
     character(len=100) :: key

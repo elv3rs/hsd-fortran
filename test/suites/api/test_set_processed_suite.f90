@@ -27,8 +27,8 @@ contains
 
   !> Non-recursive: only the target table is marked
   subroutine test_non_recursive()
-    type(hsd_node) :: root, child_tbl
-    type(hsd_node), pointer :: cptr
+    type(hsd_node_t) :: root, child_tbl
+    type(hsd_node_t), pointer :: cptr
 
     call new_table(root, name="root")
     call hsd_set(root, "Key", 42)
@@ -56,8 +56,8 @@ contains
 
   !> Recursive on a flat table: all values get marked
   subroutine test_recursive_flat()
-    type(hsd_node) :: root
-    type(hsd_node), pointer :: cptr
+    type(hsd_node_t) :: root
+    type(hsd_node_t), pointer :: cptr
 
     call new_table(root, name="root")
     call hsd_set(root, "A", 1)
@@ -81,8 +81,8 @@ contains
 
   !> Recursive on a nested tree: everything is marked
   subroutine test_recursive_nested()
-    type(hsd_node) :: root, lvl1, lvl2
-    type(hsd_node), pointer :: cptr
+    type(hsd_node_t) :: root, lvl1, lvl2
+    type(hsd_node_t), pointer :: cptr
 
     call new_table(root, name="root")
     call hsd_set(root, "TopVal", "hello")
@@ -121,8 +121,8 @@ contains
 
   !> Omitting the recursive argument defaults to non-recursive
   subroutine test_default_not_recursive()
-    type(hsd_node) :: root
-    type(hsd_node), pointer :: cptr
+    type(hsd_node_t) :: root
+    type(hsd_node_t), pointer :: cptr
 
     call new_table(root, name="root")
     call hsd_set(root, "Val", 5)

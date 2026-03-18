@@ -88,7 +88,7 @@ contains
   ! --- getChildValue tests ---
 
   subroutine test_get_child_value_real()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     real(dp) :: val
 
@@ -101,7 +101,7 @@ contains
   end subroutine test_get_child_value_real
 
   subroutine test_get_child_value_int()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     integer :: val
 
@@ -113,7 +113,7 @@ contains
   end subroutine test_get_child_value_int
 
   subroutine test_get_child_value_logical()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     logical :: val
 
@@ -125,7 +125,7 @@ contains
   end subroutine test_get_child_value_logical
 
   subroutine test_get_child_value_string()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     type(string) :: val
 
@@ -137,7 +137,7 @@ contains
   end subroutine test_get_child_value_string
 
   subroutine test_get_child_value_default()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     real(dp) :: val
 
@@ -150,11 +150,11 @@ contains
   end subroutine test_get_child_value_default
 
   subroutine test_get_child_value_modifier()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     real(dp) :: val
     type(string) :: modifier
-    type(hsd_node), pointer :: child
+    type(hsd_node_t), pointer :: child
 
     call hsd_load_string('Pressure [Pa] = 101325.0', root, error)
     call check(.not. allocated(error), msg="parse ok")
@@ -171,9 +171,9 @@ contains
   ! --- getChild tests ---
 
   subroutine test_get_child_found()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
-    type(hsd_node), pointer :: child
+    type(hsd_node_t), pointer :: child
 
     call hsd_load_string('Driver { MaxSteps = 100 }', root, error)
     call check(.not. allocated(error), msg="parse ok")
@@ -184,9 +184,9 @@ contains
   end subroutine test_get_child_found
 
   subroutine test_get_child_not_requested()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
-    type(hsd_node), pointer :: child
+    type(hsd_node_t), pointer :: child
 
     call hsd_load_string('Dummy = 1', root, error)
     call check(.not. allocated(error), msg="parse ok")
@@ -197,9 +197,9 @@ contains
   end subroutine test_get_child_not_requested
 
   subroutine test_get_child_empty_if_missing()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
-    type(hsd_node), pointer :: child
+    type(hsd_node_t), pointer :: child
 
     call hsd_load_string('Dummy = 1', root, error)
     call check(.not. allocated(error), msg="parse ok")
@@ -214,7 +214,7 @@ contains
   ! --- setChildValue tests ---
 
   subroutine test_set_child_value_real()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     real(dp) :: val
 
@@ -229,7 +229,7 @@ contains
   end subroutine test_set_child_value_real
 
   subroutine test_set_child_value_replace()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     real(dp) :: val
 
@@ -244,7 +244,7 @@ contains
   end subroutine test_set_child_value_replace
 
   subroutine test_set_child_value_string()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     type(string) :: val
 
@@ -260,9 +260,9 @@ contains
   ! --- Processing tests ---
 
   subroutine test_set_processed_compat()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
-    type(hsd_node), pointer :: child
+    type(hsd_node_t), pointer :: child
 
     call hsd_load_string('Block { A = 1' // char(10) // 'B = 2 }', &
         & root, error)
@@ -274,7 +274,7 @@ contains
   end subroutine test_set_processed_compat
 
   subroutine test_warn_unprocessed_compat()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
 
     call hsd_load_string('A = 1', root, error)
@@ -288,9 +288,9 @@ contains
   ! --- Node info tests ---
 
   subroutine test_get_node_hsd_name()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
-    type(hsd_node), pointer :: child
+    type(hsd_node_t), pointer :: child
     character(len=:), allocatable :: name
 
     call hsd_load_string('Driver { }', root, error)
@@ -302,9 +302,9 @@ contains
   end subroutine test_get_node_hsd_name
 
   subroutine test_get_first_text_child()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
-    type(hsd_node), pointer :: child
+    type(hsd_node_t), pointer :: child
     character(len=:), allocatable :: text
 
     call hsd_load_string('Value = 42', root, error)
@@ -318,7 +318,7 @@ contains
   ! --- DOM compat tests ---
 
   subroutine test_create_element()
-    type(hsd_node) :: doc, elem
+    type(hsd_node_t) :: doc, elem
     real(dp) :: val
 
     call createDocumentNode(doc)
@@ -331,9 +331,9 @@ contains
   end subroutine test_create_element
 
   subroutine test_set_child()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
-    type(hsd_node), pointer :: child
+    type(hsd_node_t), pointer :: child
 
     call hsd_load_string('Dummy = 1', root, error)
     call check(.not. allocated(error), msg="parse ok")
@@ -347,7 +347,7 @@ contains
   ! --- Array tests ---
 
   subroutine test_get_child_value_array()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     real(dp), allocatable :: val(:)
 
@@ -365,10 +365,10 @@ contains
   ! --- getNodeName2 tests ---
 
   subroutine test_get_node_name2_associated()
-    type(hsd_node), target :: root
-    type(hsd_node), pointer :: ptr
+    type(hsd_node_t), target :: root
+    type(hsd_node_t), pointer :: ptr
     type(hsd_error_t), allocatable :: error
-    type(hsd_node), pointer :: child
+    type(hsd_node_t), pointer :: child
     type(string) :: nodeName
 
     call hsd_load_string('Driver { }', root, error)
@@ -382,7 +382,7 @@ contains
   end subroutine test_get_node_name2_associated
 
   subroutine test_get_node_name2_null()
-    type(hsd_node), pointer :: ptr
+    type(hsd_node_t), pointer :: ptr
     type(string) :: nodeName
 
     ptr => null()
@@ -394,9 +394,9 @@ contains
   ! --- setNodeName tests ---
 
   subroutine test_set_node_name_basic()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
-    type(hsd_node), pointer :: child
+    type(hsd_node_t), pointer :: child
 
     call hsd_load_string('OldName { }', root, error)
     call check(.not. allocated(error), msg="parse ok")
@@ -410,9 +410,9 @@ contains
   end subroutine test_set_node_name_basic
 
   subroutine test_set_node_name_no_update()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
-    type(hsd_node), pointer :: child
+    type(hsd_node_t), pointer :: child
 
     call hsd_load_string('OldName { }', root, error)
     call check(.not. allocated(error), msg="parse ok")
@@ -430,9 +430,9 @@ contains
   ! --- splitModifier tests ---
 
   subroutine test_split_modifier_basic()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
-    type(hsd_node), pointer :: child
+    type(hsd_node_t), pointer :: child
     type(string) :: mods(3)
 
     call hsd_load_string('Dummy { }', root, error)
@@ -448,9 +448,9 @@ contains
   ! --- getDescendant tests ---
 
   subroutine test_get_descendant_basic()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
-    type(hsd_node), pointer :: child
+    type(hsd_node_t), pointer :: child
 
     call hsd_load_string( &
         & 'Hamiltonian { DFTB { MaxSCCIterations = 100 } }', &
@@ -465,9 +465,9 @@ contains
   end subroutine test_get_descendant_basic
 
   subroutine test_get_descendant_missing()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
-    type(hsd_node), pointer :: child
+    type(hsd_node_t), pointer :: child
 
     call hsd_load_string('Hamiltonian { DFTB { } }', root, error)
     call check(.not. allocated(error), msg="parse ok")
@@ -478,9 +478,9 @@ contains
   end subroutine test_get_descendant_missing
 
   subroutine test_get_descendant_parent()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
-    type(hsd_node), pointer :: child, par
+    type(hsd_node_t), pointer :: child, par
 
     call hsd_load_string('A { B { C = 1 } }', root, error)
     call check(.not. allocated(error), msg="parse ok")
@@ -494,9 +494,9 @@ contains
   ! --- renameChildren tests ---
 
   subroutine test_rename_children_basic()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
-    type(hsd_node), pointer :: child
+    type(hsd_node_t), pointer :: child
 
     call hsd_load_string('Old { } ' // char(10) // 'Old { }', &
         & root, error)
@@ -512,9 +512,9 @@ contains
   ! --- localiseName tests ---
 
   subroutine test_localise_name_basic()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
-    type(hsd_node), pointer :: child
+    type(hsd_node_t), pointer :: child
 
     call hsd_load_string('Colour { }', root, error)
     call check(.not. allocated(error), msg="parse ok")

@@ -75,7 +75,7 @@ Fortitude is configured via `fpm.toml`.
 hsd-fortran/
 ├── src/                        # Library source
 │   ├── hsd.f90                 # Public API (re-exports all modules)
-│   ├── hsd_types.f90           # Data structures (unified hsd_node, iterator)
+│   ├── hsd_types.f90           # Data structures (unified hsd_node_t, iterator)
 │   ├── hsd_table_ops.f90      # Submodule: table & iterator operations
 │   ├── hsd_value_ops.f90      # Submodule: value ops & parse helpers
 │   ├── api/                    # High-level API modules
@@ -228,11 +228,11 @@ These functions were upstreamed from DFTB+ and are part of the public API:
 
 | Type | Purpose |
 |--------|---------|
-| `hsd_node` | Unified concrete node type with a `node_type` discriminator (`NODE_TYPE_TABLE` or `NODE_TYPE_VALUE`). Tables hold children; values hold string data (parsed on demand). |
-| `hsd_iterator` | Stateful tree iteration (references a `type(hsd_node)` table) |
-| `hsd_node_ptr` | Wrapper holding `type(hsd_node), pointer` for child storage |
-| `hsd_table_ptr` | Wrapper holding `type(hsd_node), pointer` (for `hsd_get_child_tables`) |
-| `hsd_child_ptr` | Wrapper holding `type(hsd_node), pointer` (for `hsd_get_children`) |
+| `hsd_node_t` | Unified concrete node type with a `node_type` discriminator (`NODE_TYPE_TABLE` or `NODE_TYPE_VALUE`). Tables hold children; values hold string data (parsed on demand). |
+| `hsd_iterator_t` | Stateful tree iteration (references a `type(hsd_node_t)` table) |
+| `hsd_node_ptr_t` | Wrapper holding `type(hsd_node_t), pointer` for child storage |
+| `hsd_table_ptr_t` | Wrapper holding `type(hsd_node_t), pointer` (for `hsd_get_child_tables`) |
+| `hsd_child_ptr_t` | Wrapper holding `type(hsd_node_t), pointer` (for `hsd_get_children`) |
 
 ## Design Notes
 

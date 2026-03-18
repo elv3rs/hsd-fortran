@@ -1,7 +1,7 @@
 !> HSD Parser
 !>
 !> This module provides the main parsing functionality for HSD files.
-!> It converts a token stream into a tree of hsd_node nodes.
+!> It converts a token stream into a tree of hsd_node_t nodes.
 !> Includes cycle detection for <<+ includes.
 module hsd_parser
   use hsd_constants, only: dp, hsd_max_include_depth, CHAR_NEWLINE
@@ -10,7 +10,7 @@ module hsd_parser
     TOKEN_INCLUDE_TXT, TOKEN_INCLUDE_HSD, TOKEN_SEMICOLON, &
     TOKEN_TEXT, TOKEN_NEWLINE, TOKEN_WHITESPACE
   use hsd_lexer, only: hsd_lexer_t, new_lexer_from_file, new_lexer_from_string
-  use hsd_types, only: hsd_node, hsd_node_ptr, &
+  use hsd_types, only: hsd_node_t, hsd_node_ptr_t, &
     new_table, new_value, VALUE_TYPE_NONE, VALUE_TYPE_ARRAY, &
     VALUE_TYPE_STRING, NODE_TYPE_TABLE, NODE_TYPE_VALUE
   use hsd_error, only: hsd_error_t, make_error, &
@@ -24,18 +24,18 @@ module hsd_parser
   public :: hsd_load_file, hsd_load_string
 
   !> Include stack item for cycle detection
-  type :: include_item
+  type :: include_item_t
     character(len=:), allocatable :: path
-  end type include_item
+  end type include_item_t
 
   !> Parser state
-  type :: parser_state
+  type :: parser_state_t
     !> Current lexer
     type(hsd_lexer_t) :: lexer
     !> Current token
     type(hsd_token_t) :: current_token
     !> Include stack for cycle detection
-    type(include_item), allocatable :: include_stack(:)
+    type(include_item_t), allocatable :: include_stack(:)
     !> Current include depth
     integer :: include_depth = 0
     !> Base directory for relative includes
@@ -48,17 +48,17 @@ module hsd_parser
     procedure :: push_include => parser_push_include
     procedure :: pop_include => parser_pop_include
     procedure :: is_include_cycle => parser_is_cycle
-  end type parser_state
+  end type parser_state_t
 
 contains
 
   !> Load HSD from a file
   subroutine hsd_load_file(filename, root, error)
     character(len=*), intent(in) :: filename
-    type(hsd_node), intent(out) :: root
+    type(hsd_node_t), intent(out) :: root
     type(hsd_error_t), allocatable, intent(out), optional :: error
 
-    type(parser_state) :: state
+    type(parser_state_t) :: state
     type(hsd_error_t), allocatable :: local_error
     character(len=:), allocatable :: abs_path
 
@@ -105,11 +105,11 @@ contains
   !> Load HSD from a string
   subroutine hsd_load_string(source, root, error, filename)
     character(len=*), intent(in) :: source
-    type(hsd_node), intent(out) :: root
+    type(hsd_node_t), intent(out) :: root
     type(hsd_error_t), allocatable, intent(out), optional :: error
     character(len=*), intent(in), optional :: filename
 
-    type(parser_state) :: state
+    type(parser_state_t) :: state
     type(hsd_error_t), allocatable :: local_error
 
     ! Initialize lexer from string
@@ -142,13 +142,13 @@ contains
 
   !> Get next meaningful token (skipping whitespace/comments internally handled by lexer)
   subroutine parser_next_token(self)
-    class(parser_state), intent(inout) :: self
+    class(parser_state_t), intent(inout) :: self
     call self%lexer%next_token(self%current_token)
   end subroutine parser_next_token
 
   !> Skip whitespace and comments
   subroutine parser_skip_ws_comments(self)
-    class(parser_state), intent(inout) :: self
+    class(parser_state_t), intent(inout) :: self
 
     do while (self%current_token%kind == TOKEN_NEWLINE)
       call self%next_token()
@@ -158,7 +158,7 @@ contains
 
   !> Push file onto include stack
   subroutine parser_push_include(self, path, error)
-    class(parser_state), intent(inout) :: self
+    class(parser_state_t), intent(inout) :: self
     character(len=*), intent(in) :: path
     type(hsd_error_t), allocatable, intent(out), optional :: error
 
@@ -204,7 +204,7 @@ contains
 
   !> Pop file from include stack
   subroutine parser_pop_include(self)
-    class(parser_state), intent(inout) :: self
+    class(parser_state_t), intent(inout) :: self
 
     if (self%include_depth > 0) then
       if (allocated(self%include_stack(self%include_depth)%path)) then
@@ -217,7 +217,7 @@ contains
 
   !> Check if path would create a cycle
   function parser_is_cycle(self, path) result(is_cycle)
-    class(parser_state), intent(in) :: self
+    class(parser_state_t), intent(in) :: self
     character(len=*), intent(in) :: path
     logical :: is_cycle
 
@@ -262,8 +262,8 @@ contains
 
   !> Parse content (multiple tags/values)
   recursive subroutine parse_content(state, parent, error)
-    type(parser_state), intent(inout) :: state
-    type(hsd_node), intent(inout) :: parent
+    type(parser_state_t), intent(inout) :: state
+    type(hsd_node_t), intent(inout) :: parent
     type(hsd_error_t), allocatable, intent(out), optional :: error
 
     type(hsd_error_t), allocatable :: local_error
@@ -356,8 +356,8 @@ contains
 
   !> Parse a tag (possibly with value) or just data
   recursive subroutine parse_tag_or_value(state, parent, text_buffer, text_start_line, error)
-    type(parser_state), intent(inout) :: state
-    type(hsd_node), intent(inout) :: parent
+    type(parser_state_t), intent(inout) :: state
+    type(hsd_node_t), intent(inout) :: parent
     character(len=:), allocatable, intent(inout) :: text_buffer
     integer, intent(inout) :: text_start_line
     type(hsd_error_t), allocatable, intent(out), optional :: error
@@ -366,13 +366,13 @@ contains
     character(len=:), allocatable :: original_text
     integer :: tag_line
     type(hsd_token_t) :: saved_token
-    type(hsd_node) :: child_table
-    type(hsd_node) :: child_value
+    type(hsd_node_t) :: child_table
+    type(hsd_node_t) :: child_value
     type(hsd_error_t), allocatable :: local_error
     character(len=:), allocatable :: value_text
     logical :: is_amendment
-    type(hsd_node), pointer :: existing_child
-    type(hsd_node), pointer :: existing_table
+    type(hsd_node_t), pointer :: existing_child
+    type(hsd_node_t), pointer :: existing_table
 
     ! Save current state — preserve original text for data fallback, lowercase for tag use
     original_text = trim(state%current_token%value)
@@ -553,7 +553,7 @@ contains
               else
                 ! Regular child inside amended parent
                 block
-                  type(hsd_node) :: nested_table
+                  type(hsd_node_t) :: nested_table
                   call new_table(nested_table, child_tag_name, &
                     & "", saved_token%line)
                   call parse_content(state, nested_table, local_error)
@@ -569,7 +569,7 @@ contains
               call new_table(child_table, tag_name, attrib, tag_line)
 
               block
-                type(hsd_node) :: nested_table
+                type(hsd_node_t) :: nested_table
                 call new_table(nested_table, child_tag_name, "", saved_token%line)
                 call parse_content(state, nested_table, local_error)
                 if (allocated(local_error)) then
@@ -681,7 +681,7 @@ contains
 
   !> Parse attribute content between [ and ]
   subroutine parse_attribute(state, attrib, error)
-    type(parser_state), intent(inout) :: state
+    type(parser_state_t), intent(inout) :: state
     character(len=:), allocatable, intent(out) :: attrib
     type(hsd_error_t), allocatable, intent(out), optional :: error
 
@@ -726,12 +726,12 @@ contains
 
   !> Handle <<+ HSD include
   recursive subroutine handle_hsd_include(state, parent, error)
-    type(parser_state), intent(inout) :: state
-    type(hsd_node), intent(inout) :: parent
+    type(parser_state_t), intent(inout) :: state
+    type(hsd_node_t), intent(inout) :: parent
     type(hsd_error_t), allocatable, intent(out), optional :: error
 
     character(len=:), allocatable :: include_path, abs_path
-    type(parser_state) :: include_state
+    type(parser_state_t) :: include_state
     type(hsd_error_t), allocatable :: local_error
 
     ! Get the include filename
@@ -790,7 +790,7 @@ contains
 
   !> Handle <<< text include
   subroutine handle_text_include(state, text_buffer, error)
-    type(parser_state), intent(inout) :: state
+    type(parser_state_t), intent(inout) :: state
     character(len=:), allocatable, intent(inout) :: text_buffer
     type(hsd_error_t), allocatable, intent(out), optional :: error
 
@@ -950,11 +950,11 @@ contains
   !> text content. This allows hsd_get(table, "#text", val) to access inline
   !> text uniformly.
   subroutine add_text_to_parent(parent, text, line)
-    type(hsd_node), intent(inout) :: parent
+    type(hsd_node_t), intent(inout) :: parent
     character(len=*), intent(in) :: text
     integer, intent(in) :: line
 
-    type(hsd_node) :: val
+    type(hsd_node_t) :: val
 
     call new_value(val, "#text", "", line)
     call val%set_raw(text)

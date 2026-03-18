@@ -1,7 +1,7 @@
 !> Table and iterator operations for HSD types
 !>
 !> This submodule implements all type-bound procedures for table
-!> and iterator operations on hsd_node. See hsd_types.f90 for type
+!> and iterator operations on hsd_node_t. See hsd_types.f90 for type
 !> definitions and interface declarations.
 submodule (hsd_types) hsd_table_ops
   implicit none (type, external)
@@ -15,7 +15,7 @@ contains
   !> the table is destroyed or the child is removed.
   module procedure table_add_child
 
-    type(hsd_node_ptr), allocatable :: tmp(:)
+    type(hsd_node_ptr_t), allocatable :: tmp(:)
     integer :: new_size, ii
 
     ! Initialize if table was never set up via new_table
@@ -83,7 +83,7 @@ contains
   !> Check if table has a child with given name
   module procedure table_has_child
 
-    type(hsd_node), pointer :: child
+    type(hsd_node_t), pointer :: child
 
     call self%get_child_by_name(name, child)
     has = associated(child)

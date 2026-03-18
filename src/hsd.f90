@@ -25,7 +25,7 @@
 !>
 !> ```fortran
 !> use hsd
-!> type(hsd_node) :: root
+!> type(hsd_node_t) :: root
 !> type(hsd_error_t), allocatable :: error
 !> integer :: value
 !>
@@ -46,7 +46,7 @@ module hsd
     HSD_STAT_UNCLOSED_ATTRIB, HSD_STAT_UNCLOSED_QUOTE, HSD_STAT_ORPHAN_TEXT, &
     HSD_STAT_INCLUDE_CYCLE, HSD_STAT_INCLUDE_DEPTH, HSD_STAT_FILE_NOT_FOUND, &
     HSD_STAT_IO_ERROR, HSD_STAT_TYPE_ERROR, HSD_STAT_NOT_FOUND
-  use hsd_types, only: hsd_node, hsd_node_ptr, hsd_iterator, &
+  use hsd_types, only: hsd_node_t, hsd_node_ptr_t, hsd_iterator_t, &
     new_table, new_value, &
     NODE_TYPE_TABLE, NODE_TYPE_VALUE, &
     VALUE_TYPE_NONE, VALUE_TYPE_STRING, VALUE_TYPE_INTEGER, &
@@ -64,8 +64,8 @@ module hsd
     hsd_get_child, hsd_get_table, hsd_has_child, &
     hsd_remove_child, hsd_get_type, hsd_is_table, hsd_is_value, hsd_is_array, &
     hsd_child_count, hsd_get_keys, hsd_get_attrib, hsd_has_attrib, hsd_set_attrib, &
-    hsd_rename_child, hsd_get_choice, hsd_get_children, hsd_child_ptr, &
-    hsd_get_child_tables, hsd_table_ptr, &
+    hsd_rename_child, hsd_get_choice, hsd_get_children, hsd_child_ptr_t, &
+    hsd_get_child_tables, hsd_table_ptr_t, &
     hsd_merge, hsd_clone, hsd_table_equal, hsd_set_processed, &
     hsd_has_value_children, hsd_get_name
 
@@ -85,7 +85,7 @@ module hsd
   public :: HSD_STAT_UNCLOSED_ATTRIB, HSD_STAT_UNCLOSED_QUOTE, HSD_STAT_ORPHAN_TEXT
   public :: HSD_STAT_INCLUDE_CYCLE, HSD_STAT_INCLUDE_DEPTH, HSD_STAT_FILE_NOT_FOUND
   public :: HSD_STAT_IO_ERROR, HSD_STAT_TYPE_ERROR, HSD_STAT_NOT_FOUND
-  public :: hsd_node, hsd_node_ptr, hsd_iterator
+  public :: hsd_node_t, hsd_node_ptr_t, hsd_iterator_t
   public :: NODE_TYPE_TABLE, NODE_TYPE_VALUE
   public :: new_table, new_value
   public :: VALUE_TYPE_NONE, VALUE_TYPE_STRING, VALUE_TYPE_INTEGER
@@ -106,8 +106,8 @@ module hsd
   public :: hsd_child_count, hsd_get_keys
   public :: hsd_get_attrib, hsd_has_attrib, hsd_set_attrib
   public :: hsd_rename_child, hsd_get_choice
-  public :: hsd_get_children, hsd_child_ptr
-  public :: hsd_get_child_tables, hsd_table_ptr
+  public :: hsd_get_children, hsd_child_ptr_t
+  public :: hsd_get_child_tables, hsd_table_ptr_t
   public :: hsd_merge, hsd_clone
   public :: hsd_table_equal
   public :: hsd_set_processed

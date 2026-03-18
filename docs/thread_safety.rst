@@ -84,7 +84,7 @@ Unsafe Operations (Require External Synchronization)
 .. code-block:: fortran
 
     ! Each thread must have its own iterator instance
-    type(hsd_iterator) :: my_iterator  ! Thread-local
+    type(hsd_iterator_t) :: my_iterator  ! Thread-local
     call my_iterator%init(shared_table)
 
 **3. Adding/removing children**
@@ -100,7 +100,7 @@ Module-Specific Notes
 hsd_types
 ~~~~~~~~~
 
-- ``hsd_node`` is NOT thread-safe for modification
+- ``hsd_node_t`` is NOT thread-safe for modification
 - Value node getters are **thread-safe** (no internal state mutation)
 - Table node read operations (``get_child``, ``child_count``, etc.) are
   thread-safe if no concurrent writes
@@ -151,10 +151,10 @@ Each image should maintain its own HSD trees:
 
 .. code-block:: fortran
 
-    type(hsd_node) :: local_root  ! Each image has its own copy
+    type(hsd_node_t) :: local_root  ! Each image has its own copy
 
     call hsd_load_file("config.hsd", local_root, error)  ! Each image loads independently
-    ! No cross-image sharing of hsd_node objects
+    ! No cross-image sharing of hsd_node_t objects
 
 Recommendations
 ---------------

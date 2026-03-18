@@ -16,7 +16,7 @@ The most common operation is loading an HSD file into a tree structure:
    use hsd
    implicit none
 
-   type(hsd_node) :: root
+   type(hsd_node_t) :: root
    type(hsd_error_t), allocatable :: error
 
    ! Load from file
@@ -241,7 +241,7 @@ Create an independent copy of a tree:
 
 .. code-block:: fortran
 
-   type(hsd_node) :: copy
+   type(hsd_node_t) :: copy
 
    call hsd_clone(root, copy)
    ! Modify copy without affecting root
@@ -253,7 +253,7 @@ Combine two trees (source overwrites target for conflicts):
 
 .. code-block:: fortran
 
-   type(hsd_node) :: defaults, user_config, merged
+   type(hsd_node_t) :: defaults, user_config, merged
 
    call hsd_load_file("defaults.hsd", defaults, error)
    call hsd_load_file("user.hsd", user_config, error)
@@ -264,12 +264,12 @@ Combine two trees (source overwrites target for conflicts):
 Iterating Children
 ------------------
 
-To process all children of a table, including duplicate keys, use the ``hsd_iterator``:
+To process all children of a table, including duplicate keys, use the ``hsd_iterator_t``:
 
 .. code-block:: fortran
 
-   type(hsd_iterator) :: it
-   type(hsd_node), pointer :: node
+   type(hsd_iterator_t) :: it
+   type(hsd_node_t), pointer :: node
    integer :: val, stat
 
    call it%init(root)
@@ -339,7 +339,7 @@ Example: Complete Configuration Parser
      type(my_config), intent(out) :: config
      type(hsd_error_t), allocatable, intent(out) :: error
 
-     type(hsd_node) :: root
+     type(hsd_node_t) :: root
      integer :: stat
 
      ! Load file

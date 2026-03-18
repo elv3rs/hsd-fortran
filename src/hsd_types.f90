@@ -2,9 +2,9 @@
 !>
 !> This module provides the tree structure for representing parsed HSD data.
 !> The main types are:
-!> - hsd_node     - Unified concrete node (table or value)
-!> - hsd_node_ptr - Pointer wrapper for child storage
-!> - hsd_iterator - Iterator for traversing table children
+!> - hsd_node_t     - Unified concrete node (table or value)
+!> - hsd_node_ptr_t - Pointer wrapper for child storage
+!> - hsd_iterator_t - Iterator for traversing table children
 !>
 !> ## Memory Ownership Semantics
 !>
@@ -37,7 +37,7 @@ module hsd_types
   implicit none (type, external)
   private
 
-  public :: hsd_node, hsd_node_ptr, hsd_iterator
+  public :: hsd_node_t, hsd_node_ptr_t, hsd_iterator_t
   public :: new_table, new_value
   public :: NODE_TYPE_TABLE, NODE_TYPE_VALUE
   public :: VALUE_TYPE_NONE, VALUE_TYPE_STRING, VALUE_TYPE_INTEGER
@@ -62,12 +62,12 @@ module hsd_types
   !> Uses a pointer (not allocatable) so that when the children array
   !> is reallocated during growth, pointers to child nodes obtained via
   !> get_child/get_child_by_name remain valid.
-  type :: hsd_node_ptr
-    type(hsd_node), pointer :: node => null()
-  end type hsd_node_ptr
+  type :: hsd_node_ptr_t
+    type(hsd_node_t), pointer :: node => null()
+  end type hsd_node_ptr_t
 
   !> Unified HSD node type (table or value)
-  type :: hsd_node
+  type :: hsd_node_t
     !> Node name (tag name)
     character(len=:), allocatable :: name
     !> Optional attribute (e.g., unit)
@@ -79,7 +79,7 @@ module hsd_types
     !> Node type discriminator (NODE_TYPE_TABLE or NODE_TYPE_VALUE)
     integer :: node_type = 0
     !> Child nodes (table only)
-    type(hsd_node_ptr), allocatable :: children(:)
+    type(hsd_node_ptr_t), allocatable :: children(:)
     !> Number of children (table only)
     integer :: num_children = 0
     !> Type of value stored (value only)
@@ -121,12 +121,12 @@ module hsd_types
     procedure :: get_complex_matrix => value_get_complex_matrix
     ! Destroy
     procedure :: destroy => node_destroy
-  end type hsd_node
+  end type hsd_node_t
 
   !> Iterator for traversing table children
-  type :: hsd_iterator
+  type :: hsd_iterator_t
     !> Reference to the table being iterated
-    type(hsd_node), pointer :: table => null()
+    type(hsd_node_t), pointer :: table => null()
     !> Current position (0 = before first)
     integer :: pos = 0
   contains
@@ -134,7 +134,7 @@ module hsd_types
     procedure :: next => iterator_next
     procedure :: reset => iterator_reset
     procedure :: has_next => iterator_has_next
-  end type hsd_iterator
+  end type hsd_iterator_t
 
   ! =================================================================
   ! Submodule procedure interfaces
@@ -146,30 +146,30 @@ module hsd_types
 
     module subroutine table_add_child(self, child)
       implicit none (type, external)
-      class(hsd_node), intent(inout) :: self
-      type(hsd_node), intent(in) :: child
+      class(hsd_node_t), intent(inout) :: self
+      type(hsd_node_t), intent(in) :: child
     end subroutine table_add_child
 
     module subroutine table_get_child( &
         & self, index, child)
       implicit none (type, external)
-      class(hsd_node), intent(in), target :: self
+      class(hsd_node_t), intent(in), target :: self
       integer, intent(in) :: index
-      type(hsd_node), pointer, intent(out) :: child
+      type(hsd_node_t), pointer, intent(out) :: child
     end subroutine table_get_child
 
     module subroutine table_get_child_by_name( &
         & self, name, child)
       implicit none (type, external)
-      class(hsd_node), intent(in), target :: self
+      class(hsd_node_t), intent(in), target :: self
       character(len=*), intent(in) :: name
-      type(hsd_node), pointer, intent(out) :: child
+      type(hsd_node_t), pointer, intent(out) :: child
     end subroutine table_get_child_by_name
 
     module function table_has_child( &
         & self, name) result(has)
       implicit none (type, external)
-      class(hsd_node), intent(in) :: self
+      class(hsd_node_t), intent(in) :: self
       character(len=*), intent(in) :: name
       logical :: has
     end function table_has_child
@@ -177,20 +177,20 @@ module hsd_types
     pure module function table_num_children( &
         & self) result(n)
       implicit none (type, external)
-      class(hsd_node), intent(in) :: self
+      class(hsd_node_t), intent(in) :: self
       integer :: n
     end function table_num_children
 
     module subroutine table_get_keys(self, keys)
       implicit none (type, external)
-      class(hsd_node), intent(in) :: self
+      class(hsd_node_t), intent(in) :: self
       character(len=:), allocatable, intent(out) :: keys(:)
     end subroutine table_get_keys
 
     module subroutine table_remove_child( &
         & self, index, stat)
       implicit none (type, external)
-      class(hsd_node), intent(inout) :: self
+      class(hsd_node_t), intent(inout) :: self
       integer, intent(in) :: index
       integer, intent(out), optional :: stat
     end subroutine table_remove_child
@@ -198,41 +198,41 @@ module hsd_types
     module subroutine table_remove_child_by_name( &
         & self, name, stat)
       implicit none (type, external)
-      class(hsd_node), intent(inout) :: self
+      class(hsd_node_t), intent(inout) :: self
       character(len=*), intent(in) :: name
       integer, intent(out), optional :: stat
     end subroutine table_remove_child_by_name
 
     recursive module subroutine node_destroy(self)
       implicit none (type, external)
-      class(hsd_node), intent(inout) :: self
+      class(hsd_node_t), intent(inout) :: self
     end subroutine node_destroy
 
     ! --- Iterator operations (submodule hsd_table_ops) ---
 
     module subroutine iterator_init(self, table)
       implicit none (type, external)
-      class(hsd_iterator), intent(inout) :: self
-      type(hsd_node), target, intent(in) :: table
+      class(hsd_iterator_t), intent(inout) :: self
+      type(hsd_node_t), target, intent(in) :: table
     end subroutine iterator_init
 
     module function iterator_next(self, child) &
         & result(has_more)
       implicit none (type, external)
-      class(hsd_iterator), intent(inout) :: self
-      type(hsd_node), pointer, intent(out) :: child
+      class(hsd_iterator_t), intent(inout) :: self
+      type(hsd_node_t), pointer, intent(out) :: child
       logical :: has_more
     end function iterator_next
 
     module subroutine iterator_reset(self)
       implicit none (type, external)
-      class(hsd_iterator), intent(inout) :: self
+      class(hsd_iterator_t), intent(inout) :: self
     end subroutine iterator_reset
 
     module function iterator_has_next( &
         & self) result(has_more)
       implicit none (type, external)
-      class(hsd_iterator), intent(in) :: self
+      class(hsd_iterator_t), intent(in) :: self
       logical :: has_more
     end function iterator_has_next
 
@@ -240,37 +240,37 @@ module hsd_types
 
     module subroutine value_set_string(self, val)
       implicit none (type, external)
-      class(hsd_node), intent(inout) :: self
+      class(hsd_node_t), intent(inout) :: self
       character(len=*), intent(in) :: val
     end subroutine value_set_string
 
     module subroutine value_set_integer(self, val)
       implicit none (type, external)
-      class(hsd_node), intent(inout) :: self
+      class(hsd_node_t), intent(inout) :: self
       integer, intent(in) :: val
     end subroutine value_set_integer
 
     module subroutine value_set_real(self, val)
       implicit none (type, external)
-      class(hsd_node), intent(inout) :: self
+      class(hsd_node_t), intent(inout) :: self
       real(dp), intent(in) :: val
     end subroutine value_set_real
 
     module subroutine value_set_logical(self, val)
       implicit none (type, external)
-      class(hsd_node), intent(inout) :: self
+      class(hsd_node_t), intent(inout) :: self
       logical, intent(in) :: val
     end subroutine value_set_logical
 
     module subroutine value_set_complex(self, val)
       implicit none (type, external)
-      class(hsd_node), intent(inout) :: self
+      class(hsd_node_t), intent(inout) :: self
       complex(dp), intent(in) :: val
     end subroutine value_set_complex
 
     module subroutine value_set_raw(self, text)
       implicit none (type, external)
-      class(hsd_node), intent(inout) :: self
+      class(hsd_node_t), intent(inout) :: self
       character(len=*), intent(in) :: text
     end subroutine value_set_raw
 
@@ -279,7 +279,7 @@ module hsd_types
     module subroutine value_get_string( &
         & self, val, stat)
       implicit none (type, external)
-      class(hsd_node), intent(in) :: self
+      class(hsd_node_t), intent(in) :: self
       character(len=:), allocatable, intent(out) :: val
       integer, intent(out), optional :: stat
     end subroutine value_get_string
@@ -287,7 +287,7 @@ module hsd_types
     module subroutine value_get_integer( &
         & self, val, stat)
       implicit none (type, external)
-      class(hsd_node), intent(in) :: self
+      class(hsd_node_t), intent(in) :: self
       integer, intent(out) :: val
       integer, intent(out), optional :: stat
     end subroutine value_get_integer
@@ -295,7 +295,7 @@ module hsd_types
     module subroutine value_get_real( &
         & self, val, stat)
       implicit none (type, external)
-      class(hsd_node), intent(in) :: self
+      class(hsd_node_t), intent(in) :: self
       real(dp), intent(out) :: val
       integer, intent(out), optional :: stat
     end subroutine value_get_real
@@ -303,7 +303,7 @@ module hsd_types
     module subroutine value_get_logical( &
         & self, val, stat)
       implicit none (type, external)
-      class(hsd_node), intent(in) :: self
+      class(hsd_node_t), intent(in) :: self
       logical, intent(out) :: val
       integer, intent(out), optional :: stat
     end subroutine value_get_logical
@@ -311,7 +311,7 @@ module hsd_types
     module subroutine value_get_complex( &
         & self, val, stat)
       implicit none (type, external)
-      class(hsd_node), intent(in) :: self
+      class(hsd_node_t), intent(in) :: self
       complex(dp), intent(out) :: val
       integer, intent(out), optional :: stat
     end subroutine value_get_complex
@@ -321,7 +321,7 @@ module hsd_types
     module subroutine value_get_int_array( &
         & self, val, stat)
       implicit none (type, external)
-      class(hsd_node), intent(in) :: self
+      class(hsd_node_t), intent(in) :: self
       integer, allocatable, intent(out) :: val(:)
       integer, intent(out), optional :: stat
     end subroutine value_get_int_array
@@ -329,7 +329,7 @@ module hsd_types
     module subroutine value_get_real_array( &
         & self, val, stat)
       implicit none (type, external)
-      class(hsd_node), intent(in) :: self
+      class(hsd_node_t), intent(in) :: self
       real(dp), allocatable, intent(out) :: val(:)
       integer, intent(out), optional :: stat
     end subroutine value_get_real_array
@@ -337,7 +337,7 @@ module hsd_types
     module subroutine value_get_logical_array( &
         & self, val, stat)
       implicit none (type, external)
-      class(hsd_node), intent(in) :: self
+      class(hsd_node_t), intent(in) :: self
       logical, allocatable, intent(out) :: val(:)
       integer, intent(out), optional :: stat
     end subroutine value_get_logical_array
@@ -345,7 +345,7 @@ module hsd_types
     module subroutine value_get_string_array( &
         & self, val, stat)
       implicit none (type, external)
-      class(hsd_node), intent(in) :: self
+      class(hsd_node_t), intent(in) :: self
       character(len=:), allocatable, intent(out) :: val(:)
       integer, intent(out), optional :: stat
     end subroutine value_get_string_array
@@ -353,7 +353,7 @@ module hsd_types
     module subroutine value_get_complex_array( &
         & self, val, stat)
       implicit none (type, external)
-      class(hsd_node), intent(in) :: self
+      class(hsd_node_t), intent(in) :: self
       complex(dp), allocatable, intent(out) :: val(:)
       integer, intent(out), optional :: stat
     end subroutine value_get_complex_array
@@ -363,7 +363,7 @@ module hsd_types
     module subroutine value_get_int_matrix( &
         & self, val, nrows, ncols, stat)
       implicit none (type, external)
-      class(hsd_node), intent(in) :: self
+      class(hsd_node_t), intent(in) :: self
       integer, allocatable, intent(out) :: val(:,:)
       integer, intent(out) :: nrows, ncols
       integer, intent(out), optional :: stat
@@ -372,7 +372,7 @@ module hsd_types
     module subroutine value_get_real_matrix( &
         & self, val, nrows, ncols, stat)
       implicit none (type, external)
-      class(hsd_node), intent(in) :: self
+      class(hsd_node_t), intent(in) :: self
       real(dp), allocatable, intent(out) :: val(:,:)
       integer, intent(out) :: nrows, ncols
       integer, intent(out), optional :: stat
@@ -381,7 +381,7 @@ module hsd_types
     module subroutine value_get_complex_matrix( &
         & self, val, nrows, ncols, stat)
       implicit none (type, external)
-      class(hsd_node), intent(in) :: self
+      class(hsd_node_t), intent(in) :: self
       complex(dp), allocatable, intent(out) :: val(:,:)
       integer, intent(out) :: nrows, ncols
       integer, intent(out), optional :: stat
@@ -393,14 +393,14 @@ contains
 
   !> Check if node has an attribute
   pure function node_has_attrib(self) result(has)
-    class(hsd_node), intent(in) :: self
+    class(hsd_node_t), intent(in) :: self
     logical :: has
     has = allocated(self%attrib)
   end function node_has_attrib
 
   !> Get node attribute (empty string if not set)
   pure function node_get_attrib(self) result(attrib)
-    class(hsd_node), intent(in) :: self
+    class(hsd_node_t), intent(in) :: self
     character(len=:), allocatable :: attrib
     if (allocated(self%attrib)) then
       attrib = self%attrib
@@ -411,7 +411,7 @@ contains
 
   !> Create a new table node
   subroutine new_table(table, name, attrib, line)
-    type(hsd_node), intent(out) :: table
+    type(hsd_node_t), intent(out) :: table
     character(len=*), intent(in), optional :: name
     character(len=*), intent(in), optional :: attrib
     integer, intent(in), optional :: line
@@ -430,7 +430,7 @@ contains
 
   !> Create a new value node
   subroutine new_value(val, name, attrib, line)
-    type(hsd_node), intent(out) :: val
+    type(hsd_node_t), intent(out) :: val
     character(len=*), intent(in), optional :: name
     character(len=*), intent(in), optional :: attrib
     integer, intent(in), optional :: line

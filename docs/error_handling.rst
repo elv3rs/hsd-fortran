@@ -124,7 +124,7 @@ Handling Errors
 
 .. code-block:: fortran
 
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
 
     call hsd_load_file("config.hsd", root, error)
@@ -236,7 +236,7 @@ Initialize ``stat`` to ``HSD_STAT_OK`` at the start, then override only on error
 .. code-block:: fortran
 
     subroutine my_operation(table, path, result, stat)
-      type(hsd_node), intent(in) :: table
+      type(hsd_node_t), intent(in) :: table
       character(len=*), intent(in) :: path
       integer, intent(out) :: result
       integer, intent(out), optional :: stat
@@ -264,12 +264,12 @@ Explicitly set ``stat`` before every ``return`` and at the end:
 .. code-block:: fortran
 
     subroutine my_operation(table, path, result, stat)
-      type(hsd_node), intent(in) :: table
+      type(hsd_node_t), intent(in) :: table
       character(len=*), intent(in) :: path
       integer, intent(out) :: result
       integer, intent(out), optional :: stat
 
-      type(hsd_node), pointer :: child
+      type(hsd_node_t), pointer :: child
       integer :: local_stat
 
       call get_child(table, path, child, local_stat)

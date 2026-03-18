@@ -158,9 +158,9 @@ contains
 
   !> Get table children by simple name
   subroutine test_child_tables_simple()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
-    type(hsd_table_ptr), allocatable :: children(:)
+    type(hsd_table_ptr_t), allocatable :: children(:)
     integer :: stat
 
     call hsd_load_string( &
@@ -179,9 +179,9 @@ contains
 
   !> Get table children via nested path "Parent/Child"
   subroutine test_child_tables_nested_path()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
-    type(hsd_table_ptr), allocatable :: children(:)
+    type(hsd_table_ptr_t), allocatable :: children(:)
     integer :: stat
 
     call hsd_load_string( &
@@ -202,9 +202,9 @@ contains
 
   !> Empty path returns NOT_FOUND
   subroutine test_child_tables_empty_path()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
-    type(hsd_table_ptr), allocatable :: children(:)
+    type(hsd_table_ptr_t), allocatable :: children(:)
     integer :: stat
 
     call hsd_load_string("X { y = 1 }", root, error)
@@ -219,9 +219,9 @@ contains
 
   !> Path pointing at a value node returns TYPE_ERROR
   subroutine test_child_tables_value_parent()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
-    type(hsd_table_ptr), allocatable :: children(:)
+    type(hsd_table_ptr_t), allocatable :: children(:)
     integer :: stat
 
     call hsd_load_string( &
@@ -245,7 +245,7 @@ contains
 
   !> Basic amendment: +Outer merges into existing Outer
   subroutine test_amendment_basic()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     integer :: inner_val
     integer :: stat
@@ -266,7 +266,7 @@ contains
 
   !> Amendment target not found produces error
   subroutine test_amendment_missing_target()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
 
     call hsd_load_string("+Missing { x = 1 }", root, error)
@@ -282,7 +282,7 @@ contains
 
   !> hsd_get_or_set with logical — missing key uses default
   subroutine test_get_or_set_logical_missing()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     logical :: val
     integer :: stat
@@ -298,7 +298,7 @@ contains
 
   !> hsd_get_or_set with logical — existing key reads value
   subroutine test_get_or_set_logical_existing()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     logical :: val
     integer :: stat
@@ -315,7 +315,7 @@ contains
 
   !> hsd_get_or_set with complex(dp) — missing key uses default
   subroutine test_get_or_set_complex_dp_missing()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     complex(dp) :: val
     complex(dp) :: default_val
@@ -334,7 +334,7 @@ contains
 
   !> hsd_get_or_set with complex(dp) — existing key reads value
   subroutine test_get_or_set_complex_dp_existing()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     complex(dp) :: val
     complex(dp) :: default_val
@@ -358,7 +358,7 @@ contains
 
   !> Parse HSD, process some children, check warnings for unprocessed
   subroutine test_warn_unprocessed()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     character(len=MAX_WARNING_LEN), allocatable :: warnings(:)
     integer :: val, stat
@@ -384,9 +384,9 @@ contains
 
   !> hsd_node_context on a node with name + line
   subroutine test_node_context_with_line()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
-    type(hsd_node), pointer :: child_tbl
+    type(hsd_node_t), pointer :: child_tbl
     character(len=:), allocatable :: ctx
     integer :: stat
 
@@ -407,7 +407,7 @@ contains
 
   !> hsd_node_context on a node with name only (no line)
   subroutine test_node_context_name_only()
-    type(hsd_node) :: tbl
+    type(hsd_node_t) :: tbl
     character(len=:), allocatable :: ctx
 
     call new_table(tbl, name="TestNode", line=0)
@@ -422,7 +422,7 @@ contains
 
   !> hsd_format_error produces error prefix
   subroutine test_format_error_msg()
-    type(hsd_node) :: tbl
+    type(hsd_node_t) :: tbl
     character(len=:), allocatable :: formatted
 
     call new_table(tbl, name="BadNode", line=5)
@@ -436,7 +436,7 @@ contains
 
   !> hsd_format_warning produces warning prefix
   subroutine test_format_warning_msg()
-    type(hsd_node) :: tbl
+    type(hsd_node_t) :: tbl
     character(len=:), allocatable :: formatted
 
     call new_table(tbl, name="WarnNode", line=10)
@@ -454,7 +454,7 @@ contains
 
   !> Compare tables with integer values
   subroutine test_table_equal_integer_values()
-    type(hsd_node) :: a, b
+    type(hsd_node_t) :: a, b
     logical :: eq
 
     call new_table(a, name="root")
@@ -471,7 +471,7 @@ contains
 
   !> Compare tables with real values
   subroutine test_table_equal_real_values()
-    type(hsd_node) :: a, b
+    type(hsd_node_t) :: a, b
     logical :: eq
 
     call new_table(a, name="root")
@@ -488,7 +488,7 @@ contains
 
   !> Compare tables with logical values
   subroutine test_table_equal_logical_values()
-    type(hsd_node) :: a, b
+    type(hsd_node_t) :: a, b
     logical :: eq
 
     call new_table(a, name="root")
@@ -505,7 +505,7 @@ contains
 
   !> Compare tables with mismatched values
   subroutine test_table_equal_mismatched()
-    type(hsd_node) :: a, b
+    type(hsd_node_t) :: a, b
     logical :: eq
 
     call new_table(a, name="root")
@@ -526,7 +526,7 @@ contains
 
   !> Parse a matrix and get with column-major ordering (integer)
   subroutine test_matrix_column_major_int()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     integer, allocatable :: mat(:,:)
     integer :: nrows, ncols, stat
@@ -554,7 +554,7 @@ contains
 
   !> Parse a matrix and get with column-major ordering (real dp)
   subroutine test_matrix_column_major_real()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     real(dp), allocatable :: mat(:,:)
     integer :: nrows, ncols, stat
@@ -585,10 +585,10 @@ contains
 
   !> Get choice when only a value child exists (no table children)
   subroutine test_get_choice_value_child()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     character(len=:), allocatable :: choice_name
-    type(hsd_node), pointer :: choice_tbl
+    type(hsd_node_t), pointer :: choice_tbl
     integer :: stat
 
     ! "Driver { ConjugateGradient }" — table with only a text value child
@@ -611,7 +611,7 @@ contains
 
   !> Rename a child via path "Parent/OldChild" -> "NewChild"
   subroutine test_rename_child_with_path()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     integer :: stat, val
     logical :: found
@@ -644,7 +644,7 @@ contains
 
   !> Parse text that contains # comments and verify they are stripped
   subroutine test_strip_hsd_comments()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     integer :: val, stat
 
@@ -668,7 +668,7 @@ contains
 
   !> Get integer from a table node that has an inline #text value child
   subroutine test_get_int_from_table_inline()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     integer :: val, stat
 
@@ -689,7 +689,7 @@ contains
 
   !> Get real from a table that has inline text
   subroutine test_get_real_from_table_inline()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     real(dp) :: val
     integer :: stat
@@ -707,7 +707,7 @@ contains
 
   !> Get logical from a table that has inline text
   subroutine test_get_logical_from_table_inline()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     logical :: val
     integer :: stat
@@ -725,7 +725,7 @@ contains
 
   !> Get complex from a table that has inline text
   subroutine test_get_complex_from_table_inline()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     complex(dp) :: val
     integer :: stat
@@ -745,7 +745,7 @@ contains
 
   !> Get integer array from a table with inline text child
   subroutine test_get_int_array_from_table_inline()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     integer, allocatable :: val(:)
     integer :: stat
@@ -764,7 +764,7 @@ contains
 
   !> Get real array from table with inline text child
   subroutine test_get_real_array_from_table_inline()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     real(dp), allocatable :: val(:)
     integer :: stat
@@ -782,7 +782,7 @@ contains
 
   !> Get logical array from table with inline text child
   subroutine test_get_logical_array_from_table_inline()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     logical, allocatable :: val(:)
     integer :: stat
@@ -802,7 +802,7 @@ contains
 
   !> Get string array from table with inline text child
   subroutine test_get_string_array_from_table_inline()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     character(len=:), allocatable :: val(:)
     integer :: stat
@@ -820,7 +820,7 @@ contains
 
   !> Get complex array from table with inline text child
   subroutine test_get_complex_array_from_table_inline()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     complex(dp), allocatable :: val(:)
     integer :: stat
@@ -843,7 +843,7 @@ contains
 
   !> Get complex matrix from a direct value node
   subroutine test_complex_matrix_from_value()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     complex(dp), allocatable :: mat(:,:)
     integer :: nrows, ncols, stat
@@ -865,7 +865,7 @@ contains
 
   !> Get complex matrix with column-major order
   subroutine test_complex_matrix_column_major()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     complex(dp), allocatable :: mat(:,:)
     integer :: nrows, ncols, stat
@@ -892,10 +892,10 @@ contains
 
   !> get_or_set string with child output
   subroutine test_get_or_set_string_with_child()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     character(len=:), allocatable :: val
-    type(hsd_node), pointer :: child
+    type(hsd_node_t), pointer :: child
     integer :: stat
 
     call hsd_load_string("Other = 1", root, error)
@@ -909,10 +909,10 @@ contains
 
   !> get_or_set integer with child output
   subroutine test_get_or_set_integer_with_child()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     integer :: val, stat
-    type(hsd_node), pointer :: child
+    type(hsd_node_t), pointer :: child
 
     call hsd_load_string("Other = 1", root, error)
     call check(.not. allocated(error), msg="parse ok")
@@ -925,11 +925,11 @@ contains
 
   !> get_or_set real(dp) with child output
   subroutine test_get_or_set_real_dp_with_child()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     real(dp) :: val
     integer :: stat
-    type(hsd_node), pointer :: child
+    type(hsd_node_t), pointer :: child
 
     call hsd_load_string("Other = 1", root, error)
     call check(.not. allocated(error), msg="parse ok")
@@ -943,11 +943,11 @@ contains
 
   !> get_or_set logical with child output
   subroutine test_get_or_set_logical_with_child()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     logical :: val
     integer :: stat
-    type(hsd_node), pointer :: child
+    type(hsd_node_t), pointer :: child
 
     call hsd_load_string("Other = 1", root, error)
     call check(.not. allocated(error), msg="parse ok")
@@ -960,11 +960,11 @@ contains
 
   !> get_or_set complex with child output
   subroutine test_get_or_set_complex_with_child()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     complex(dp) :: val, def
     integer :: stat
-    type(hsd_node), pointer :: child
+    type(hsd_node_t), pointer :: child
 
     call hsd_load_string("Other = 1", root, error)
     call check(.not. allocated(error), msg="parse ok")
@@ -978,11 +978,11 @@ contains
 
   !> get_or_set integer array with child output
   subroutine test_get_or_set_int_array_with_child()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     integer, allocatable :: val(:)
     integer :: stat
-    type(hsd_node), pointer :: child
+    type(hsd_node_t), pointer :: child
 
     call hsd_load_string("Other = 1", root, error)
     call check(.not. allocated(error), msg="parse ok")
@@ -996,11 +996,11 @@ contains
 
   !> get_or_set real(dp) array with child output
   subroutine test_get_or_set_real_dp_array_child()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     real(dp), allocatable :: val(:)
     integer :: stat
-    type(hsd_node), pointer :: child
+    type(hsd_node_t), pointer :: child
 
     call hsd_load_string("Other = 1", root, error)
     call check(.not. allocated(error), msg="parse ok")
@@ -1014,11 +1014,11 @@ contains
 
   !> get_or_set logical array with child output
   subroutine test_get_or_set_logical_array_child()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     logical, allocatable :: val(:)
     integer :: stat
-    type(hsd_node), pointer :: child
+    type(hsd_node_t), pointer :: child
 
     call hsd_load_string("Other = 1", root, error)
     call check(.not. allocated(error), msg="parse ok")
@@ -1036,7 +1036,7 @@ contains
 
   !> Nested amendment: +Outer { +Inner { Key = newval } }
   subroutine test_nested_amendment()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     integer :: val, stat
 
@@ -1062,7 +1062,7 @@ contains
 
   !> Amendment target child is not a block (error)
   subroutine test_amendment_child_not_block()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
 
     ! Outer has a value child "Inner", not a table, so +Inner should fail
@@ -1082,7 +1082,7 @@ contains
 
   !> Parse values separated by semicolons
   subroutine test_semicolon_separated_values()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     integer :: val1, val2, stat
 
@@ -1099,7 +1099,7 @@ contains
 
   !> Parse quoted string values after equals
   subroutine test_value_after_equals_string()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     character(len=:), allocatable :: val
     integer :: stat
@@ -1120,7 +1120,7 @@ contains
 
   !> Format a table containing a complex value
   subroutine test_format_complex_value()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     character(len=:), allocatable :: output
 
     call new_table(root, name="root")
@@ -1132,7 +1132,7 @@ contains
 
   !> Format a string that requires escape sequences (backslash, tab, newline)
   subroutine test_format_string_with_escapes()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     character(len=:), allocatable :: output
 
     call new_table(root, name="root")
@@ -1147,7 +1147,7 @@ contains
 
   !> Format a table with attributes to string
   subroutine test_format_table_with_attrib_str()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     character(len=:), allocatable :: output
 
@@ -1164,7 +1164,7 @@ contains
 
   !> Format an empty table to string
   subroutine test_format_empty_table_str()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     character(len=:), allocatable :: output
 
     call new_table(root, name="root")
@@ -1176,7 +1176,7 @@ contains
 
   !> Format a multiline string value to string buffer
   subroutine test_format_multiline_value_str()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     character(len=:), allocatable :: output
 
     call new_table(root, name="root")
@@ -1188,7 +1188,7 @@ contains
 
   !> Format a named table with multiple children (falls through to block syntax)
   subroutine test_format_named_multi_child_str()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     character(len=:), allocatable :: output
 
@@ -1213,7 +1213,7 @@ contains
 
   !> hsd_validate_one_of on a table node (not a string value)
   subroutine test_validate_one_of_not_string()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error, val_error
 
     call hsd_load_string( &
@@ -1231,7 +1231,7 @@ contains
 
   !> hsd_get_array_with_unit when path not found
   subroutine test_get_array_with_unit_not_found()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     real(dp), allocatable :: val(:)
     integer :: stat
@@ -1248,7 +1248,7 @@ contains
 
   !> hsd_get_array_with_unit on a table node (type error)
   subroutine test_get_array_with_unit_type_err()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     real(dp), allocatable :: val(:)
     integer :: stat
@@ -1266,7 +1266,7 @@ contains
 
   !> hsd_get_matrix_with_unit when path not found
   subroutine test_get_matrix_with_unit_not_found()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     real(dp), allocatable :: val(:,:)
     integer :: nrows, ncols, stat
@@ -1284,7 +1284,7 @@ contains
 
   !> hsd_get_matrix_with_unit on a table node (type error)
   subroutine test_get_matrix_with_unit_type_err()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     real(dp), allocatable :: val(:,:)
     integer :: nrows, ncols, stat
@@ -1302,7 +1302,7 @@ contains
 
   !> hsd_format_error on a node with no context (empty name)
   subroutine test_format_err_no_context()
-    type(hsd_node) :: tbl
+    type(hsd_node_t) :: tbl
     character(len=:), allocatable :: formatted
 
     call new_table(tbl, line=0)
@@ -1313,7 +1313,7 @@ contains
 
   !> hsd_format_warning on a node with no context (empty name)
   subroutine test_format_warn_no_context()
-    type(hsd_node) :: tbl
+    type(hsd_node_t) :: tbl
     character(len=:), allocatable :: formatted
 
     call new_table(tbl, line=0)
@@ -1324,7 +1324,7 @@ contains
 
   !> hsd_warn_unprocessed with enough children to trigger buffer grow
   subroutine test_warn_unprocessed_many()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     character(len=MAX_WARNING_LEN), allocatable :: warnings(:)
     character(len=:), allocatable :: hsd_input
@@ -1357,7 +1357,7 @@ contains
 
   !> Merge tables that overwrite logical array values
   subroutine test_merge_logical_arrays()
-    type(hsd_node) :: base, overlay
+    type(hsd_node_t) :: base, overlay
     logical, allocatable :: val(:)
     integer :: stat
 
@@ -1380,7 +1380,7 @@ contains
 
   !> Merge tables that overwrite string array values
   subroutine test_merge_string_arrays()
-    type(hsd_node) :: base, overlay
+    type(hsd_node_t) :: base, overlay
     character(len=:), allocatable :: val(:)
     integer :: stat
 
@@ -1402,7 +1402,7 @@ contains
 
   !> Merge tables that overwrite complex array values
   subroutine test_merge_complex_arrays()
-    type(hsd_node) :: base, overlay
+    type(hsd_node_t) :: base, overlay
     complex(dp), allocatable :: val(:)
     integer :: stat
 
@@ -1424,7 +1424,7 @@ contains
 
   !> Merge tables that overwrite integer matrix values
   subroutine test_merge_int_matrices()
-    type(hsd_node) :: base, overlay
+    type(hsd_node_t) :: base, overlay
     type(hsd_error_t), allocatable :: error
     integer, allocatable :: mat(:,:)
     integer :: nrows, ncols, stat
@@ -1452,7 +1452,7 @@ contains
 
   !> Merge tables that overwrite real matrix values
   subroutine test_merge_real_matrices()
-    type(hsd_node) :: base, overlay
+    type(hsd_node_t) :: base, overlay
     type(hsd_error_t), allocatable :: error
     integer :: stat
 
@@ -1479,7 +1479,7 @@ contains
 
   !> hsd_get_name on a node with empty name returns default
   subroutine test_get_name_empty()
-    type(hsd_node) :: tbl
+    type(hsd_node_t) :: tbl
     character(len=:), allocatable :: name
 
     call new_table(tbl)
@@ -1490,7 +1490,7 @@ contains
 
   !> hsd_get_name on a node with explicit default
   subroutine test_get_name_with_default()
-    type(hsd_node) :: tbl
+    type(hsd_node_t) :: tbl
     character(len=:), allocatable :: name
 
     call new_table(tbl)
@@ -1501,7 +1501,7 @@ contains
 
   !> Table equality for complex values
   subroutine test_table_equal_complex()
-    type(hsd_node) :: a, b
+    type(hsd_node_t) :: a, b
     logical :: eq
 
     call new_table(a, name="root")
@@ -1518,7 +1518,7 @@ contains
 
   !> Table equality for string values
   subroutine test_table_equal_string_values()
-    type(hsd_node) :: a, b
+    type(hsd_node_t) :: a, b
     logical :: eq
 
     call new_table(a, name="root")
@@ -1542,7 +1542,7 @@ contains
 
   !> Table equality via raw text comparison
   subroutine test_table_equal_raw_text()
-    type(hsd_node) :: a, b
+    type(hsd_node_t) :: a, b
     type(hsd_error_t), allocatable :: error
     logical :: eq
 
@@ -1561,9 +1561,9 @@ contains
 
   !> hsd_get_children with empty path returns NOT_FOUND
   subroutine test_get_children_not_found()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
-    type(hsd_child_ptr), allocatable :: children(:)
+    type(hsd_child_ptr_t), allocatable :: children(:)
     integer :: stat
 
     call hsd_load_string("X = 1", root, error)
@@ -1578,9 +1578,9 @@ contains
 
   !> hsd_get_children through a value node (type error)
   subroutine test_get_children_type_error()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
-    type(hsd_child_ptr), allocatable :: children(:)
+    type(hsd_child_ptr_t), allocatable :: children(:)
     integer :: stat
 
     call hsd_load_string( &
@@ -1600,10 +1600,10 @@ contains
 
   !> hsd_get_choice when no children match returns NOT_FOUND
   subroutine test_get_choice_not_found()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     character(len=:), allocatable :: choice_name
-    type(hsd_node), pointer :: choice_tbl
+    type(hsd_node_t), pointer :: choice_tbl
     integer :: stat
 
     call hsd_load_string("Empty {}", root, error)
@@ -1622,7 +1622,7 @@ contains
 
   !> +Outer = +Inner { Key = newval } — amend Inner inside existing Outer
   subroutine test_amend_equals_child_amend()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     integer :: val, stat
 
@@ -1646,7 +1646,7 @@ contains
 
   !> +Outer = NewChild { Key = 5 } — add new child table inside existing Outer
   subroutine test_amend_equals_new_child()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     integer :: val, stat
 
@@ -1672,7 +1672,7 @@ contains
 
   !> +Missing = +Child { } — target table doesn't exist (error)
   subroutine test_amend_equals_target_missing()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
 
     call hsd_load_string( &
@@ -1686,7 +1686,7 @@ contains
 
   !> +Tag = +Child { } where Tag is a value, not a table (error)
   subroutine test_amend_equals_target_not_block()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
 
     call hsd_load_string( &
@@ -1700,7 +1700,7 @@ contains
 
   !> +Outer = +Missing { } where Inner child doesn't exist (error)
   subroutine test_amend_equals_child_missing()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
 
     call hsd_load_string( &
@@ -1720,7 +1720,7 @@ contains
 
   !> Text data in a block before a tag gets flushed as #text child
   subroutine test_text_buffer_before_tag()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     character(len=:), allocatable :: text_val
     integer :: val, stat
@@ -1742,7 +1742,7 @@ contains
 
   !> Multi-token value with trailing comment: Tag = val1 val2 # comment
   subroutine test_multi_value_with_comment()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     character(len=:), allocatable :: val
     integer :: stat
@@ -1767,7 +1767,7 @@ contains
 
   !> Clear all children from a table
   subroutine test_clear_children()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
 
     call hsd_load_string( &
@@ -1797,7 +1797,7 @@ contains
 
   !> Get integer from a table that has a #text inline value child
   subroutine test_get_int_inline_table()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     integer :: val, stat
 
@@ -1816,7 +1816,7 @@ contains
 
   !> Get real from a table that has a #text inline value child
   subroutine test_get_real_inline_table()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     real(dp) :: val
     integer :: stat
@@ -1834,7 +1834,7 @@ contains
 
   !> Get logical from a table that has a #text inline value child
   subroutine test_get_logical_inline_table()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     logical :: val
     integer :: stat
@@ -1854,7 +1854,7 @@ contains
 
   !> Get complex from a table that has a #text inline value child
   subroutine test_get_complex_inline_table()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     complex(dp) :: val
     integer :: stat
@@ -1872,7 +1872,7 @@ contains
 
   !> Get integer array from a table that has a #text inline value child
   subroutine test_get_int_arr_inline_table()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     integer, allocatable :: val(:)
     integer :: stat
@@ -1891,7 +1891,7 @@ contains
 
   !> Get real array from a table that has a #text inline value child
   subroutine test_get_real_arr_inline_table()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     real(dp), allocatable :: val(:)
     integer :: stat
@@ -1909,7 +1909,7 @@ contains
 
   !> Get logical array from a table that has a #text inline value child
   subroutine test_get_logical_arr_inline_tbl()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     logical, allocatable :: val(:)
     integer :: stat
@@ -1927,7 +1927,7 @@ contains
 
   !> Get string array from a table that has a #text inline value child
   subroutine test_get_string_arr_inline_tbl()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     character(len=:), allocatable :: val(:)
     integer :: stat
@@ -1945,7 +1945,7 @@ contains
 
   !> Get complex array from a table that has a #text inline value child
   subroutine test_get_complex_arr_inline_tbl()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     complex(dp), allocatable :: val(:)
     integer :: stat
@@ -1967,10 +1967,10 @@ contains
 
   !> hsd_get_or_set string when key exists, with child argument
   subroutine test_get_or_set_str_exist_child()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     character(len=:), allocatable :: val
-    type(hsd_node), pointer :: child_tbl
+    type(hsd_node_t), pointer :: child_tbl
     integer :: stat
 
     call hsd_load_string("Name = existing", root, error)
@@ -1985,10 +1985,10 @@ contains
 
   !> hsd_get_or_set integer when key exists, with child argument
   subroutine test_get_or_set_int_exist_child()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     integer :: val, stat
-    type(hsd_node), pointer :: child_tbl
+    type(hsd_node_t), pointer :: child_tbl
 
     call hsd_load_string("Count = 7", root, error)
     call check(.not. allocated(error), msg="parse ok")
@@ -2002,10 +2002,10 @@ contains
 
   !> hsd_get_or_set logical array when key exists, with child argument
   subroutine test_get_or_set_log_arr_ex_child()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     logical, allocatable :: val(:)
-    type(hsd_node), pointer :: child_tbl
+    type(hsd_node_t), pointer :: child_tbl
     integer :: stat
 
     call hsd_load_string("Flags = Yes No Yes", root, error)
@@ -2024,7 +2024,7 @@ contains
 
   !> Dump tree with multiline raw-text value to a file, triggering write_tag_value multiline path
   subroutine test_dump_to_file_multiline()
-    type(hsd_node) :: root, reloaded
+    type(hsd_node_t) :: root, reloaded
     type(hsd_error_t), allocatable :: error
     integer :: val, stat
     logical :: file_exists
@@ -2060,7 +2060,7 @@ contains
 
   !> Dump tree with complex value to a file
   subroutine test_dump_to_file_complex()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     character(len=:), allocatable :: output
     integer :: file_size
@@ -2086,7 +2086,7 @@ contains
 
   !> Complex matrix from a table with multiple unnamed value children
   subroutine test_complex_matrix_from_table()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     complex(dp), allocatable :: mat(:,:)
     integer :: nrows, ncols, stat
@@ -2109,7 +2109,7 @@ contains
 
   !> Complex matrix from an empty table returns empty
   subroutine test_complex_matrix_empty_table()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     complex(dp), allocatable :: mat(:,:)
     integer :: nrows, ncols, stat
@@ -2130,7 +2130,7 @@ contains
 
   !> Remove child when path does not exist
   subroutine test_remove_child_not_found()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     integer :: stat
 

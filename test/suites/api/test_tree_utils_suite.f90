@@ -38,7 +38,7 @@ contains
 
   !> Table with value children should return .true.
   subroutine test_has_value_children_yes()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
 
     call new_table(root, name="root")
     call hsd_set(root, "Key", 42)
@@ -51,7 +51,7 @@ contains
 
   !> Table with only table children should return .false.
   subroutine test_has_value_children_no()
-    type(hsd_node) :: root, sub
+    type(hsd_node_t) :: root, sub
 
     call new_table(root, name="root")
     call new_table(sub, name="Sub")
@@ -67,7 +67,7 @@ contains
 
   !> Empty table should return .false.
   subroutine test_has_value_children_empty()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
 
     call new_table(root, name="root")
 
@@ -82,8 +82,8 @@ contains
 
   !> Table with a single unnamed text child
   subroutine test_get_inline_text_single()
-    type(hsd_node) :: root
-    type(hsd_node) :: txt
+    type(hsd_node_t) :: root
+    type(hsd_node_t) :: txt
     character(len=:), allocatable :: text
     integer :: stat
 
@@ -103,8 +103,8 @@ contains
 
   !> Table with multiple unnamed text children should concatenate with spaces
   subroutine test_get_inline_text_multi()
-    type(hsd_node) :: root
-    type(hsd_node) :: t1, t2, t3
+    type(hsd_node_t) :: root
+    type(hsd_node_t) :: t1, t2, t3
     character(len=:), allocatable :: text
     integer :: stat
 
@@ -130,7 +130,7 @@ contains
 
   !> Table with no text children returns NOT_FOUND
   subroutine test_get_inline_text_none()
-    type(hsd_node) :: root, sub
+    type(hsd_node_t) :: root, sub
     character(len=:), allocatable :: text
     integer :: stat
 
@@ -151,7 +151,7 @@ contains
 
   !> Named table should return lowercased name
   subroutine test_get_name_table()
-    type(hsd_node) :: tbl
+    type(hsd_node_t) :: tbl
     character(len=:), allocatable :: name
 
     call new_table(tbl, name="MyTable")
@@ -166,7 +166,7 @@ contains
 
   !> Named value should return lowercased name
   subroutine test_get_name_value()
-    type(hsd_node) :: val
+    type(hsd_node_t) :: val
     character(len=:), allocatable :: name
 
     call new_value(val, name="SomeKey")
@@ -180,7 +180,7 @@ contains
 
   !> Unnamed node with no explicit default should return ""
   subroutine test_get_name_unnamed_default()
-    type(hsd_node) :: val
+    type(hsd_node_t) :: val
     character(len=:), allocatable :: name
 
     call new_value(val)
@@ -194,7 +194,7 @@ contains
 
   !> Unnamed node with explicit default should return that default
   subroutine test_get_name_unnamed_custom()
-    type(hsd_node) :: val
+    type(hsd_node_t) :: val
     character(len=:), allocatable :: name
 
     call new_value(val)

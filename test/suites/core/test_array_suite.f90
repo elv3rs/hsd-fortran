@@ -33,7 +33,7 @@ contains
 
   !> Test integer array parsing
   subroutine test_integer_array()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     integer, allocatable :: arr(:)
     integer :: stat
@@ -55,7 +55,7 @@ contains
 
   !> Test real array parsing
   subroutine test_real_array()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     real(dp), allocatable :: arr(:)
     integer :: stat
@@ -78,7 +78,7 @@ contains
 
   !> Test logical array parsing
   subroutine test_logical_array()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     logical, allocatable :: arr(:)
     integer :: stat
@@ -103,7 +103,7 @@ contains
 
   !> Test string array parsing with unquoted strings
   subroutine test_string_array()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     character(len=:), allocatable :: arr(:)
     integer :: stat
@@ -128,7 +128,7 @@ contains
 
   !> Test comma-separated values
   subroutine test_comma_separated()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     integer, allocatable :: arr(:)
     integer :: stat
@@ -149,7 +149,7 @@ contains
 
   !> Test mixed separators (spaces, commas)
   subroutine test_mixed_separators()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     real(dp), allocatable :: arr(:)
     integer :: stat
@@ -171,7 +171,7 @@ contains
   !> but the parser treats newlines as whitespace. For explicit matrices,
   !> users should specify dimensions separately or use a flat array.
   subroutine test_integer_matrix()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     integer, allocatable :: arr(:)
     integer, allocatable :: mat(:,:)
@@ -214,7 +214,7 @@ contains
 
   !> Test 2D real matrix parsing with explicit row format
   subroutine test_real_matrix()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     real(dp), allocatable :: arr(:)
     real(dp), allocatable :: mat(:,:)
@@ -257,7 +257,7 @@ contains
 
   !> Test empty array handling
   subroutine test_empty_array()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     integer, allocatable :: arr(:)
     integer :: stat
@@ -276,7 +276,7 @@ contains
 
   !> Test large array (more than old 1000 limit)
   subroutine test_large_array()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     integer, allocatable :: arr(:)
     integer :: stat, i

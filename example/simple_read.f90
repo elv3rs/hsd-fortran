@@ -12,7 +12,7 @@
 ! - Writing modified data
 program simple_read
   use hsd, only : &
-  & hsd_node, hsd_error_t, dp, HSD_STAT_OK, HSD_STAT_NOT_FOUND, &
+  & hsd_node_t, hsd_error_t, dp, HSD_STAT_OK, HSD_STAT_NOT_FOUND, &
   & hsd_load_file, hsd_load_string, hsd_dump, &
   & hsd_get, hsd_get_matrix, hsd_get_attrib, hsd_get_keys, &
   & hsd_set, &
@@ -22,7 +22,7 @@ program simple_read
   & hsd_merge, hsd_clone
   implicit none (type, external)
 
-  type(hsd_node) :: root, modified_root, merged_root
+  type(hsd_node_t) :: root, modified_root, merged_root
   type(hsd_error_t), allocatable :: error
   integer :: stat, max_steps, random_seed, nrows, ncols
   real(dp) :: temperature, tolerance, max_force
@@ -217,7 +217,7 @@ program simple_read
 
   ! Create an overlay config
   block
-    type(hsd_node) :: overlay
+    type(hsd_node_t) :: overlay
     character(len=:), allocatable :: overlay_text
 
     overlay_text = "Driver { MaxSteps = 1000 }" // char(10) // &

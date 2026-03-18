@@ -41,7 +41,7 @@ contains
 
   !> Test dumping nested tables
   subroutine test_dump_nested_tables()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     character(len=:), allocatable :: output
 
@@ -65,7 +65,7 @@ contains
 
   !> Test dumping mixed content (tables and values)
   subroutine test_dump_mixed_content()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     character(len=:), allocatable :: output
 
@@ -89,7 +89,7 @@ contains
 
   !> Test dumping arrays
   subroutine test_dump_arrays()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     character(len=:), allocatable :: output
 
@@ -111,7 +111,7 @@ contains
 
   !> Test dumping matrix
   subroutine test_dump_matrix()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     character(len=:), allocatable :: output
 
@@ -130,7 +130,7 @@ contains
 
   !> Test dumping with attributes
   subroutine test_dump_with_attributes()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     character(len=:), allocatable :: output
 
@@ -149,8 +149,8 @@ contains
 
   !> Test dumping strings with special characters
   subroutine test_dump_special_chars()
-    type(hsd_node) :: root
-    type(hsd_node) :: val
+    type(hsd_node_t) :: root
+    type(hsd_node_t) :: val
     character(len=:), allocatable :: output
 
     call new_table(root)
@@ -182,7 +182,7 @@ contains
 
   !> Test dumping deeply nested structure
   subroutine test_dump_deep_nesting()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     character(len=:), allocatable :: output
 
@@ -201,7 +201,7 @@ contains
 
   !> Test dumping empty table
   subroutine test_dump_empty_table()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     character(len=:), allocatable :: output
 
     call new_table(root)
@@ -217,7 +217,7 @@ contains
 
   !> Test dumping to file
   subroutine test_dump_to_file()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     character(len=512) :: filepath
 
@@ -242,7 +242,7 @@ contains
 
   !> Test dumping complex values
   subroutine test_dump_complex_values()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     character(len=:), allocatable :: output
 
@@ -261,8 +261,8 @@ contains
 
   !> Test dumping boolean values
   subroutine test_dump_boolean_values()
-    type(hsd_node) :: root
-    type(hsd_node) :: val
+    type(hsd_node_t) :: root
+    type(hsd_node_t) :: val
     character(len=:), allocatable :: output
 
     call new_table(root)
@@ -288,8 +288,8 @@ contains
 
   !> Test dumping values in exponential format
   subroutine test_dump_exponential_format()
-    type(hsd_node) :: root
-    type(hsd_node) :: val
+    type(hsd_node_t) :: root
+    type(hsd_node_t) :: val
     character(len=:), allocatable :: output
 
     call new_table(root)
@@ -346,7 +346,7 @@ contains
 
   !> Test roundtrip of complex document
   subroutine test_roundtrip_complex_document()
-    type(hsd_node) :: root1, root2
+    type(hsd_node_t) :: root1, root2
     type(hsd_error_t), allocatable :: error
     character(len=:), allocatable :: output
     integer :: val1, val2, stat
@@ -387,7 +387,7 @@ contains
 
   !> Test that order is preserved in output
   subroutine test_dump_preserved_order()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     character(len=:), allocatable :: output
     integer :: pos_a, pos_b, pos_c

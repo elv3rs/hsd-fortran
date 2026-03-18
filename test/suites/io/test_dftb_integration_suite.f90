@@ -55,7 +55,7 @@ contains
 
   !> Load the shared DFTB+ test input file
   subroutine load_dftb_input(root, error)
-    type(hsd_node), intent(out) :: root
+    type(hsd_node_t), intent(out) :: root
     type(hsd_error_t), allocatable, intent(out) :: error
 
     character(len=512) :: filepath
@@ -70,7 +70,7 @@ contains
 
   !> Verify the file parses without errors
   subroutine test_parse_full_input()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
 
     call load_dftb_input(root, error)
@@ -81,7 +81,7 @@ contains
 
   !> Verify all top-level sections exist
   subroutine test_top_level_sections()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
 
     call load_dftb_input(root, error)
@@ -99,7 +99,7 @@ contains
 
   !> Test named method block pattern: Hamiltonian = DFTB { ... }
   subroutine test_named_method_block()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
 
     call load_dftb_input(root, error)
@@ -134,7 +134,7 @@ contains
 
   !> Test empty block: Driver = {}
   subroutine test_empty_driver_block()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
 
     call load_dftb_input(root, error)
@@ -149,7 +149,7 @@ contains
 
   !> Test attribute/modifier extraction: Temperature [Kelvin] = 300.0
   subroutine test_unit_attributes()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     character(len=:), allocatable :: attrib
     real(dp) :: temperature
@@ -177,7 +177,7 @@ contains
 
   !> Test deep path navigation across multiple levels
   subroutine test_deep_path_navigation()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     character(len=:), allocatable :: str_val
     real(dp) :: real_val
@@ -207,7 +207,7 @@ contains
 
   !> Test that GenFormat raw data is accessible
   subroutine test_genformat_raw_data()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
 
     call load_dftb_input(root, error)
@@ -226,7 +226,7 @@ contains
 
   !> Test DFTB+-style boolean values (Yes/No)
   subroutine test_boolean_values()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     logical :: bool_val
     integer :: stat
@@ -264,7 +264,7 @@ contains
 
   !> Test DFTB+-style integer values
   subroutine test_integer_values()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     integer :: int_val, stat
 
@@ -291,7 +291,7 @@ contains
 
   !> Test DFTB+-style real values (including scientific notation)
   subroutine test_real_values()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     real(dp) :: real_val
     integer :: stat
@@ -319,7 +319,7 @@ contains
 
   !> Test string value extraction
   subroutine test_string_values()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     character(len=:), allocatable :: str_val
     integer :: stat
@@ -354,11 +354,11 @@ contains
 
   !> Test repeated sections (multiple Region blocks in ProjectStates)
   subroutine test_repeated_sections()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
-    type(hsd_iterator) :: iter
-    type(hsd_node), pointer :: child
-    type(hsd_node), pointer :: project_states
+    type(hsd_iterator_t) :: iter
+    type(hsd_node_t), pointer :: child
+    type(hsd_node_t), pointer :: project_states
     integer :: stat, region_count
 
     call load_dftb_input(root, error)
@@ -386,7 +386,7 @@ contains
   !> Note: when multiple children share the same name (like Region),
   !> path-based access returns the LAST one. Use iteration for all duplicates.
   subroutine test_nested_method_blocks()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     character(len=:), allocatable :: str_val
     integer :: stat
@@ -409,7 +409,7 @@ contains
 
   !> Test missing-value fallback with hsd_get and stat handling
   subroutine test_default_values()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     integer :: int_val, stat
     real(dp) :: real_val
@@ -444,7 +444,7 @@ contains
 
   !> Test round-trip: parse → dump → re-parse → compare
   subroutine test_round_trip()
-    type(hsd_node) :: root, reloaded
+    type(hsd_node_t) :: root, reloaded
     type(hsd_error_t), allocatable :: error, error2
     character(len=512) :: dump_path
     integer :: stat
@@ -489,8 +489,8 @@ contains
 
   !> Test building a DFTB+-like input programmatically
   subroutine test_programmatic_dftb_input()
-    type(hsd_node) :: root, ham, dftb, filling, fermi
-    type(hsd_node) :: reloaded
+    type(hsd_node_t) :: root, ham, dftb, filling, fermi
+    type(hsd_node_t) :: reloaded
     type(hsd_error_t), allocatable :: error
     character(len=512) :: dump_path
     real(dp) :: temp_val
@@ -534,7 +534,7 @@ contains
 
   !> Test parsing inline DFTB+ patterns with hsd_load_string
   subroutine test_parse_inline_dftb()
-    type(hsd_node) :: root
+    type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
     logical :: scc_val
     real(dp) :: real_val
