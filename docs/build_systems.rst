@@ -301,4 +301,4 @@ Summary
 - **FPM** provides a simpler alternative for quick builds
 - **Debug builds** include comprehensive runtime checks by default
 - **Sanitizers** can detect memory leaks and errors not caught by standard checks
-- Both build systems are tested and working with all 381 tests passing
+- Both build systems are tested and working with all 504 tests passing

@@ -108,6 +108,7 @@ cmake --install build --prefix /path/to/install
 | `HSD_BUILD_TESTS` | `ON` | Build test suite |
 | `HSD_BUILD_EXAMPLES` | `ON` | Build example programs |
 | `HSD_COVERAGE` | `OFF` | Enable code coverage (GCC only) |
+| `HSD_SANITIZERS` | `OFF` | Enable sanitizers for leak/memory detection |
 
 ## Examples
 

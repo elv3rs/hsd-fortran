@@ -164,22 +164,9 @@ Recommendations
 3. **Use thread-local iterators** when traversing shared trees
 4. **Avoid modifying shared trees** without external locks
 
-Future Considerations
----------------------
-
-Future versions may include:
-
-- Optional mutex protection for thread-safe modification
-- Thread-local storage for iterators
-- Atomic reference counting for shared trees
-
 Implementation Notes
 --------------------
 
-Why No Built-in Synchronization?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-1. **Performance**: Mutex overhead is significant for small operations
-2. **Flexibility**: Users can choose their synchronization strategy
-3. **Fortran compatibility**: Standard Fortran has limited synchronization primitives
-4. **Use case**: Most HSD use is configuration parsing (single-threaded)
+HSD-Fortran does not include built-in synchronization because the primary use case
+(configuration file parsing) is single-threaded, and mutex overhead would penalize
+the common case. Users requiring concurrent modification should provide their own locks.

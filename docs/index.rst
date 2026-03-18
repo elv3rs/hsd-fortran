@@ -29,7 +29,7 @@ Quick Start
      use hsd
      implicit none
      
-     type(hsd_table) :: root
+     type(hsd_node) :: root
      type(hsd_error_t), allocatable :: error
      integer :: max_steps, stat
      real(dp) :: temperature

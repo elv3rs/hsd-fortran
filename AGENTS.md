@@ -20,7 +20,7 @@ HSD-Fortran is a Human-friendly Structured Data parser for Fortran, designed as 
 ## Quick Reference
 
 > **Intel ifx support:** The project is tested with both `gfortran` and Intel `ifx`.
-> Use `FC=ifx cmake ...` to build with ifx. All 590 tests pass with both compilers.
+> Use `FC=ifx cmake ...` to build with ifx. All 504 tests pass with both compilers.
 
 ```bash
 # Build (gfortran, default)
@@ -62,7 +62,7 @@ All source code **must** pass `fortitude check` with zero warnings before being 
 consistent style and catches common mistakes.
 
 ```bash
-# Check all source files and output erros, whilst fixing simple stuff like indentation
+# Check all source files and output errors, whilst fixing simple stuff like indentation
 fortitude check --fix
 ```
 
@@ -80,7 +80,9 @@ hsd-fortran/
 │   ├── hsd_value_ops.f90      # Submodule: value ops & parse helpers
 │   ├── api/                    # High-level API modules
 │   │   ├── hsd_api.f90         # Unified API (accessors, mutators, query)
-│   │   ├── hsd_validation.f90  # hsd_require, hsd_validate_range
+│   │   └── hsd_validation.f90  # hsd_require, hsd_validate_range
+│   ├── compat/                 # DFTB+ compatibility layer
+│   │   └── hsd_compat.f90      # Legacy API wrappers
 │   ├── core/                   # Core infrastructure
 │   │   ├── hsd_constants.f90   # dp precision constant (iso_fortran_env)
 │   │   ├── hsd_error.f90       # Error types, status codes
@@ -98,6 +100,7 @@ hsd-fortran/
 │   │   ├── api/                # API tests
 │   │   ├── core/               # Core module tests
 │   │   ├── io/                 # Lexer, parser, formatter tests
+│   │   ├── compat/             # Compatibility layer tests
 │   │   └── coverage/           # Additional coverage tests
 │   └── inputs/                 # Test data files
 ├── example/                    # Usage examples
@@ -108,7 +111,6 @@ hsd-fortran/
 │   ├── conf.py                 # Sphinx configuration
 │   ├── index.rst               # Main documentation page
 │   └── *.rst, *.md             # Documentation files
-├── external/fortuno/           # Test framework (git submodule)
 └── cmake/                      # CMake config templates
 ```
 
@@ -125,6 +127,7 @@ Tests are organized into categories under `test/suites/`:
 | `api/` | High-level API tests (accessors, validation) |
 | `core/` | Array parsing, error paths, edge cases |
 | `io/` | Lexer, parser, formatter tests |
+| `compat/` | DFTB+ compatibility layer tests |
 | `coverage/` | Additional tests for code coverage |
 
 ### Writing Tests
@@ -197,6 +200,12 @@ This ensures tests work regardless of where CTest runs from.
 | `hsd_api` | Unified API (accessors, mutators, query) |
 | `hsd_validation` | Value validation helpers |
 
+### Compatibility Layer (`src/compat/`)
+
+| Module | Purpose |
+|--------|---------|
+| `hsd_compat` | DFTB+ legacy API wrappers |
+
 ### Generic Tree Utilities (in `hsd_api`)
 
 These functions were upstreamed from DFTB+ and are part of the public API:
@@ -242,13 +251,14 @@ These functions were upstreamed from DFTB+ and are part of the public API:
 | `HSD_BUILD_TESTS` | `ON` | Build test suite |
 | `HSD_BUILD_EXAMPLES` | `ON` | Build examples |
 | `HSD_COVERAGE` | `OFF` | Enable code coverage (GCC only) |
+| `HSD_SANITIZERS` | `OFF` | Enable sanitizers for leak/memory detection |
 
 ## Documentation
 
 The project uses Sphinx for user-facing documentation and guides:
 
 - Configuration: `docs/conf.py`
-- Output: `public//index.html`
+- Output: `public/index.html`
 
 ## Error Codes
 
