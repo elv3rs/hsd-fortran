@@ -24,6 +24,5 @@ Structure
 - ``hsd_format.rst`` — HSD format specification
 - ``api.rst`` — API reference
 - ``error_handling.rst`` — Error handling guide
-- ``thread_safety.rst`` — Thread safety information
 - ``tree_storage.rst`` — Internal tree storage details
 - ``conf.py`` — Sphinx configuration

@@ -18,7 +18,6 @@ Features
 - **Path-based accessors** for convenient data retrieval (e.g., ``"section/subsection/value"``)
 - **Type introspection** to query node types before access
 - **Tree operations** including merge, clone, and recursive traversal
-- **Thread-safe** read access to parsed trees
 
 Quick Start
 -----------
@@ -77,7 +76,6 @@ Contents
    user_guide
    hsd_format
    error_handling
-   thread_safety
    tree_storage
 
 .. toctree::

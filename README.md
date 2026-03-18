@@ -20,247 +20,51 @@ A lightweight, dependency-free HSD (Human-friendly Structured Data) parser for F
 
 ## Overview
 
-HSD is a data format similar to JSON and YAML, but designed to minimize the effort for humans to read and write it. It was originally developed as the input format for [DFTB+](https://github.com/dftbplus/dftbplus).
-
-This library provides:
-
-- **Parsing** HSD files into a tree structure with full error reporting
-- **Serialization** of data structures back to HSD format
-- **Include support** with cycle detection (`<<+` for HSD, `<<<` for text)
-- **Path-based accessors** for convenient data retrieval (`"section/subsection/value"`)
-- **Type introspection** to query node types before access
-- **Tree operations** including merge, clone, and recursive traversal
+HSD is a human-friendly data format similar to JSON/YAML, originally developed as the input format for [DFTB+](https://github.com/dftbplus/dftbplus). This library parses HSD into a tree, provides path-based accessors, and serializes back to HSD.
 
 ## Quick Example
 
 ```fortran
-program example
-  use hsd
-  implicit none
-  
-  type(hsd_node) :: root
-  type(hsd_error_t), allocatable :: error
-  integer :: max_steps, stat
-  real(dp) :: temperature
-  
-  ! Load HSD file
-  call hsd_load_file("input.hsd", root, error)
-  if (allocated(error)) then
-    call error%print()
-    stop 1
-  end if
-  
-  ! Access values with path navigation
-  call hsd_get(root, "Driver/MaxSteps", max_steps, stat)
-  call hsd_get(root, "Hamiltonian/DFTB/Filling/Fermi/Temperature", temperature, stat)
-  
-  ! Use defaults for optional values
-  call hsd_get(root, "Driver/Timeout", max_steps, stat=stat)
-  if (stat == HSD_STAT_NOT_FOUND) max_steps = 3600
-  
-  ! Type introspection
-  if (hsd_is_table(root, "Hamiltonian/DFTB")) then
-    print *, "Child count:", hsd_child_count(root, "Hamiltonian/DFTB")
-  end if
-  
-  ! Modify and save
-  call hsd_set(root, "Driver/MaxSteps", 200)
-  call hsd_dump(root, "output.hsd")
-  
-end program example
-```
+use hsd
+type(hsd_node) :: root
+type(hsd_error_t), allocatable :: error
+integer :: max_steps
 
-Example input file:
+call hsd_load_file("input.hsd", root, error)
+if (allocated(error)) stop 1
+
+call hsd_get(root, "Driver/MaxSteps", max_steps)
+call hsd_set(root, "Driver/MaxSteps", 200)
+call hsd_dump(root, "output.hsd")
+```
 
 ```hsd
 Driver = ConjugateGradient {
   MaxSteps = 100
-}
-
-Hamiltonian = DFTB {
   SCC = Yes
-  Filling = Fermi {
-    Temperature [Kelvin] = 300.0
-  }
+  Temperature [Kelvin] = 300.0
 }
 ```
 
 ## Installation
 
-### Requirements
-
-- Fortran 2008 compatible compiler (gfortran ≥ 7, ifort ≥ 18, ifx)
-- CMake ≥ 3.14
-
-### Build with CMake
+Requires a Fortran 2008 compiler (gfortran ≥ 7, ifort ≥ 18, ifx) and CMake ≥ 3.14.
 
 ```bash
-cmake -B build
-cmake --build build
-ctest --test-dir build  # Run tests
+cmake -B build && cmake --build build
+ctest --test-dir build
 cmake --install build --prefix /path/to/install
 ```
 
-### CMake Options
-
-| Option | Default | Description |
-|--------|---------|-------------|
-| `HSD_BUILD_TESTS` | `ON` | Build test suite |
-| `HSD_BUILD_EXAMPLES` | `ON` | Build example programs |
-| `HSD_COVERAGE` | `OFF` | Enable code coverage (GCC only) |
-| `HSD_SANITIZERS` | `OFF` | Enable sanitizers for leak/memory detection |
-
-## Examples
-
-The `example/` directory contains demonstration programs showcasing various features:
-
-- **`matrix_demo.f90`**: Handling arrays and matrices, including reading from various HSD array formats.
-- **`simple_read.f90`**: Basic feature showcase including file loading, value access, and output.
-
-Build and run examples:
-```bash
-cmake -B build -S .
-cmake --build build
-# Run simple_read example
-(cd example && ../build/example/simple_read)
-```
-
-### Build with fpm
+Also available via [fpm](https://fpm.fortran-lang.org/):
 
 ```bash
-fpm build
-fpm test
-fpm run --example simple_read
+fpm build && fpm test
 ```
-
-## API Overview
-
-### I/O Operations
-
-| Procedure | Description |
-|-----------|-------------|
-| `hsd_load_file(file, root, error)` | Parse HSD file into tree |
-| `hsd_load_string(str, root, error)` | Parse HSD string |
-| `hsd_dump(root, file)` | Write tree to file |
-| `hsd_dump_to_string(root, str)` | Serialize tree to string |
-
-### Data Accessors
-
-| Procedure | Description |
-|-----------|-------------|
-| `hsd_get(root, path, value, stat)` | Get value at path |
-| `hsd_get_matrix(root, path, matrix, stat)` | Get 2D array |
-| `hsd_get_inline_text(root, text, stat)` | Get concatenated inline text values |
-
-### Query Operations
-
-| Procedure | Description |
-|-----------|-------------|
-| `hsd_has_child(root, path)` | Check if path exists |
-| `hsd_is_table(root, path)` | Check if node is a table |
-| `hsd_is_value(root, path)` | Check if node is a leaf value |
-| `hsd_child_count(root, path)` | Count children in table |
-| `hsd_get_keys(root, path, keys)` | Get child key names |
-| `hsd_get_attrib(root, path, attrib)` | Get attribute (e.g., unit) |
-| `hsd_has_value_children(root, path)` | Check if table has value children |
-| `hsd_get_name(node, name, default)` | Get lowercased node name |
-
-### Mutation and Tree Operations
-
-| Procedure | Description |
-|-----------|-------------|
-| `hsd_set(root, path, value)` | Set value at path |
-| `hsd_remove_child(root, path)` | Remove child node |
-| `hsd_merge(target, source)` | Merge two trees |
-| `hsd_clone(source, dest)` | Deep copy a tree |
-
-### Validation
-
-| Procedure | Description |
-|-----------|-------------|
-| `hsd_require(root, path, value, error)` | Get required value or error |
-| `hsd_validate_range(value, min, max, error)` | Validate numeric range |
-| `hsd_validate_one_of(value, options, error)` | Validate against allowed values |
-
-## HSD Format Reference
-
-### Basic Syntax
-
-```hsd
-# Comments start with #
-TagName {
-  ChildTag = value
-  WithUnit [eV/Angstrom] = 0.001
-}
-
-# Short form (assigns type to parent)
-TagName = TypeName {
-  ...
-}
-```
-
-### Data Types
-
-| Type | Examples |
-|------|----------|
-| Strings | `name = hello`, `name = "hello world"` |
-| Integers | `count = 42` |
-| Reals | `value = 3.14`, `value = 1.0e-5` |
-| Booleans | `enabled = Yes`, `enabled = No`, `enabled = On/Off` |
-| Arrays | `values = 1 2 3 4 5`, `values = 1, 2, 3` |
-
-### Matrix Data (Multi-line)
-
-```hsd
-KPoints {
-  4 0 0
-  0 4 0
-  0 0 4
-}
-```
-
-### File Includes
-
-```hsd
-# Include and parse another HSD file
-<<+ "other.hsd"
-
-# Include raw text content
-Data {
-  <<< "datafile.dat"
-}
-```
-
-Circular includes are automatically detected and reported as errors.
-
-## Error Handling
-
-All parsing and access operations can return detailed errors:
-
-```fortran
-type(hsd_error_t), allocatable :: error
-
-call hsd_load_file("config.hsd", root, error)
-if (allocated(error)) then
-  call error%print()  ! Prints formatted error with location
-  ! Access details: error%code, error%message, error%line_start, error%hint
-end if
-```
-
-Error codes include: `HSD_STAT_OK`, `HSD_STAT_SYNTAX_ERROR`, `HSD_STAT_TYPE_ERROR`, `HSD_STAT_NOT_FOUND`, `HSD_STAT_FILE_NOT_FOUND`, and more.
 
 ## Documentation
 
-Full documentation is available at [https://elv3rs.github.io/hsd-fortran](https://elv3rs.github.io/hsd-fortran):
-
-- [User Guide](docs/user_guide.rst) — Tutorials and examples
-- [HSD Format](docs/hsd_format.rst) — Format specification
-- [Error Handling](docs/error_handling.rst) — Error types and handling
-- [Thread Safety](docs/thread_safety.rst) — Concurrency guidelines
-
-### Building Documentation Locally
-
-Build the Sphinx documentation:
+Full docs at **[https://elv3rs.github.io/hsd-fortran](https://elv3rs.github.io/hsd-fortran)** — API reference, format spec, error handling, and examples.
 
 ```bash
 pip install -r docs/requirements.txt
