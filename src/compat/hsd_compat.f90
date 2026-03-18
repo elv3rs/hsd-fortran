@@ -27,6 +27,7 @@ module hsd_compat
       & hsd_has_value_children, hsd_get_name, hsd_clear_children
   use hsd_validation, only: hsd_node_context, hsd_format_error, &
       & hsd_format_warning, hsd_warn_unprocessed, MAX_WARNING_LEN
+  use hsd_utils, only: to_lower
   use hsd_parser, only: hsd_load_file, hsd_load_string
   use hsd_formatter, only: hsd_dump, hsd_dump_to_string
   use, intrinsic :: iso_fortran_env, only: error_unit
@@ -107,11 +108,20 @@ module hsd_compat
   public :: parseHSD
   public :: dumpHSD
   public :: destroyNode
+  public :: getNodeName2
+  public :: setNodeName
+  public :: splitModifier
+  public :: getDescendant
+  public :: renameChildren
+  public :: localiseName
 
   ! DOM compat for programmatic tree building (mmapi.F90)
   public :: createElement
   public :: appendChild
   public :: createDocumentNode
+
+  !> Separator for comma-delimited modifiers
+  character, parameter :: sepModifier = ","
 
 contains
 
@@ -1019,5 +1029,209 @@ contains
     end do
 
   end subroutine move_children_
+
+  ! ================================================================
+  ! getNodeName2 — safe node name retrieval
+  ! ================================================================
+
+  !> Returns the name of a node, or empty string for unassociated nodes.
+  subroutine getNodeName2(node, nodeName)
+    type(hsd_node), pointer, intent(in) :: node
+    type(string), intent(inout) :: nodeName
+
+    if (.not. associated(node)) then
+      nodeName = ""
+    else
+      call hsd_get_name(node, nodeName%str)
+    end if
+
+  end subroutine getNodeName2
+
+  ! ================================================================
+  ! setNodeName — rename a node
+  ! ================================================================
+
+  !> Changes the name of a given node.
+  !>
+  !> The name is lowercased for internal storage (canonical form).
+  !> If updateHsdName is .true. (default), the attrib field storing
+  !> the original HSD-name is also updated.
+  subroutine setNodeName(node, name, updateHsdName)
+    type(hsd_node), intent(inout), target :: node
+    character(len=*), intent(in) :: name
+    logical, optional, intent(in) :: updateHsdName
+
+    logical :: updateHsdName_
+
+    updateHsdName_ = .true.
+    if (present(updateHsdName)) updateHsdName_ = updateHsdName
+
+    node%name = to_lower(name)
+    if (updateHsdName_) then
+      node%attrib = name
+    end if
+
+  end subroutine setNodeName
+
+  ! ================================================================
+  ! splitModifier — split comma-separated modifiers
+  ! ================================================================
+
+  !> Splits a modifier containing comma-separated list of modifiers into
+  !> components.
+  !>
+  !> If the number of modifiers found differs from the size of the modifiers
+  !> array, the program stops with detailedError.
+  subroutine splitModifier(modifier, child, modifiers)
+    character(len=*), intent(in) :: modifier
+    type(hsd_node), intent(in) :: child
+    type(string), intent(inout) :: modifiers(:)
+
+    integer :: nModif, ii, iStart, iEnd
+    character(len=20) :: buf
+
+    nModif = size(modifiers)
+    iStart = 1
+    do ii = 1, nModif - 1
+      iEnd = index(modifier(iStart:), sepModifier)
+      if (iEnd == 0) then
+        write(buf, '(I0)') ii
+        call detailedError(child, "Invalid number of specified modifiers (" &
+            & // trim(buf) // " instead of " // trim(adjustl(i2c_(nModif))) &
+            & // ").")
+      end if
+      iEnd = iStart + iEnd - 1
+      modifiers(ii) = trim(adjustl(modifier(iStart:iEnd - 1)))
+      iStart = iEnd + 1
+    end do
+    if (index(modifier(iStart:), sepModifier) /= 0) then
+      call detailedError(child, "Invalid number of specified modifiers (" &
+          & // "more than " // trim(adjustl(i2c_(nModif))) // ").")
+    end if
+    modifiers(nModif) = trim(adjustl(modifier(iStart:)))
+
+  end subroutine splitModifier
+
+  ! ================================================================
+  ! getDescendant — tree traversal by path
+  ! ================================================================
+
+  !> Returns a descendant of a given node following a "/"-separated path.
+  !>
+  !> Example: getDescendant(root, "Hamiltonian/DFTB/MaxAngularMomentum", child)
+  subroutine getDescendant(root, path, child, requested, processed, parent)
+    type(hsd_node), intent(inout), target :: root
+    character(len=*), intent(in) :: path
+    type(hsd_node), pointer, intent(out) :: child
+    logical, intent(in), optional :: requested
+    logical, intent(in), optional :: processed
+    type(hsd_node), pointer, intent(out), optional :: parent
+
+    character(len=*), parameter :: pathSep = "/"
+
+    logical :: tRequested, tUnprocessed
+    type(hsd_node), pointer :: par
+    integer :: iStart, iPos, stat
+
+    tRequested = .false.
+    if (present(requested)) tRequested = requested
+    tUnprocessed = .true.
+    if (present(processed)) tUnprocessed = .not. processed
+
+    iStart = 1
+    par => null()
+    child => root
+    iPos = index(path, pathSep)
+    do while (iPos /= 0 .and. associated(child))
+      par => child
+      call hsd_get_child(par, path(iStart:iStart + iPos - 2), child, stat)
+      if (stat /= HSD_STAT_OK) then
+        child => null()
+      end if
+      if (.not. associated(child)) then
+        if (tRequested) then
+          call detailedError(par, &
+              & "Missing required block: '" &
+              & // path(iStart:iStart + iPos - 2) // "'")
+        end if
+        exit
+      end if
+      if (tUnprocessed) child%processed = .false.
+      iStart = iStart + iPos
+      iPos = index(path(iStart:), pathSep)
+    end do
+    if (associated(child)) then
+      par => child
+      call hsd_get_child(par, path(iStart:), child, stat)
+      if (stat /= HSD_STAT_OK) then
+        child => null()
+      end if
+      if (.not. associated(child)) then
+        if (tRequested) then
+          call detailedError(par, &
+              & "Missing required block: '" // path(iStart:) // "'")
+        end if
+      else
+        if (tUnprocessed) child%processed = .false.
+      end if
+    end if
+
+    if (present(parent)) parent => par
+
+  end subroutine getDescendant
+
+  ! ================================================================
+  ! renameChildren — rename all children matching a name
+  ! ================================================================
+
+  !> Renames all children of node with oldName to newName.
+  !>
+  !> If updateHsdNames is .true. (default), the attrib storing the original
+  !> HSD-name is also updated. If .false., the original name is preserved
+  !> (useful for error messages showing the original user input).
+  subroutine renameChildren(node, oldName, newName, updateHsdNames)
+    type(hsd_node), intent(inout), target :: node
+    character(*), intent(in) :: oldName
+    character(*), intent(in) :: newName
+    logical, optional, intent(in) :: updateHsdNames
+
+    type(hsd_child_ptr), allocatable :: children(:)
+    integer :: iChild
+
+    call hsd_get_children(node, oldName, children)
+    do iChild = 1, size(children)
+      call setNodeName(children(iChild)%ptr, newName, updateHsdNames)
+    end do
+
+  end subroutine renameChildren
+
+  ! ================================================================
+  ! localiseName — alias for renameChildren (spelling localisation)
+  ! ================================================================
+
+  !> Renames children from localName to anglicisedName without updating
+  !> the original HSD-name attribute (preserves user's original spelling).
+  subroutine localiseName(node, localName, anglicisedName)
+    type(hsd_node), intent(inout), target :: node
+    character(*), intent(in) :: localName
+    character(*), intent(in) :: anglicisedName
+
+    call renameChildren(node, localName, anglicisedName, &
+        & updateHsdNames=.false.)
+
+  end subroutine localiseName
+
+  ! ================================================================
+  ! Internal: integer to character
+  ! ================================================================
+
+  !> Convert integer to character string
+  pure function i2c_(ii) result(res)
+    integer, intent(in) :: ii
+    character(len=20) :: res
+
+    write(res, '(I0)') ii
+
+  end function i2c_
 
 end module hsd_compat

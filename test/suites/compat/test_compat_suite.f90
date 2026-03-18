@@ -47,7 +47,27 @@ contains
             test("getChildValue_array", &
                 & test_get_child_value_array), &
             test("setChildValue_string", &
-                & test_set_child_value_string) &
+                & test_set_child_value_string), &
+            test("getNodeName2_associated", &
+                & test_get_node_name2_associated), &
+            test("getNodeName2_null", &
+                & test_get_node_name2_null), &
+            test("setNodeName_basic", &
+                & test_set_node_name_basic), &
+            test("setNodeName_no_update", &
+                & test_set_node_name_no_update), &
+            test("splitModifier_basic", &
+                & test_split_modifier_basic), &
+            test("getDescendant_basic", &
+                & test_get_descendant_basic), &
+            test("getDescendant_missing", &
+                & test_get_descendant_missing), &
+            test("getDescendant_parent", &
+                & test_get_descendant_parent), &
+            test("renameChildren_basic", &
+                & test_rename_children_basic), &
+            test("localiseName_basic", &
+                & test_localise_name_basic) &
         ]))&
     ])
   end function tests
@@ -341,5 +361,167 @@ contains
     call check(abs(val(3) - 3.0_dp) < 1.0e-10_dp, &
         & msg="array value 3")
   end subroutine test_get_child_value_array
+
+  ! --- getNodeName2 tests ---
+
+  subroutine test_get_node_name2_associated()
+    type(hsd_node), target :: root
+    type(hsd_node), pointer :: ptr
+    type(hsd_error_t), allocatable :: error
+    type(hsd_node), pointer :: child
+    type(string) :: nodeName
+
+    call hsd_load_string('Driver { }', root, error)
+    call check(.not. allocated(error), msg="parse ok")
+
+    call getChild(root, "Driver", child)
+    ptr => child
+    call getNodeName2(ptr, nodeName)
+    call check(char(nodeName) == "driver", &
+        & msg="associated node returns name")
+  end subroutine test_get_node_name2_associated
+
+  subroutine test_get_node_name2_null()
+    type(hsd_node), pointer :: ptr
+    type(string) :: nodeName
+
+    ptr => null()
+    call getNodeName2(ptr, nodeName)
+    call check(char(nodeName) == "", &
+        & msg="null node returns empty string")
+  end subroutine test_get_node_name2_null
+
+  ! --- setNodeName tests ---
+
+  subroutine test_set_node_name_basic()
+    type(hsd_node) :: root
+    type(hsd_error_t), allocatable :: error
+    type(hsd_node), pointer :: child
+
+    call hsd_load_string('OldName { }', root, error)
+    call check(.not. allocated(error), msg="parse ok")
+
+    call getChild(root, "OldName", child)
+    call setNodeName(child, "NewName")
+    call check(child%name == "newname", &
+        & msg="name lowercased")
+    call check(child%attrib == "NewName", &
+        & msg="attrib updated with original case")
+  end subroutine test_set_node_name_basic
+
+  subroutine test_set_node_name_no_update()
+    type(hsd_node) :: root
+    type(hsd_error_t), allocatable :: error
+    type(hsd_node), pointer :: child
+
+    call hsd_load_string('OldName { }', root, error)
+    call check(.not. allocated(error), msg="parse ok")
+
+    call getChild(root, "OldName", child)
+    ! Clear attrib to test no-update path
+    child%attrib = "OriginalHSD"
+    call setNodeName(child, "NewName", updateHsdName=.false.)
+    call check(child%name == "newname", &
+        & msg="name changed")
+    call check(child%attrib == "OriginalHSD", &
+        & msg="attrib not updated when updateHsdName=.false.")
+  end subroutine test_set_node_name_no_update
+
+  ! --- splitModifier tests ---
+
+  subroutine test_split_modifier_basic()
+    type(hsd_node) :: root
+    type(hsd_error_t), allocatable :: error
+    type(hsd_node), pointer :: child
+    type(string) :: mods(3)
+
+    call hsd_load_string('Dummy { }', root, error)
+    call check(.not. allocated(error), msg="parse ok")
+
+    call getChild(root, "Dummy", child)
+    call splitModifier("eV,Angstrom,Kelvin", child, mods)
+    call check(char(mods(1)) == "eV", msg="first modifier")
+    call check(char(mods(2)) == "Angstrom", msg="second modifier")
+    call check(char(mods(3)) == "Kelvin", msg="third modifier")
+  end subroutine test_split_modifier_basic
+
+  ! --- getDescendant tests ---
+
+  subroutine test_get_descendant_basic()
+    type(hsd_node) :: root
+    type(hsd_error_t), allocatable :: error
+    type(hsd_node), pointer :: child
+
+    call hsd_load_string( &
+        & 'Hamiltonian { DFTB { MaxSCCIterations = 100 } }', &
+        & root, error)
+    call check(.not. allocated(error), msg="parse ok")
+
+    call getDescendant(root, "Hamiltonian/DFTB/MaxSCCIterations", &
+        & child)
+    call check(associated(child), msg="descendant found")
+    call check(child%name == "maxscciterations", &
+        & msg="descendant name correct")
+  end subroutine test_get_descendant_basic
+
+  subroutine test_get_descendant_missing()
+    type(hsd_node) :: root
+    type(hsd_error_t), allocatable :: error
+    type(hsd_node), pointer :: child
+
+    call hsd_load_string('Hamiltonian { DFTB { } }', root, error)
+    call check(.not. allocated(error), msg="parse ok")
+
+    call getDescendant(root, "Hamiltonian/DFTB/Missing", child)
+    call check(.not. associated(child), &
+        & msg="missing descendant returns null")
+  end subroutine test_get_descendant_missing
+
+  subroutine test_get_descendant_parent()
+    type(hsd_node) :: root
+    type(hsd_error_t), allocatable :: error
+    type(hsd_node), pointer :: child, par
+
+    call hsd_load_string('A { B { C = 1 } }', root, error)
+    call check(.not. allocated(error), msg="parse ok")
+
+    call getDescendant(root, "A/B/C", child, parent=par)
+    call check(associated(child), msg="descendant found")
+    call check(associated(par), msg="parent returned")
+    call check(par%name == "b", msg="parent is B")
+  end subroutine test_get_descendant_parent
+
+  ! --- renameChildren tests ---
+
+  subroutine test_rename_children_basic()
+    type(hsd_node) :: root
+    type(hsd_error_t), allocatable :: error
+    type(hsd_node), pointer :: child
+
+    call hsd_load_string('Old { } ' // char(10) // 'Old { }', &
+        & root, error)
+    call check(.not. allocated(error), msg="parse ok")
+
+    call renameChildren(root, "Old", "New")
+    call check(hsd_has_child(root, "New"), &
+        & msg="renamed children exist")
+    call check(.not. hsd_has_child(root, "Old"), &
+        & msg="old name no longer exists")
+  end subroutine test_rename_children_basic
+
+  ! --- localiseName tests ---
+
+  subroutine test_localise_name_basic()
+    type(hsd_node) :: root
+    type(hsd_error_t), allocatable :: error
+    type(hsd_node), pointer :: child
+
+    call hsd_load_string('Colour { }', root, error)
+    call check(.not. allocated(error), msg="parse ok")
+
+    call localiseName(root, "Colour", "Color")
+    call check(hsd_has_child(root, "Color"), &
+        & msg="localised name works")
+  end subroutine test_localise_name_basic
 
 end module test_compat_suite
