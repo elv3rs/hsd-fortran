@@ -160,7 +160,7 @@ contains
   subroutine test_child_tables_simple()
     type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
-    type(hsd_table_ptr_t), allocatable :: children(:)
+    type(hsd_node_ptr_t), allocatable :: children(:)
     integer :: stat
 
     call hsd_load_string( &
@@ -181,7 +181,7 @@ contains
   subroutine test_child_tables_nested_path()
     type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
-    type(hsd_table_ptr_t), allocatable :: children(:)
+    type(hsd_node_ptr_t), allocatable :: children(:)
     integer :: stat
 
     call hsd_load_string( &
@@ -204,7 +204,7 @@ contains
   subroutine test_child_tables_empty_path()
     type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
-    type(hsd_table_ptr_t), allocatable :: children(:)
+    type(hsd_node_ptr_t), allocatable :: children(:)
     integer :: stat
 
     call hsd_load_string("X { y = 1 }", root, error)
@@ -221,7 +221,7 @@ contains
   subroutine test_child_tables_value_parent()
     type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
-    type(hsd_table_ptr_t), allocatable :: children(:)
+    type(hsd_node_ptr_t), allocatable :: children(:)
     integer :: stat
 
     call hsd_load_string( &
@@ -1563,7 +1563,7 @@ contains
   subroutine test_get_children_not_found()
     type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
-    type(hsd_child_ptr_t), allocatable :: children(:)
+    type(hsd_node_ptr_t), allocatable :: children(:)
     integer :: stat
 
     call hsd_load_string("X = 1", root, error)
@@ -1580,7 +1580,7 @@ contains
   subroutine test_get_children_type_error()
     type(hsd_node_t) :: root
     type(hsd_error_t), allocatable :: error
-    type(hsd_child_ptr_t), allocatable :: children(:)
+    type(hsd_node_ptr_t), allocatable :: children(:)
     integer :: stat
 
     call hsd_load_string( &

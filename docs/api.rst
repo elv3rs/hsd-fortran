@@ -407,22 +407,22 @@ Collect all children matching a (possibly path-qualified) name.
    subroutine hsd_get_children(root, path, children, stat)
      type(hsd_node_t), intent(in), target :: root
      character(len=*), intent(in) :: path
-     type(hsd_child_ptr_t), allocatable, intent(out) :: children(:)
+     type(hsd_node_ptr_t), allocatable, intent(out) :: children(:)
      integer, intent(out), optional :: stat
    end subroutine
 
 hsd_get_child_tables
 ~~~~~~~~~~~~~~~~~~~~
 
-Collect all matching table children. ``hsd_table_ptr_t`` reuses the same
-``ptr`` storage model as ``hsd_child_ptr_t``.
+Collect all matching table children. Both ``hsd_get_children`` and
+``hsd_get_child_tables`` use ``hsd_node_ptr_t`` with a ``%node`` pointer component.
 
 .. code-block:: fortran
 
    subroutine hsd_get_child_tables(root, path, children, stat)
      type(hsd_node_t), intent(in), target :: root
      character(len=*), intent(in) :: path
-     type(hsd_table_ptr_t), allocatable, intent(out) :: children(:)
+     type(hsd_node_ptr_t), allocatable, intent(out) :: children(:)
      integer, intent(out), optional :: stat
    end subroutine
 

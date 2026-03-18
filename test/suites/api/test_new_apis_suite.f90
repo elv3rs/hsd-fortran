@@ -120,7 +120,7 @@ contains
 
   subroutine test_get_children_basic()
     type(hsd_node_t) :: root, child1, child2, child3
-    type(hsd_child_ptr_t), allocatable :: children(:)
+    type(hsd_node_ptr_t), allocatable :: children(:)
     integer :: stat
 
     call new_table(root)
@@ -144,7 +144,7 @@ contains
 
   subroutine test_get_children_none()
     type(hsd_node_t) :: root
-    type(hsd_child_ptr_t), allocatable :: children(:)
+    type(hsd_node_ptr_t), allocatable :: children(:)
     integer :: stat
 
     call new_table(root)
@@ -159,7 +159,7 @@ contains
 
   subroutine test_get_children_nested()
     type(hsd_node_t) :: root, parent, c1, c2
-    type(hsd_child_ptr_t), allocatable :: children(:)
+    type(hsd_node_ptr_t), allocatable :: children(:)
     integer :: stat
 
     call new_table(root)

@@ -23,7 +23,7 @@ module hsd_compat
       & new_table, new_value, NODE_TYPE_TABLE, NODE_TYPE_VALUE
   use hsd_api, only: hsd_get, hsd_get_or_set, hsd_get_matrix, &
       & hsd_get_child, hsd_get_inline_text, hsd_has_child, &
-      & hsd_set, hsd_set_processed, hsd_get_children, hsd_child_ptr_t, &
+      & hsd_set, hsd_set_processed, hsd_get_children, &
       & hsd_has_value_children, hsd_get_name, hsd_clear_children
   use hsd_validation, only: hsd_node_context, hsd_format_error, &
       & hsd_format_warning, hsd_warn_unprocessed, MAX_WARNING_LEN
@@ -220,7 +220,7 @@ contains
   subroutine getChildren(node, name, children)
     type(hsd_node_t), intent(in), target :: node
     character(len=*), intent(in) :: name
-    type(hsd_child_ptr_t), allocatable, intent(out) :: children(:)
+    type(hsd_node_ptr_t), allocatable, intent(out) :: children(:)
 
     call hsd_get_children(node, name, children)
   end subroutine getChildren
@@ -1195,12 +1195,12 @@ contains
     character(*), intent(in) :: newName
     logical, optional, intent(in) :: updateHsdNames
 
-    type(hsd_child_ptr_t), allocatable :: children(:)
+    type(hsd_node_ptr_t), allocatable :: children(:)
     integer :: iChild
 
     call hsd_get_children(node, oldName, children)
     do iChild = 1, size(children)
-      call setNodeName(children(iChild)%ptr, newName, updateHsdNames)
+      call setNodeName(children(iChild)%node, newName, updateHsdNames)
     end do
 
   end subroutine renameChildren

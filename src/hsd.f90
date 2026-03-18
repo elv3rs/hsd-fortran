@@ -64,8 +64,8 @@ module hsd
     hsd_get_child, hsd_get_table, hsd_has_child, &
     hsd_remove_child, hsd_get_type, hsd_is_table, hsd_is_value, hsd_is_array, &
     hsd_child_count, hsd_get_keys, hsd_get_attrib, hsd_has_attrib, hsd_set_attrib, &
-    hsd_rename_child, hsd_get_choice, hsd_get_children, hsd_child_ptr_t, &
-    hsd_get_child_tables, hsd_table_ptr_t, &
+    hsd_rename_child, hsd_get_choice, hsd_get_children, &
+    hsd_get_child_tables, &
     hsd_merge, hsd_clone, hsd_table_equal, hsd_set_processed, &
     hsd_has_value_children, hsd_get_name
 
@@ -106,8 +106,8 @@ module hsd
   public :: hsd_child_count, hsd_get_keys
   public :: hsd_get_attrib, hsd_has_attrib, hsd_set_attrib
   public :: hsd_rename_child, hsd_get_choice
-  public :: hsd_get_children, hsd_child_ptr_t
-  public :: hsd_get_child_tables, hsd_table_ptr_t
+  public :: hsd_get_children
+  public :: hsd_get_child_tables
   public :: hsd_merge, hsd_clone
   public :: hsd_table_equal
   public :: hsd_set_processed

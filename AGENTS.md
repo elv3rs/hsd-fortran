@@ -231,8 +231,7 @@ These functions were upstreamed from DFTB+ and are part of the public API:
 | `hsd_node_t` | Unified concrete node type with a `node_type` discriminator (`NODE_TYPE_TABLE` or `NODE_TYPE_VALUE`). Tables hold children; values hold string data (parsed on demand). |
 | `hsd_iterator_t` | Stateful tree iteration (references a `type(hsd_node_t)` table) |
 | `hsd_node_ptr_t` | Wrapper holding `type(hsd_node_t), pointer` for child storage |
-| `hsd_table_ptr_t` | Wrapper holding `type(hsd_node_t), pointer` (for `hsd_get_child_tables`) |
-| `hsd_child_ptr_t` | Wrapper holding `type(hsd_node_t), pointer` (for `hsd_get_children`) |
+| `hsd_node_ptr_t` | Wrapper holding `type(hsd_node_t), pointer :: node` — used for internal child storage and as the return type of `hsd_get_children` / `hsd_get_child_tables` |
 
 ## Design Notes
 

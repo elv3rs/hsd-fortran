@@ -4,7 +4,7 @@ module hsd_api
   use hsd_constants, only: dp
   use hsd_utils, only: to_lower, string_buffer_t
   use hsd_error, only: HSD_STAT_OK, HSD_STAT_NOT_FOUND, HSD_STAT_TYPE_ERROR
-  use hsd_types, only: hsd_node_t, new_table, new_value, &
+  use hsd_types, only: hsd_node_t, hsd_node_ptr_t, new_table, new_value, &
     & NODE_TYPE_TABLE, NODE_TYPE_VALUE, &
     & VALUE_TYPE_NONE, VALUE_TYPE_STRING, VALUE_TYPE_INTEGER, &
     & VALUE_TYPE_REAL, VALUE_TYPE_LOGICAL, VALUE_TYPE_ARRAY, &
@@ -19,19 +19,8 @@ module hsd_api
 !> introspecting node types, and performing tree operations like merging
 !> and cloning.
 
-  !> Pointer wrapper for returning references to existing child nodes
-  type :: hsd_child_ptr_t
-    type(hsd_node_t), pointer :: ptr => null()
-  end type hsd_child_ptr_t
-
-  !> Pointer wrapper for returning references to table children only.
-  !>
-  !> Extends hsd_child_ptr_t to keep a single shared pointer representation.
-  type, extends(hsd_child_ptr_t) :: hsd_table_ptr_t
-  end type hsd_table_ptr_t
-
   ! Public types
-  public :: hsd_child_ptr_t, hsd_table_ptr_t
+  public :: hsd_node_ptr_t
 
   ! Public procedures
   public :: hsd_get_child, hsd_get_table
@@ -692,12 +681,12 @@ module hsd_api
   !>
   !> Supports path-based lookup: "Geometry/Atom" will navigate to the
   !> "Geometry" table then collect all children named "Atom".
-  !> Returns an array of hsd_child_ptr_t pointing to the matching children.
+  !> Returns an array of hsd_node_ptr_t pointing to the matching children.
   !> If no children match, an empty (size-0) array is returned and stat is OK.
   subroutine hsd_get_children(table, path, children, stat)
     type(hsd_node_t), intent(in), target :: table
     character(len=*), intent(in) :: path
-    type(hsd_child_ptr_t), allocatable, intent(out) :: children(:)
+    type(hsd_node_ptr_t), allocatable, intent(out) :: children(:)
     integer, intent(out), optional :: stat
 
     call collect_named_children_(table, path, children, stat, tables_only=.false.)
@@ -714,7 +703,7 @@ module hsd_api
   subroutine hsd_get_child_tables(table, path, children, stat)
     type(hsd_node_t), intent(in), target :: table
     character(len=*), intent(in) :: path
-    type(hsd_table_ptr_t), allocatable, intent(out) :: children(:)
+    type(hsd_node_ptr_t), allocatable, intent(out) :: children(:)
     integer, intent(out), optional :: stat
 
     character(len=:), allocatable :: child_name
@@ -756,7 +745,7 @@ module hsd_api
       if (to_lower(child%name) /= lower_name) cycle
       if (child%node_type == NODE_TYPE_TABLE) then
         count = count + 1
-        children(count)%ptr => child
+        children(count)%node => child
         child%processed = .true.
       end if
     end do
@@ -1842,7 +1831,7 @@ module hsd_api
   subroutine collect_named_children_(table, path, children, stat, tables_only)
     type(hsd_node_t), intent(in), target :: table
     character(len=*), intent(in) :: path
-    type(hsd_child_ptr_t), allocatable, intent(out) :: children(:)
+    type(hsd_node_ptr_t), allocatable, intent(out) :: children(:)
     integer, intent(out), optional :: stat
     logical, intent(in) :: tables_only
 
@@ -1886,12 +1875,12 @@ module hsd_api
       if (tables_only) then
         if (child%node_type == NODE_TYPE_TABLE) then
           count = count + 1
-          children(count)%ptr => child
+          children(count)%node => child
           child%processed = .true.
         end if
       else
         count = count + 1
-        children(count)%ptr => child
+        children(count)%node => child
         child%processed = .true.
       end if
     end do
