@@ -101,7 +101,7 @@ contains
 
     type(string_buffer_t) :: buf
 
-    call buf%init(1024)
+    call buf%init()
     call write_table_to_string_buf(root, 0, buf)
     output = buf%get_string()
 
@@ -395,7 +395,7 @@ contains
     integer :: i
     character(len=1) :: ch
 
-    call buf%init(len(str) + 16)
+    call buf%init()
     do i = 1, len(str)
       ch = str(i:i)
       if (ch == CHAR_BACKSLASH) then

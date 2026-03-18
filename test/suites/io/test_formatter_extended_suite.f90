@@ -319,7 +319,7 @@ contains
 
     ! Test repeated append/clear cycles
     do i = 1, 3
-      call buf%init(8)
+      call buf%init()
       call buf%append_str("cycle " // char(ichar('0') + i))
       result = buf%get_string()
       call check(len(result) > 0, msg="Buffer not empty after append")
@@ -327,7 +327,7 @@ contains
     end do
 
     ! Test appending many small strings
-    call buf%init(4)
+    call buf%init()
     do i = 1, 50
       call buf%append_str("x")
     end do

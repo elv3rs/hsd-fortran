@@ -2271,7 +2271,7 @@ module hsd_api
     end if
 
     if (child%node_type == NODE_TYPE_VALUE) then
-      call buf%init(size(val) * 12)
+      call buf%init()
       do i = 1, size(val)
         write(buffer, '(I0)') val(i)
         if (i > 1) call buf%append_char(' ')
@@ -2307,7 +2307,7 @@ module hsd_api
     end if
 
     if (child%node_type == NODE_TYPE_VALUE) then
-      call buf%init(size(val) * 16)
+      call buf%init()
       do i = 1, size(val)
         write(buffer, '(G0)') val(i)
         if (i > 1) call buf%append_char(' ')
@@ -2342,7 +2342,7 @@ module hsd_api
     end if
 
     if (child%node_type == NODE_TYPE_VALUE) then
-      call buf%init(size(val) * 4)
+      call buf%init()
       do i = 1, size(val)
         if (i > 1) call buf%append_char(' ')
         if (val(i)) then
@@ -2381,7 +2381,7 @@ module hsd_api
     end if
 
     if (child%node_type == NODE_TYPE_VALUE) then
-      call buf%init(size(val) * 32)
+      call buf%init()
       do i = 1, size(val)
         if (i > 1) call buf%append_char(' ')
         if (aimag(val(i)) >= 0.0_dp) then
@@ -2420,7 +2420,7 @@ module hsd_api
     end if
 
     if (child%node_type == NODE_TYPE_VALUE) then
-      call buf%init(size(val) * 32)
+      call buf%init()
       do i = 1, size(val)
         if (i > 1) call buf%append_char(' ')
         ! Quote strings containing spaces
@@ -2462,7 +2462,7 @@ module hsd_api
     end if
 
     if (child%node_type == NODE_TYPE_VALUE) then
-      call buf%init(size(val) * 12)
+      call buf%init()
       do ir = 1, size(val, 1)
         if (ir > 1) call buf%append_str(new_line('a'))
         do ic = 1, size(val, 2)
@@ -2501,7 +2501,7 @@ module hsd_api
     end if
 
     if (child%node_type == NODE_TYPE_VALUE) then
-      call buf%init(size(val) * 16)
+      call buf%init()
       do ir = 1, size(val, 1)
         if (ir > 1) call buf%append_str(new_line('a'))
         do ic = 1, size(val, 2)
@@ -2540,7 +2540,7 @@ module hsd_api
     end if
 
     if (child%node_type == NODE_TYPE_VALUE) then
-      call buf%init(size(val) * 32)
+      call buf%init()
       do ir = 1, size(val, 1)
         if (ir > 1) call buf%append_str(new_line('a'))
         do ic = 1, size(val, 2)

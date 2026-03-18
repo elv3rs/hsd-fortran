@@ -29,16 +29,10 @@ module hsd_utils
 contains
 
   !> Initialize the string buffer with given or default capacity
-  subroutine buffer_init(self, initial_capacity)
+  subroutine buffer_init(self)
     class(string_buffer_t), intent(inout) :: self
-    integer, intent(in), optional :: initial_capacity
 
-    if (present(initial_capacity)) then
-      self%capacity = initial_capacity
-    else
-      self%capacity = BUFFER_INITIAL_CAPACITY
-    end if
-
+    self%capacity = BUFFER_INITIAL_CAPACITY
     if (allocated(self%buffer)) deallocate(self%buffer)
     allocate(character(len=self%capacity) :: self%buffer)
     self%length = 0
