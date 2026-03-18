@@ -8,7 +8,7 @@ module hsd_parser
   use hsd_token, only: hsd_token_t, TOKEN_EOF, TOKEN_STRING, &
     TOKEN_LBRACE, TOKEN_RBRACE, TOKEN_EQUAL, TOKEN_LBRACKET, TOKEN_RBRACKET, &
     TOKEN_INCLUDE_TXT, TOKEN_INCLUDE_HSD, TOKEN_SEMICOLON, &
-    TOKEN_TEXT, TOKEN_NEWLINE, TOKEN_WHITESPACE
+    TOKEN_TEXT, TOKEN_NEWLINE
   use hsd_lexer, only: hsd_lexer_t, new_lexer_from_file, new_lexer_from_string
   use hsd_types, only: hsd_node_t, hsd_node_ptr_t, &
     new_table, new_value, VALUE_TYPE_NONE, VALUE_TYPE_ARRAY, &
@@ -44,7 +44,6 @@ module hsd_parser
     type(hsd_error_t), allocatable :: error
   contains
     procedure :: next_token => parser_next_token
-    procedure :: skip_ws_comments => parser_skip_ws_comments
     procedure :: push_include => parser_push_include
     procedure :: pop_include => parser_pop_include
     procedure :: is_include_cycle => parser_is_cycle
@@ -60,28 +59,24 @@ contains
 
     type(parser_state_t) :: state
     type(hsd_error_t), allocatable :: local_error
-    character(len=:), allocatable :: abs_path
 
     ! Always initialize root so callers get a valid (empty) table even on error
     call new_table(root)
 
-    ! Get absolute path
-    abs_path = get_absolute_path(filename)
-
     ! Initialize lexer
-    call new_lexer_from_file(state%lexer, abs_path, local_error)
+    call new_lexer_from_file(state%lexer, filename, local_error)
     if (allocated(local_error)) then
       if (present(error)) call move_alloc(local_error, error)
       return
     end if
 
     ! Initialize parser state
-    state%base_dir = get_directory(abs_path)
+    state%base_dir = get_directory(filename)
     allocate(state%include_stack(hsd_max_include_depth))
     state%include_depth = 0
 
     ! Push current file onto include stack
-    call state%push_include(abs_path, local_error)
+    call state%push_include(filename, local_error)
     if (allocated(local_error)) then
       if (present(error)) call move_alloc(local_error, error)
       return
@@ -140,21 +135,11 @@ contains
 
   end subroutine hsd_load_string
 
-  !> Get next meaningful token (skipping whitespace/comments internally handled by lexer)
+  !> Advance to the next token
   subroutine parser_next_token(self)
     class(parser_state_t), intent(inout) :: self
     call self%lexer%next_token(self%current_token)
   end subroutine parser_next_token
-
-  !> Skip whitespace and comments
-  subroutine parser_skip_ws_comments(self)
-    class(parser_state_t), intent(inout) :: self
-
-    do while (self%current_token%kind == TOKEN_NEWLINE)
-      call self%next_token()
-    end do
-
-  end subroutine parser_skip_ws_comments
 
   !> Push file onto include stack
   subroutine parser_push_include(self, path, error)
@@ -163,8 +148,6 @@ contains
     type(hsd_error_t), allocatable, intent(out), optional :: error
 
     ! Check for cycle
-
-    ! Callers (handle_hsd_include) already check for cycles before calling push_include
     if (self%is_include_cycle(path)) then
       if (present(error)) then
         call make_error(error, HSD_STAT_INCLUDE_CYCLE, &
@@ -180,8 +163,6 @@ contains
 
 
     ! Check depth limit
-
-    ! Requires 10+ unique include files to trigger; callers catch common cases
     if (self%include_depth >= hsd_max_include_depth) then
       if (present(error)) then
         call make_error(error, HSD_STAT_INCLUDE_DEPTH, &
@@ -274,18 +255,6 @@ contains
     text_start_line = 0
 
     do while (.not. state%current_token%is_eof())
-      ! Preserve newlines as content separators when buffering inline text.
-      ! Without text buffered, newlines are simply skipped (e.g. between tags).
-      if (state%current_token%kind == TOKEN_NEWLINE) then
-        if (len(text_buffer) > 0) then
-          text_buffer = text_buffer // char(10)
-        end if
-        call state%next_token()
-        cycle
-      end if
-
-      if (state%current_token%is_eof()) exit
-
       select case (state%current_token%kind)
       case (TOKEN_RBRACE)
         ! End of current block - return to parent
@@ -335,8 +304,8 @@ contains
         end if
 
       case (TOKEN_NEWLINE)
-        ! Newlines should have been handled above the select case.
-        ! This is a safety fallthrough for edge cases.
+        ! Preserve newlines as content separators when buffering inline text;
+        ! otherwise skip them (e.g. blank lines between tags).
         if (len(text_buffer) > 0) then
           text_buffer = text_buffer // char(10)
         end if
@@ -398,8 +367,6 @@ contains
         return
       end if
     end if
-
-    ! Skip whitespace again (lexer already skips, defensive)
 
     ! Determine what follows
     select case (state%current_token%kind)
@@ -1000,18 +967,5 @@ contains
     end if
 
   end function resolve_path
-
-  !> Get absolute path by prepending the current working directory
-  !>
-  !> Returns the path as is (C interop removed).
-  !> Originally resolved to absolute path using C getcwd, but explicit C interop
-  !> has been removed.
-  function get_absolute_path(path) result(abs_path)
-    character(len=*), intent(in) :: path
-    character(len=:), allocatable :: abs_path
-
-    abs_path = path
-
-  end function get_absolute_path
 
 end module hsd_parser

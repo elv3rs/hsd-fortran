@@ -6,7 +6,7 @@ module hsd_token
   private
 
   public :: hsd_token_t
-  public :: TOKEN_INVALID, TOKEN_EOF, TOKEN_WHITESPACE, TOKEN_NEWLINE
+  public :: TOKEN_INVALID, TOKEN_EOF, TOKEN_NEWLINE
   public :: TOKEN_LBRACE, TOKEN_RBRACE, TOKEN_LBRACKET
   public :: TOKEN_RBRACKET, TOKEN_EQUAL, TOKEN_SEMICOLON, TOKEN_STRING
   public :: TOKEN_TEXT, TOKEN_INCLUDE_TXT, TOKEN_INCLUDE_HSD
@@ -14,26 +14,23 @@ module hsd_token
 
   !> Token kind constants
   !>
-  !> TOKEN_INVALID and TOKEN_WHITESPACE are sentinel values:
-  !>  - TOKEN_INVALID is never emitted by the lexer; it serves as the error
-  !>    sentinel for is_valid() and token_name().
-  !>  - TOKEN_WHITESPACE is never emitted by the current lexer (whitespace
-  !>    is silently consumed), but the parser defensively skips it so that a
-  !>    future whitespace-preserving lexer mode would work without changes.
+  !> TOKEN_INVALID is a sentinel value: it is never emitted by the lexer and
+  !> serves as the error sentinel for is_valid() and token_name().
+  !> Whitespace and comments are silently consumed by the lexer and never
+  !> represented as tokens.
   integer, parameter :: TOKEN_INVALID = -1
   integer, parameter :: TOKEN_EOF = 0
-  integer, parameter :: TOKEN_WHITESPACE = 1
-  integer, parameter :: TOKEN_NEWLINE = 2
-  integer, parameter :: TOKEN_LBRACE = 4
-  integer, parameter :: TOKEN_RBRACE = 5
-  integer, parameter :: TOKEN_LBRACKET = 6
-  integer, parameter :: TOKEN_RBRACKET = 7
-  integer, parameter :: TOKEN_EQUAL = 8
-  integer, parameter :: TOKEN_SEMICOLON = 9
-  integer, parameter :: TOKEN_STRING = 10
-  integer, parameter :: TOKEN_TEXT = 11
-  integer, parameter :: TOKEN_INCLUDE_TXT = 12
-  integer, parameter :: TOKEN_INCLUDE_HSD = 13
+  integer, parameter :: TOKEN_NEWLINE = 1
+  integer, parameter :: TOKEN_LBRACE = 2
+  integer, parameter :: TOKEN_RBRACE = 3
+  integer, parameter :: TOKEN_LBRACKET = 4
+  integer, parameter :: TOKEN_RBRACKET = 5
+  integer, parameter :: TOKEN_EQUAL = 6
+  integer, parameter :: TOKEN_SEMICOLON = 7
+  integer, parameter :: TOKEN_STRING = 8
+  integer, parameter :: TOKEN_TEXT = 9
+  integer, parameter :: TOKEN_INCLUDE_TXT = 10
+  integer, parameter :: TOKEN_INCLUDE_HSD = 11
 
   !> Token type with position and value
   type :: hsd_token_t
@@ -76,8 +73,6 @@ contains
       name = "invalid"
     case (TOKEN_EOF)
       name = "end of file"
-    case (TOKEN_WHITESPACE)
-      name = "whitespace"
     case (TOKEN_NEWLINE)
       name = "newline"
     case (TOKEN_LBRACE)

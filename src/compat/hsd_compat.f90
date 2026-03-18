@@ -78,7 +78,10 @@ module hsd_compat
     module procedure getChVal_cmplxR1
     module procedure getChVal_logicalR1
     module procedure getChVal_realR2
+    module procedure getChVal_node
   end interface
+
+  public :: checkError
 
   public :: getChild
   public :: getChildren
@@ -120,8 +123,21 @@ module hsd_compat
   public :: appendChild
   public :: createDocumentNode
 
+  ! xmlf90 DOM compat constants and functions
+  public :: textNodeName
+  public :: TEXT_NODE, ELEMENT_NODE
+  public :: getNodeName, getNodeType, getNodeValue
+  public :: getFirstChild, removeChild, removeChildNodes
+
   !> Separator for comma-delimited modifiers
   character, parameter :: sepModifier = ","
+
+  !> Text node name constant (matches xmlf90 convention)
+  character(len=*), parameter :: textNodeName = "#text"
+
+  !> Node type constants matching xmlf90 conventions
+  integer, parameter :: TEXT_NODE = NODE_TYPE_VALUE
+  integer, parameter :: ELEMENT_NODE = NODE_TYPE_TABLE
 
 contains
 
@@ -417,13 +433,14 @@ contains
 
   ! --- String ---
   subroutine getChVal_string(node, name, val, default, modifier, &
-      & child)
+      & child, multiple)
     type(hsd_node_t), intent(inout), target :: node
     character(len=*), intent(in) :: name
     type(string), intent(inout) :: val
     character(len=*), intent(in), optional :: default
     type(string), intent(inout), optional :: modifier
     type(hsd_node_t), pointer, intent(out), optional :: child
+    logical, intent(in), optional :: multiple
 
     type(hsd_node_t), pointer :: cp
     logical :: found
@@ -1233,5 +1250,221 @@ contains
     write(res, '(I0)') ii
 
   end function i2c_
+
+  ! ================================================================
+  ! xmlf90 DOM compat: getNodeName, getNodeType, getNodeValue
+  ! ================================================================
+
+  !> Get the name of a node (xmlf90-compatible signature)
+  !>
+  !> Returns the node's name for TABLE nodes, and "#text" for VALUE nodes,
+  !> matching the xmlf90 DOM convention.
+  subroutine getNodeName(node, name)
+    type(hsd_node_t), intent(in) :: node
+    type(string), intent(inout) :: name
+
+    if (node%node_type == NODE_TYPE_VALUE) then
+      name%str = textNodeName
+    else
+      if (allocated(node%name)) then
+        name%str = node%name
+      else
+        name%str = ""
+      end if
+    end if
+  end subroutine getNodeName
+
+  !> Get the type of a node (xmlf90-compatible)
+  pure function getNodeType(node) result(ntype)
+    type(hsd_node_t), intent(in) :: node
+    integer :: ntype
+    ntype = node%node_type
+  end function getNodeType
+
+  !> Get the text value of a node (xmlf90-compatible)
+  subroutine getNodeValue(node, val)
+    type(hsd_node_t), intent(in) :: node
+    type(string), intent(inout) :: val
+
+    if (node%node_type == NODE_TYPE_VALUE .and. &
+        & allocated(node%string_value)) then
+      val%str = node%string_value
+    else
+      val%str = ""
+    end if
+  end subroutine getNodeValue
+
+  ! ================================================================
+  ! xmlf90 DOM compat: getFirstChild
+  ! ================================================================
+
+  !> Get pointer to the first child of a table node
+  function getFirstChild(node) result(child)
+    type(hsd_node_t), intent(in), target :: node
+    type(hsd_node_t), pointer :: child
+
+    if (node%node_type == NODE_TYPE_TABLE .and. node%num_children > 0) then
+      child => node%children(1)%node
+    else
+      child => null()
+    end if
+  end function getFirstChild
+
+  ! ================================================================
+  ! xmlf90 DOM compat: removeChild, removeChildNodes
+  ! ================================================================
+
+  !> Remove a child from a parent, identified by pointer
+  !>
+  !> Finds the child by matching its name, then removes it.
+  !> Returns a pointer (always null - the node is deallocated).
+  function removeChild(parent, child) result(removed)
+    type(hsd_node_t), intent(inout) :: parent
+    type(hsd_node_t), intent(in) :: child
+    type(hsd_node_t), pointer :: removed
+    integer :: stat
+
+    removed => null()
+    if (allocated(child%name)) then
+      call parent%remove_child_by_name(child%name, stat)
+    end if
+  end function removeChild
+
+  !> Remove all children from a node
+  subroutine removeChildNodes(node)
+    type(hsd_node_t), intent(inout) :: node
+    call hsd_clear_children(node)
+  end subroutine removeChildNodes
+
+  ! ================================================================
+  ! getChVal_node — getChildValue returning node pointer
+  ! ================================================================
+
+  !> Get a child's value as a node pointer (xmlf90 DOM compat)
+  !>
+  !> For TABLE children: returns pointer to first child (named block or #text)
+  !> For VALUE children: returns pointer to the child itself
+  !> This matches the old xmlf90 behavior where getFirstChild of an element
+  !> returns either a text node or element node.
+  subroutine getChVal_node(node, name, variableValue, default, &
+      & modifier, child, list, allowEmptyValue, dummyValue)
+    type(hsd_node_t), intent(inout), target :: node
+    character(len=*), intent(in) :: name
+    type(hsd_node_t), pointer, intent(out) :: variableValue
+    character(len=*), intent(in), optional :: default
+    type(string), intent(inout), optional :: modifier
+    type(hsd_node_t), pointer, intent(out), optional :: child
+    logical, intent(in), optional :: list
+    logical, intent(in), optional :: allowEmptyValue
+    logical, intent(in), optional :: dummyValue
+
+    type(hsd_node_t), pointer :: child2
+    integer :: stat
+    logical :: tAllowEmptyVal, tDummyValue
+
+    tAllowEmptyVal = .false.
+    if (present(allowEmptyValue)) tAllowEmptyVal = allowEmptyValue
+    tDummyValue = .false.
+    if (present(dummyValue)) tDummyValue = dummyValue
+
+    ! Find the named child (or use node itself if name is empty)
+    if (len_trim(name) == 0) then
+      child2 => node
+    else
+      call hsd_get_child(node, name, child2, stat)
+      if (stat /= HSD_STAT_OK) then
+        if (present(default)) then
+          if (len(default) > 0) then
+            ! Create a child table with a named sub-child
+            block
+              type(hsd_node_t) :: new_child, sub_child
+              call new_table(new_child, name)
+              call new_table(sub_child, to_lower(default))
+              call new_child%add_child(sub_child)
+              call node%add_child(new_child)
+              call hsd_get_child(node, name, child2, stat)
+              if (associated(child2)) then
+                child2%processed = .true.
+                call hsd_get_child(child2, to_lower(default), &
+                    & variableValue, stat)
+                if (associated(variableValue)) &
+                    & variableValue%processed = .true.
+              end if
+            end block
+          else
+            ! Empty default — create empty child
+            block
+              type(hsd_node_t) :: new_child
+              call new_table(new_child, name)
+              call node%add_child(new_child)
+              call hsd_get_child(node, name, child2, stat)
+              if (associated(child2)) child2%processed = .true.
+            end block
+            nullify(variableValue)
+          end if
+          if (present(modifier)) modifier%str = ""
+          if (present(child)) child => child2
+          return
+        end if
+        call detailedError(node, &
+            & "Missing required block: '" // name // "'")
+      end if
+    end if
+
+    ! Mark as processed
+    if (associated(child2)) child2%processed = .true.
+
+    ! Extract modifier
+    if (present(modifier)) then
+      if (allocated(child2%attrib) .and. len(child2%attrib) > 0) then
+        modifier%str = child2%attrib
+      else
+        modifier%str = ""
+      end if
+    end if
+
+    ! Get the "value" — first child for tables, self for values
+    if (child2%node_type == NODE_TYPE_TABLE) then
+      if (child2%num_children > 0) then
+        variableValue => child2%children(1)%node
+      else
+        if (.not. tAllowEmptyVal) then
+          call detailedError(child2, "Missing value")
+        end if
+        nullify(variableValue)
+      end if
+    else
+      ! VALUE node — return itself (analogous to returning the text child)
+      variableValue => child2
+    end if
+
+    ! Mark variableValue as processed
+    if (associated(variableValue) .and. .not. tDummyValue) then
+      if (variableValue%node_type == NODE_TYPE_TABLE) then
+        variableValue%processed = .true.
+      end if
+    end if
+
+    if (present(child)) child => child2
+
+  end subroutine getChVal_node
+
+  ! ================================================================
+  ! checkError — tokenreader error check (compat)
+  ! ================================================================
+
+  !> Check error flag from tokenreader and call detailedError if needed
+  subroutine checkError(node, iErr, msg)
+    type(hsd_node_t), intent(in) :: node
+    integer, intent(in) :: iErr
+    character(len=*), intent(in) :: msg
+
+    ! TOKEN_ERROR = -2, TOKEN_EOS = -1 (from tokenreader constants)
+    if (iErr == -2) then
+      call detailedError(node, msg)
+    else if (iErr == -1) then
+      call detailedError(node, "Unexpected end of data")
+    end if
+  end subroutine checkError
 
 end module hsd_compat

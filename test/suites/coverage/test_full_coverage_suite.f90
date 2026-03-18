@@ -3,7 +3,7 @@ module test_full_coverage_suite
   use hsd
   use hsd_error, only: make_syntax_error, make_type_error, make_error, &
       & error_message
-  use hsd_token, only: token_name, TOKEN_WHITESPACE, TOKEN_NEWLINE, &
+  use hsd_token, only: token_name, TOKEN_NEWLINE, &
       & TOKEN_LBRACKET, TOKEN_RBRACKET, TOKEN_SEMICOLON, TOKEN_INCLUDE_TXT, &
       & TOKEN_INCLUDE_HSD, TOKEN_EOF, hsd_token_t
   use fortuno_serial, only: test => serial_case_item, &
@@ -1673,8 +1673,6 @@ contains
 
   !> Test token_name for all token types
   subroutine test_token_name_all()
-    call check(token_name(TOKEN_WHITESPACE) == "whitespace", &
-        msg="Whitespace name")
     call check(token_name(TOKEN_NEWLINE) == "newline", msg="Newline name")
     call check(token_name(TOKEN_LBRACKET) == "opening bracket", &
         msg="Lbracket name")
@@ -1694,8 +1692,6 @@ contains
 
     tok%kind = TOKEN_EOF
     call check(.not. tok%is_valid(), msg="EOF not valid")
-    tok%kind = TOKEN_WHITESPACE
-    call check(tok%is_valid(), msg="Whitespace is valid")
   end subroutine test_token_is_valid_fn
 
   ! ===========================================================================
