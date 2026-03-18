@@ -407,7 +407,7 @@ contains
     call root%destroy()
   end subroutine test_nested_method_blocks
 
-  !> Test hsd_get_or for missing values (default fallback)
+  !> Test missing-value fallback with hsd_get and stat handling
   subroutine test_default_values()
     type(hsd_table) :: root
     type(hsd_error_t), allocatable :: error
@@ -420,19 +420,23 @@ contains
     call check(.not. allocated(error), msg="Parse OK")
 
     ! Nonexistent integer with default
-    call hsd_get_or(root, "Hamiltonian/DFTB/NonexistentField", int_val, 999, stat)
+    call hsd_get(root, "Hamiltonian/DFTB/NonexistentField", int_val, stat)
+    if (stat == HSD_STAT_NOT_FOUND) int_val = 999
     call check(is_equal(int_val, 999), msg="Default int value used")
 
     ! Nonexistent real with default
-    call hsd_get_or(root, "Options/Timeout", real_val, 60.0_dp, stat)
+    call hsd_get(root, "Options/Timeout", real_val, stat)
+    if (stat == HSD_STAT_NOT_FOUND) real_val = 60.0_dp
     call check(abs(real_val - 60.0_dp) < 1.0e-10_dp, msg="Default real value used")
 
     ! Nonexistent boolean with default
-    call hsd_get_or(root, "Options/VerboseOutput", bool_val, .false., stat)
+    call hsd_get(root, "Options/VerboseOutput", bool_val, stat)
+    if (stat == HSD_STAT_NOT_FOUND) bool_val = .false.
     call check(.not. bool_val, msg="Default bool value used")
 
     ! Nonexistent string with default
-    call hsd_get_or(root, "Options/LogFile", str_val, "output.log", stat)
+    call hsd_get(root, "Options/LogFile", str_val, stat)
+    if (stat == HSD_STAT_NOT_FOUND) str_val = "output.log"
     call check(str_val == "output.log", msg="Default string value used")
 
     call root%destroy()

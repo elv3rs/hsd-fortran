@@ -55,7 +55,8 @@ program example
   call hsd_get(root, "Hamiltonian/DFTB/Filling/Fermi/Temperature", temperature, stat)
   
   ! Use defaults for optional values
-  call hsd_get_or(root, "Driver/Timeout", max_steps, default=3600, stat=stat)
+  call hsd_get(root, "Driver/Timeout", max_steps, stat=stat)
+  if (stat == HSD_STAT_NOT_FOUND) max_steps = 3600
   
   ! Type introspection
   if (hsd_is_table(root, "Hamiltonian/DFTB")) then
@@ -147,7 +148,6 @@ fpm run --example simple_read
 | Procedure | Description |
 |-----------|-------------|
 | `hsd_get(root, path, value, stat)` | Get value at path |
-| `hsd_get_or(root, path, value, default, stat)` | Get with fallback default |
 | `hsd_get_matrix(root, path, matrix, stat)` | Get 2D array |
 | `hsd_get_inline_text(root, text, stat)` | Get concatenated inline text values |
 

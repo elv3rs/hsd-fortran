@@ -203,27 +203,6 @@ Get a value at the specified path. Supports multiple output types via generic in
    call hsd_get(root, "Geometry/Name", name, stat)
    call hsd_get(root, "Data/Values", values, stat)
 
-hsd_get_or
-~~~~~~~~~~
-
-Get a value with a default fallback if the path doesn't exist.
-
-.. code-block:: fortran
-
-   subroutine hsd_get_or(root, path, value, default, stat)
-     type(hsd_table), intent(in) :: root
-     character(len=*), intent(in) :: path
-     <type>, intent(out) :: value
-     <type>, intent(in) :: default
-     integer, intent(out), optional :: stat  ! HSD_STAT_NOT_FOUND if default used
-   end subroutine
-
-**Example:**
-
-.. code-block:: fortran
-
-   call hsd_get_or(root, "Timeout", timeout, default=3600, stat=stat)
-
 hsd_get_matrix
 ~~~~~~~~~~~~~~
 

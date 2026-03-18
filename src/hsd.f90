@@ -57,7 +57,7 @@ module hsd
   ! Unified API module
   use hsd_api, only: &
     ! Accessors
-    hsd_get, hsd_get_or, hsd_get_or_set, hsd_get_matrix, hsd_get_inline_text, &
+    hsd_get, hsd_get_or_set, hsd_get_matrix, hsd_get_inline_text, &
     ! Mutators
     hsd_set, hsd_clear_children, &
     ! Query
@@ -96,7 +96,7 @@ module hsd
   public :: hsd_dump, hsd_dump_to_string
 
   ! Re-export Unified API
-  public :: hsd_get, hsd_get_or, hsd_get_or_set, hsd_get_matrix
+  public :: hsd_get, hsd_get_or_set, hsd_get_matrix
   public :: hsd_get_inline_text
   public :: hsd_set, hsd_clear_children
   public :: hsd_get_child, hsd_get_table, hsd_has_child

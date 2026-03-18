@@ -62,17 +62,21 @@ Use ``hsd_get`` to retrieve values from the tree using path notation:
 Default Values
 ~~~~~~~~~~~~~~
 
-Use ``hsd_get_or`` when you want a default value if the key is missing:
+Use ``hsd_get`` with status checks when you want a default value if the key is missing:
 
 .. code-block:: fortran
 
    integer :: timeout, seed
    real(dp) :: tolerance
 
-   ! Returns default if path not found
-   call hsd_get_or(root, "Driver/Timeout", timeout, default=3600, stat=stat)
-   call hsd_get_or(root, "Options/RandomSeed", seed, default=12345, stat=stat)
-   call hsd_get_or(root, "Tolerance", tolerance, default=1.0e-6_dp, stat=stat)
+   call hsd_get(root, "Driver/Timeout", timeout, stat=stat)
+   if (stat == HSD_STAT_NOT_FOUND) timeout = 3600
+
+   call hsd_get(root, "Options/RandomSeed", seed, stat=stat)
+   if (stat == HSD_STAT_NOT_FOUND) seed = 12345
+
+   call hsd_get(root, "Tolerance", tolerance, stat=stat)
+   if (stat == HSD_STAT_NOT_FOUND) tolerance = 1.0e-6_dp
 
    ! stat will be HSD_STAT_NOT_FOUND if default was used
    if (stat == HSD_STAT_NOT_FOUND) then
@@ -345,8 +349,10 @@ Example: Complete Configuration Parser
 
      ! Extract values
      call hsd_get(root, "MaxIterations", config%max_iter, stat)
-     call hsd_get_or(root, "Tolerance", config%tolerance, default=1.0e-6_dp, stat=stat)
-     call hsd_get_or(root, "Method", config%method, default="default", stat=stat)
+     call hsd_get(root, "Tolerance", config%tolerance, stat=stat)
+     if (stat == HSD_STAT_NOT_FOUND) config%tolerance = 1.0e-6_dp
+     call hsd_get(root, "Method", config%method, stat=stat)
+     if (stat == HSD_STAT_NOT_FOUND) config%method = "default"
 
      ! Validate ranges (takes table + path)
      call hsd_validate_range(root, "MaxIterations", 1.0_dp, 100000.0_dp, error)

@@ -53,16 +53,15 @@ module hsd_api
 !>
 !> This module provides interfaces and implementations for retrieving data
 !> from HSD tables. It supports type-safe access to scalars, arrays, and
-!> matrices with optional default values.
+!> matrices.
 
   ! Public interfaces
-  public :: hsd_get, hsd_get_or, hsd_get_or_set, hsd_get_matrix
+  public :: hsd_get, hsd_get_or_set, hsd_get_matrix
   public :: hsd_get_inline_text
 
   !> Generic interface for getting values
   !>
   !> All procedures accept an optional `stat` parameter for error status.
-  !> Use `hsd_get_or` for fallback default values when key is not found.
   interface hsd_get
     module procedure :: hsd_get_string
     module procedure :: hsd_get_integer
@@ -78,22 +77,9 @@ module hsd_api
     module procedure :: hsd_get_complex_dp_array
   end interface hsd_get
 
-  !> Generic interface for getting values with default fallback
-  !>
-  !> Returns the default value if the key is not found.
-  !> stat will be HSD_STAT_NOT_FOUND when default is used, HSD_STAT_OK otherwise.
-  interface hsd_get_or
-    module procedure :: hsd_get_string_default
-    module procedure :: hsd_get_integer_default
-    module procedure :: hsd_get_real_dp_default
-    module procedure :: hsd_get_real_sp_default
-    module procedure :: hsd_get_logical_default
-    module procedure :: hsd_get_complex_dp_default
-  end interface hsd_get_or
-
   !> Generic interface for getting values with default, writing default back to tree if absent
   !>
-  !> Like `hsd_get_or`, but if the key is not found, the default value is also
+  !> If the key is not found, the default value is
   !> written back into the tree. This is critical for generating processed output
   !> (e.g., dftb_pin.hsd) that contains all defaults.
   !> stat is HSD_STAT_NOT_FOUND when default is used, HSD_STAT_OK when key existed.
@@ -1181,27 +1167,6 @@ module hsd_api
 
   end subroutine hsd_get_string
 
-  !> Get string value by path with default fallback
-  subroutine hsd_get_string_default(table, path, val, default, stat)
-    type(hsd_table), intent(in), target :: table
-    character(len=*), intent(in) :: path
-    character(len=:), allocatable, intent(out) :: val
-    character(len=*), intent(in) :: default
-    integer, intent(out), optional :: stat
-
-    integer :: local_stat
-
-    call hsd_get_string(table, path, val, local_stat)
-
-    if (local_stat /= 0) then
-      val = default
-      if (present(stat)) stat = local_stat
-    else
-      if (present(stat)) stat = HSD_STAT_OK
-    end if
-
-  end subroutine hsd_get_string_default
-
   !> Get integer value by path
   subroutine hsd_get_integer(table, path, val, stat)
     type(hsd_table), intent(in), target :: table
@@ -1222,27 +1187,6 @@ module hsd_api
 
     if (present(stat)) stat = local_stat
   end subroutine hsd_get_integer
-
-  !> Get integer value by path with default fallback
-  subroutine hsd_get_integer_default(table, path, val, default, stat)
-    type(hsd_table), intent(in), target :: table
-    character(len=*), intent(in) :: path
-    integer, intent(out) :: val
-    integer, intent(in) :: default
-    integer, intent(out), optional :: stat
-
-    integer :: local_stat
-
-    call hsd_get_integer(table, path, val, local_stat)
-
-    if (local_stat /= 0) then
-      val = default
-      if (present(stat)) stat = local_stat
-    else
-      if (present(stat)) stat = HSD_STAT_OK
-    end if
-
-  end subroutine hsd_get_integer_default
 
   !> Get double precision real value by path
   subroutine hsd_get_real_dp(table, path, val, stat)
@@ -1265,27 +1209,6 @@ module hsd_api
     if (present(stat)) stat = local_stat
   end subroutine hsd_get_real_dp
 
-  !> Get double precision real value by path with default fallback
-  subroutine hsd_get_real_dp_default(table, path, val, default, stat)
-    type(hsd_table), intent(in), target :: table
-    character(len=*), intent(in) :: path
-    real(dp), intent(out) :: val
-    real(dp), intent(in) :: default
-    integer, intent(out), optional :: stat
-
-    integer :: local_stat
-
-    call hsd_get_real_dp(table, path, val, local_stat)
-
-    if (local_stat /= 0) then
-      val = default
-      if (present(stat)) stat = local_stat
-    else
-      if (present(stat)) stat = HSD_STAT_OK
-    end if
-
-  end subroutine hsd_get_real_dp_default
-
   !> Get single precision real value by path
   subroutine hsd_get_real_sp(table, path, val, stat)
     type(hsd_table), intent(in), target :: table
@@ -1301,27 +1224,6 @@ module hsd_api
     if (present(stat)) stat = local_stat
 
   end subroutine hsd_get_real_sp
-
-  !> Get single precision real value by path with default fallback
-  subroutine hsd_get_real_sp_default(table, path, val, default, stat)
-    type(hsd_table), intent(in), target :: table
-    character(len=*), intent(in) :: path
-    real(sp), intent(out) :: val
-    real(sp), intent(in) :: default
-    integer, intent(out), optional :: stat
-
-    integer :: local_stat
-
-    call hsd_get_real_sp(table, path, val, local_stat)
-
-    if (local_stat /= 0) then
-      val = default
-      if (present(stat)) stat = local_stat
-    else
-      if (present(stat)) stat = HSD_STAT_OK
-    end if
-
-  end subroutine hsd_get_real_sp_default
 
   !> Get logical value by path
   subroutine hsd_get_logical(table, path, val, stat)
@@ -1344,27 +1246,6 @@ module hsd_api
     if (present(stat)) stat = local_stat
   end subroutine hsd_get_logical
 
-  !> Get logical value by path with default fallback
-  subroutine hsd_get_logical_default(table, path, val, default, stat)
-    type(hsd_table), intent(in), target :: table
-    character(len=*), intent(in) :: path
-    logical, intent(out) :: val
-    logical, intent(in) :: default
-    integer, intent(out), optional :: stat
-
-    integer :: local_stat
-
-    call hsd_get_logical(table, path, val, local_stat)
-
-    if (local_stat /= 0) then
-      val = default
-      if (present(stat)) stat = local_stat
-    else
-      if (present(stat)) stat = HSD_STAT_OK
-    end if
-
-  end subroutine hsd_get_logical_default
-
   !> Get complex value by path
   subroutine hsd_get_complex_dp(table, path, val, stat)
     type(hsd_table), intent(in), target :: table
@@ -1385,27 +1266,6 @@ module hsd_api
 
     if (present(stat)) stat = local_stat
   end subroutine hsd_get_complex_dp
-
-  !> Get complex value by path with default fallback
-  subroutine hsd_get_complex_dp_default(table, path, val, default, stat)
-    type(hsd_table), intent(in), target :: table
-    character(len=*), intent(in) :: path
-    complex(dp), intent(out) :: val
-    complex(dp), intent(in) :: default
-    integer, intent(out), optional :: stat
-
-    integer :: local_stat
-
-    call hsd_get_complex_dp(table, path, val, local_stat)
-
-    if (local_stat /= 0) then
-      val = default
-      if (present(stat)) stat = local_stat
-    else
-      if (present(stat)) stat = HSD_STAT_OK
-    end if
-
-  end subroutine hsd_get_complex_dp_default
 
   !> Get integer array by path (supports space/comma/newline separated values)
   subroutine hsd_get_integer_array(table, path, val, stat)

@@ -197,7 +197,7 @@ contains
 
   end subroutine test_pure_imaginary_values
 
-  !> Test hsd_get_or with all types
+  !> Test default fallback with hsd_get and stat handling for all types
   subroutine test_get_or_fallback_all_types()
     type(hsd_table) :: root
     type(hsd_error_t), allocatable :: error
@@ -207,27 +207,34 @@ contains
     logical :: log_val
     character(len=:), allocatable :: str_val
     complex(dp) :: cpx_val
+    integer :: stat
 
     call hsd_load_string("dummy = 0", root, error)
     call check(.not. allocated(error), msg="Parse OK")
 
     ! All fallback calls - keys don't exist so defaults returned
-    call hsd_get_or(root, "missing_int", int_val, 42)
+    call hsd_get(root, "missing_int", int_val, stat)
+    if (stat == HSD_STAT_NOT_FOUND) int_val = 42
     call check(is_equal(int_val, 42), msg="Int fallback is 42")
 
-    call hsd_get_or(root, "missing_real", real_val, 3.14_dp)
+    call hsd_get(root, "missing_real", real_val, stat)
+    if (stat == HSD_STAT_NOT_FOUND) real_val = 3.14_dp
     call check(abs(real_val - 3.14_dp) < 0.001_dp, msg="Real fallback is 3.14")
 
-    call hsd_get_or(root, "missing_sp", sp_val, 2.0_sp)
+    call hsd_get(root, "missing_sp", sp_val, stat)
+    if (stat == HSD_STAT_NOT_FOUND) sp_val = 2.0_sp
     call check(abs(sp_val - 2.0_sp) < 0.001_sp, msg="SP fallback is 2.0")
 
-    call hsd_get_or(root, "missing_log", log_val, .true.)
+    call hsd_get(root, "missing_log", log_val, stat)
+    if (stat == HSD_STAT_NOT_FOUND) log_val = .true.
     call check(log_val .eqv. .true., msg="Logical fallback is true")
 
-    call hsd_get_or(root, "missing_str", str_val, "default")
+    call hsd_get(root, "missing_str", str_val, stat)
+    if (stat == HSD_STAT_NOT_FOUND) str_val = "default"
     call check(str_val == "default", msg="String fallback is 'default'")
 
-    call hsd_get_or(root, "missing_cpx", cpx_val, (1.0_dp, 2.0_dp))
+    call hsd_get(root, "missing_cpx", cpx_val, stat)
+    if (stat == HSD_STAT_NOT_FOUND) cpx_val = (1.0_dp, 2.0_dp)
     call check(abs(real(cpx_val) - 1.0_dp) < 0.001_dp, msg="Complex fallback real")
 
     call root%destroy()

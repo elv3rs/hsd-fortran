@@ -926,7 +926,8 @@ contains
     integer :: stat
 
     call hsd_load_string("Temp = 3.14", root, err)
-    call hsd_get_or(root, "Temp", val, 0.0_sp, stat)
+    call hsd_get(root, "Temp", val, stat)
+    if (stat == HSD_STAT_NOT_FOUND) val = 0.0_sp
     call check(stat == HSD_STAT_OK, msg="Got real(sp) ok")
     call check(abs(val - 3.14_sp) < 0.01_sp, msg="Value correct")
     call root%destroy()

@@ -4,7 +4,7 @@
 ! - Loading HSD from file
 ! - Path-based navigation
 ! - Type introspection
-! - Default values with hsd_get_or
+! - Default values via hsd_get + stat handling
 ! - Attribute extraction (units)
 ! - Array and matrix handling
 ! - Tree operations (merge, clone)
@@ -12,9 +12,9 @@
 ! - Writing modified data
 program simple_read
   use hsd, only : &
-  & hsd_table, hsd_error_t, dp, HSD_STAT_OK, &
+  & hsd_table, hsd_error_t, dp, HSD_STAT_OK, HSD_STAT_NOT_FOUND, &
   & hsd_load, hsd_load_string, hsd_dump, &
-  & hsd_get, hsd_get_or, hsd_get_matrix, hsd_get_attrib, hsd_get_keys, &
+  & hsd_get, hsd_get_matrix, hsd_get_attrib, hsd_get_keys, &
   & hsd_set, &
   & hsd_has_child, hsd_has_attrib, hsd_is_table, hsd_is_value, hsd_child_count, &
   & hsd_require, hsd_validate_range, hsd_validate_one_of, &
@@ -88,17 +88,20 @@ program simple_read
   print *
 
   ! ===========================================================================
-  ! 4. Using hsd_get_or for defaults
+  ! 4. Using hsd_get with defaults
   ! ===========================================================================
-  print '(A)', "4. Reading values with defaults (hsd_get_or)..."
+  print '(A)', "4. Reading values with defaults (hsd_get + stat)..."
 
-  call hsd_get_or(root, "Options/RandomSeed", random_seed, 12345, stat)
+  call hsd_get(root, "Options/RandomSeed", random_seed, stat)
+  if (stat == HSD_STAT_NOT_FOUND) random_seed = 12345
   print '(A,I0)', "   Options/RandomSeed = ", random_seed
 
-  call hsd_get_or(root, "Options/MissingOption", random_seed, 99999, stat)
+  call hsd_get(root, "Options/MissingOption", random_seed, stat)
+  if (stat == HSD_STAT_NOT_FOUND) random_seed = 99999
   print '(A,I0,A)', "   Options/MissingOption = ", random_seed, " (default)"
 
-  call hsd_get_or(root, "Driver/OutputPrefix", output_prefix, "output", stat)
+  call hsd_get(root, "Driver/OutputPrefix", output_prefix, stat)
+  if (stat == HSD_STAT_NOT_FOUND) output_prefix = "output"
   print '(A,A,A)', '   Driver/OutputPrefix = "', output_prefix, '"'
   print *
 
@@ -180,7 +183,8 @@ program simple_read
   end if
 
   ! Validate enum
-  call hsd_get_or(root, "Hamiltonian/DFTB/MaxAngularMomentum/C", method, "unknown")
+  call hsd_get(root, "Hamiltonian/DFTB/MaxAngularMomentum/C", method, stat)
+  if (stat == HSD_STAT_NOT_FOUND) method = "unknown"
   call hsd_validate_one_of(root, "Hamiltonian/DFTB/MaxAngularMomentum/C", &
     [character(len=3) :: "s", "p", "d", "f"], error)
   if (.not. allocated(error)) then

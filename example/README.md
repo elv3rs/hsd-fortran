@@ -24,7 +24,7 @@ A comprehensive feature showcase that demonstrates:
   - Strings
   - Arrays of all types
   - 2D matrices
-- Default values with `hsd_get_or()`
+- Default value handling with `hsd_get()` + status checks
 - Attribute extraction (e.g., unit labels)
 
 ### 4. Data Modification
@@ -65,7 +65,7 @@ The program produces detailed output showing:
 - Successful parsing
 - Structure exploration (6 sections)
 - Value extraction with proper types
-- Default value handling
+- Default value handling via status checks
 - Unit attribute extraction
 - Array/matrix handling
 - Validation results

@@ -197,7 +197,7 @@ contains
 
   end subroutine test_get_keys
 
-  !> Test hsd_get_or with integer default
+  !> Test default fallback with hsd_get and stat handling (integer)
   subroutine test_default_integer()
     type(hsd_table) :: root
     type(hsd_error_t), allocatable :: error
@@ -207,12 +207,13 @@ contains
     call check(.not. allocated(error), msg="No parse error")
 
     ! Existing value should be returned
-    call hsd_get_or(root, "existing", val, 999, stat)
+    call hsd_get(root, "existing", val, stat)
     call check(is_equal(val, 42), msg="existing value is 42")
     call check(is_equal(stat, HSD_STAT_OK), msg="stat is OK for existing")
 
     ! Missing value should return default
-    call hsd_get_or(root, "missing", val, 999, stat)
+    call hsd_get(root, "missing", val, stat)
+    if (stat == HSD_STAT_NOT_FOUND) val = 999
     call check(is_equal(val, 999), msg="missing returns default 999")
     call check(is_equal(stat, HSD_STAT_NOT_FOUND), msg="stat is NOT_FOUND for missing")
 
@@ -220,7 +221,7 @@ contains
 
   end subroutine test_default_integer
 
-  !> Test hsd_get_or with real default
+  !> Test default fallback with hsd_get and stat handling (real)
   subroutine test_default_real()
     type(hsd_table) :: root
     type(hsd_error_t), allocatable :: error
@@ -231,12 +232,13 @@ contains
     call check(.not. allocated(error), msg="No parse error")
 
     ! Existing value
-    call hsd_get_or(root, "pi", val, 0.0_dp, stat)
+    call hsd_get(root, "pi", val, stat)
     call check(abs(val - 3.14159_dp) < 0.001_dp, msg="pi value is correct")
     call check(is_equal(stat, HSD_STAT_OK), msg="stat is OK")
 
     ! Missing value
-    call hsd_get_or(root, "e", val, 2.71828_dp, stat)
+    call hsd_get(root, "e", val, stat)
+    if (stat == HSD_STAT_NOT_FOUND) val = 2.71828_dp
     call check(abs(val - 2.71828_dp) < 0.001_dp, msg="missing returns default")
     call check(is_equal(stat, HSD_STAT_NOT_FOUND), msg="stat is NOT_FOUND")
 
@@ -244,7 +246,7 @@ contains
 
   end subroutine test_default_real
 
-  !> Test hsd_get_or with string default
+  !> Test default fallback with hsd_get and stat handling (string)
   subroutine test_default_string()
     type(hsd_table) :: root
     type(hsd_error_t), allocatable :: error
@@ -255,12 +257,13 @@ contains
     call check(.not. allocated(error), msg="No parse error")
 
     ! Existing value
-    call hsd_get_or(root, "name", val, "Unknown", stat)
+    call hsd_get(root, "name", val, stat)
     call check(val == "Alice", msg="name is Alice")
     call check(is_equal(stat, HSD_STAT_OK), msg="stat is OK")
 
     ! Missing value
-    call hsd_get_or(root, "title", val, "Default", stat)
+    call hsd_get(root, "title", val, stat)
+    if (stat == HSD_STAT_NOT_FOUND) val = "Default"
     call check(val == "Default", msg="missing returns default")
     call check(is_equal(stat, HSD_STAT_NOT_FOUND), msg="stat is NOT_FOUND")
 
@@ -268,7 +271,7 @@ contains
 
   end subroutine test_default_string
 
-  !> Test hsd_get_or with logical default
+  !> Test default fallback with hsd_get and stat handling (logical)
   subroutine test_default_logical()
     type(hsd_table) :: root
     type(hsd_error_t), allocatable :: error
@@ -279,12 +282,13 @@ contains
     call check(.not. allocated(error), msg="No parse error")
 
     ! Existing value
-    call hsd_get_or(root, "enabled", val, .false., stat)
+    call hsd_get(root, "enabled", val, stat)
     call check(val, msg="enabled is true")
     call check(is_equal(stat, HSD_STAT_OK), msg="stat is OK")
 
     ! Missing value
-    call hsd_get_or(root, "debug", val, .true., stat)
+    call hsd_get(root, "debug", val, stat)
+    if (stat == HSD_STAT_NOT_FOUND) val = .true.
     call check(val, msg="missing returns default true")
     call check(is_equal(stat, HSD_STAT_NOT_FOUND), msg="stat is NOT_FOUND")
 
@@ -839,7 +843,7 @@ contains
 
   end subroutine test_set_arrays
 
-  !> Test hsd_get_or for complex with default
+  !> Test default fallback with hsd_get and stat handling (complex)
   subroutine test_default_complex()
     type(hsd_table) :: root
     type(hsd_error_t), allocatable :: error
@@ -850,12 +854,13 @@ contains
     call check(.not. allocated(error), msg="Parse OK")
 
     ! Existing value
-    call hsd_get_or(root, "existing", cval, (0.0_dp, 0.0_dp), stat)
+    call hsd_get(root, "existing", cval, stat)
     call check(is_equal(stat, HSD_STAT_OK), msg="Found existing complex")
     call check(abs(real(cval) - 1.0_dp) < 0.001_dp, msg="Real part correct")
 
     ! Missing value - should use default
-    call hsd_get_or(root, "missing", cval, (5.0_dp, 6.0_dp), stat)
+    call hsd_get(root, "missing", cval, stat)
+    if (stat == HSD_STAT_NOT_FOUND) cval = (5.0_dp, 6.0_dp)
     call check(is_equal(stat, HSD_STAT_NOT_FOUND), msg="Missing returns not found")
     call check(abs(real(cval) - 5.0_dp) < 0.001_dp, msg="Default real part")
     call check(abs(aimag(cval) - 6.0_dp) < 0.001_dp, msg="Default imag part")
