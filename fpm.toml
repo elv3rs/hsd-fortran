@@ -46,28 +46,3 @@ main = "config_demo.f90"
 name = "matrix_demo"
 source-dir = "example"
 main = "matrix_demo.f90"
-
-[[example]]
-name = "bench_lookup"
-source-dir = "utils/bench"
-main = "bench_lookup.f90"
-
-[[example]]
-name = "bench_copy"
-source-dir = "utils/bench"
-main = "bench_copy.f90"
-
-[[example]]
-name = "bench_parser"
-source-dir = "utils/bench"
-main = "bench_parser.f90"
-
-[[example]]
-name = "bench_access"
-source-dir = "utils/bench"
-main = "bench_access.f90"
-
-[[example]]
-name = "bench_array"
-source-dir = "utils/bench"
-main = "bench_array.f90"

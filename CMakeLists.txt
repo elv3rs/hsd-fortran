@@ -13,7 +13,6 @@ project(hsd-fortran
 # Options
 option(HSD_BUILD_TESTS "Build test suite" ON)
 option(HSD_BUILD_EXAMPLES "Build examples" ON)
-option(HSD_BUILD_BENCHMARKS "Build benchmarks" ON)
 option(HSD_COVERAGE "Enable code coverage instrumentation (requires GCC)" OFF)
 option(HSD_SANITIZERS "Enable sanitizers for leak/memory detection in Debug builds (requires GCC/Clang)" OFF)
 
@@ -71,15 +70,6 @@ endif()
 # Examples
 if(HSD_BUILD_EXAMPLES)
   add_subdirectory(example)
-endif()
-
-# Benchmarks
-if(HSD_BUILD_BENCHMARKS)
-  if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/utils/bench/CMakeLists.txt")
-    add_subdirectory(utils/bench)
-  else()
-    message(STATUS "HSD_BUILD_BENCHMARKS=ON but utils/bench is missing; skipping benchmarks")
-  endif()
 endif()
 
 # Installation

@@ -45,7 +45,6 @@ CMake Options
     ``HSD_ACCEPT_TRUE_FALSE``                    ``ON``     Accept ``True``/``False`` as boolean values
     ``HSD_BUILD_TESTS``                          ``ON``     Build test suite
     ``HSD_BUILD_EXAMPLES``                       ``ON``     Build example programs
-    ``HSD_BUILD_BENCHMARKS``                     ``ON``     Build benchmark programs
     ``HSD_COVERAGE``                             ``OFF``    Enable code coverage (requires GCC)
     ``HSD_SANITIZERS``                           ``OFF``    Enable sanitizers for leak/memory detection
     ============================================ ========== ============================================
