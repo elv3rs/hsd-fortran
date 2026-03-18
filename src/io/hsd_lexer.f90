@@ -10,7 +10,7 @@ module hsd_lexer
   use hsd_utils, only: to_lower, string_buffer_t
   use hsd_token, only: hsd_token_t, TOKEN_EOF, TOKEN_STRING, &
     TOKEN_LBRACE, TOKEN_RBRACE, TOKEN_EQUAL, TOKEN_LBRACKET, TOKEN_RBRACKET, &
-    TOKEN_INCLUDE_TXT, TOKEN_INCLUDE_HSD, TOKEN_SEMICOLON, TOKEN_COMMENT, &
+    TOKEN_INCLUDE_TXT, TOKEN_INCLUDE_HSD, TOKEN_SEMICOLON, &
     TOKEN_NEWLINE, TOKEN_TEXT
   use hsd_error, only: hsd_error_t, make_error, &
     HSD_STAT_OK, HSD_STAT_IO_ERROR, HSD_STAT_UNCLOSED_QUOTE, HSD_STAT_UNCLOSED_ATTRIB, &
@@ -47,7 +47,7 @@ module hsd_lexer
     procedure :: skip_whitespace => lexer_skip_whitespace
     procedure :: read_string => lexer_read_string
     procedure :: read_text => lexer_read_text
-    procedure :: read_comment => lexer_read_comment
+    procedure :: skip_comment => lexer_skip_comment
     procedure :: is_eof => lexer_is_eof
   end type hsd_lexer_t
 
@@ -298,35 +298,24 @@ contains
 
   end subroutine lexer_read_text
 
-  !> Read a comment (from # to end of line)
-  subroutine lexer_read_comment(self, token)
+  !> Skip a comment (from # to end of line) including its trailing newline
+  subroutine lexer_skip_comment(self)
     class(hsd_lexer_t), intent(inout) :: self
-    type(hsd_token_t), intent(out) :: token
 
     character(len=1) :: ch
-    type(string_buffer_t) :: buf
-    integer :: start_line, start_col
 
-    start_line = self%line
-    start_col = self%column
     call self%advance()  ! Skip #
 
-    call buf%init()
     do while (.not. self%is_eof())
       ch = self%peek_char()
       if (ch == CHAR_NEWLINE) then
+        call self%advance()
         exit
       end if
-      call buf%append_char(ch)
       call self%advance()
     end do
 
-    token%kind = TOKEN_COMMENT
-    token%value = buf%get_string()
-    token%line = start_line
-    token%column = start_col
-
-  end subroutine lexer_read_comment
+  end subroutine lexer_skip_comment
 
   !> Get the next token from the source
   subroutine lexer_next_token(self, token, in_attrib)
@@ -352,18 +341,28 @@ contains
       stop_chars = general_stop
     end if
 
-    ! Skip whitespace
-    call self%skip_whitespace()
+    do
+      ! Skip whitespace
+      call self%skip_whitespace()
 
-    ! Check for EOF
-    if (self%is_eof()) then
-      token%kind = TOKEN_EOF
-      token%line = self%line
-      token%column = self%column
-      return
-    end if
+      ! Check for EOF
+      if (self%is_eof()) then
+        token%kind = TOKEN_EOF
+        token%line = self%line
+        token%column = self%column
+        return
+      end if
 
-    ch = self%peek_char()
+      ch = self%peek_char()
+
+      ! Handle comments silently
+      if (ch == CHAR_HASH) then
+        call self%skip_comment()
+        cycle
+      end if
+
+      exit
+    end do
 
     ! Single character tokens
     select case (ch)
@@ -424,10 +423,6 @@ contains
       token%line = self%line
       token%column = self%column
       call self%advance()
-      return
-
-    case (CHAR_HASH)
-      call self%read_comment(token)
       return
 
     case (CHAR_DQUOTE, CHAR_SQUOTE)

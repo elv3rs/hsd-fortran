@@ -3,7 +3,7 @@ module test_lexer_suite
   use hsd_lexer, only : hsd_lexer_t, new_lexer_from_string
   use hsd_token, only : hsd_token_t, TOKEN_EOF, TOKEN_TEXT, TOKEN_STRING, &
       & TOKEN_LBRACE, TOKEN_RBRACE, TOKEN_EQUAL, TOKEN_LBRACKET, TOKEN_RBRACKET, &
-      & TOKEN_INCLUDE_TXT, TOKEN_INCLUDE_HSD, TOKEN_COMMENT
+      & TOKEN_INCLUDE_TXT, TOKEN_INCLUDE_HSD
   use fortuno_serial, only : is_equal, test => serial_case_item, check => serial_check, &
       & suite => serial_suite_item, test_list
   implicit none (type, external)
@@ -141,13 +141,9 @@ contains
 
     call lexer%next_token(token)  ! tag
     call check(is_equal(token%kind, TOKEN_TEXT), msg="Token before comment is TEXT")
-
-    call lexer%next_token(token)  ! # comment
-    call check(is_equal(token%kind, TOKEN_COMMENT), msg="Comment token recognized")
-
-    call lexer%next_token(token)  ! newline
     call lexer%next_token(token)  ! next
     call check(is_equal(token%kind, TOKEN_TEXT), msg="Token after comment is TEXT")
+
     call check(token%value == "next", msg="Token after comment has correct value")
 
   end subroutine test_comments

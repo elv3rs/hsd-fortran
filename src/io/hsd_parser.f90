@@ -7,7 +7,7 @@ module hsd_parser
   use hsd_constants, only: dp, hsd_max_include_depth, CHAR_NEWLINE
   use hsd_token, only: hsd_token_t, TOKEN_EOF, TOKEN_STRING, &
     TOKEN_LBRACE, TOKEN_RBRACE, TOKEN_EQUAL, TOKEN_LBRACKET, TOKEN_RBRACKET, &
-    TOKEN_INCLUDE_TXT, TOKEN_INCLUDE_HSD, TOKEN_SEMICOLON, TOKEN_COMMENT, &
+    TOKEN_INCLUDE_TXT, TOKEN_INCLUDE_HSD, TOKEN_SEMICOLON, &
     TOKEN_TEXT, TOKEN_NEWLINE, TOKEN_WHITESPACE
   use hsd_lexer, only: hsd_lexer_t, new_lexer_from_file, new_lexer_from_string
   use hsd_types, only: hsd_node, hsd_node_ptr, &
@@ -140,7 +140,7 @@ contains
 
   end subroutine hsd_load_string
 
-  !> Get next meaningful token (skipping whitespace)
+  !> Get next meaningful token (skipping whitespace/comments internally handled by lexer)
   subroutine parser_next_token(self)
     class(parser_state), intent(inout) :: self
     call self%lexer%next_token(self%current_token)
@@ -150,9 +150,7 @@ contains
   subroutine parser_skip_ws_comments(self)
     class(parser_state), intent(inout) :: self
 
-    do while (self%current_token%kind == TOKEN_WHITESPACE .or. &
-              self%current_token%kind == TOKEN_COMMENT .or. &
-              self%current_token%kind == TOKEN_NEWLINE)
+    do while (self%current_token%kind == TOKEN_NEWLINE)
       call self%next_token()
     end do
 
@@ -276,23 +274,6 @@ contains
     text_start_line = 0
 
     do while (.not. state%current_token%is_eof())
-      ! Skip whitespace and comments.  When a comment is followed by a
-      ! newline, consume the newline as well so that comment-only lines
-      ! do not leave spurious blank lines in the text buffer.
-      block
-        logical :: had_comment
-        had_comment = .false.
-        do while (state%current_token%kind == TOKEN_WHITESPACE .or. &
-                  state%current_token%kind == TOKEN_COMMENT)
-          if (state%current_token%kind == TOKEN_COMMENT) had_comment = .true.
-          call state%next_token()
-        end do
-        if (had_comment .and. state%current_token%kind == TOKEN_NEWLINE) then
-          call state%next_token()
-          cycle
-        end if
-      end block
-
       ! Preserve newlines as content separators when buffering inline text.
       ! Without text buffered, newlines are simply skipped (e.g. between tags).
       if (state%current_token%kind == TOKEN_NEWLINE) then
@@ -406,10 +387,6 @@ contains
       tag_name = tag_name(2:)
     end if
 
-    ! Skip whitespace (lexer already skips, defensive)
-    do while (state%current_token%kind == TOKEN_WHITESPACE)
-      call state%next_token()
-    end do
 
     ! Check for attribute [...]
     attrib = ""
@@ -423,9 +400,6 @@ contains
     end if
 
     ! Skip whitespace again (lexer already skips, defensive)
-    do while (state%current_token%kind == TOKEN_WHITESPACE)
-      call state%next_token()
-    end do
 
     ! Determine what follows
     select case (state%current_token%kind)
@@ -491,10 +465,6 @@ contains
 
       call state%next_token()  ! consume =
 
-      ! Skip whitespace (lexer already skips, defensive)
-      do while (state%current_token%kind == TOKEN_WHITESPACE)
-        call state%next_token()
-      end do
 
       ! Check what follows =
       if (state%current_token%kind == TOKEN_LBRACE) then
@@ -516,10 +486,6 @@ contains
         saved_token = state%current_token
         call state%next_token()
 
-        ! Skip whitespace (lexer already skips, defensive)
-        do while (state%current_token%kind == TOKEN_WHITESPACE)
-          call state%next_token()
-        end do
 
         if (state%current_token%kind == TOKEN_LBRACE) then
           ! Tag = ChildTag { ... } or +Tag = +ChildTag { ... }
@@ -633,8 +599,7 @@ contains
           do while (state%current_token%kind /= TOKEN_NEWLINE .and. &
                     state%current_token%kind /= TOKEN_EOF .and. &
                     state%current_token%kind /= TOKEN_SEMICOLON .and. &
-                    state%current_token%kind /= TOKEN_RBRACE .and. &
-                    state%current_token%kind /= TOKEN_COMMENT)
+                    state%current_token%kind /= TOKEN_RBRACE)
             if (state%current_token%kind == TOKEN_TEXT .or. &
                 state%current_token%kind == TOKEN_STRING) then
               value_text = value_text // " " // state%current_token%value
@@ -661,8 +626,7 @@ contains
         do while (state%current_token%kind /= TOKEN_NEWLINE .and. &
                   state%current_token%kind /= TOKEN_EOF .and. &
                   state%current_token%kind /= TOKEN_SEMICOLON .and. &
-                  state%current_token%kind /= TOKEN_RBRACE .and. &
-                  state%current_token%kind /= TOKEN_COMMENT)
+                  state%current_token%kind /= TOKEN_RBRACE)
           if (state%current_token%kind == TOKEN_TEXT .or. &
               state%current_token%kind == TOKEN_STRING) then
             value_text = value_text // " " // state%current_token%value

@@ -3,7 +3,7 @@ module test_full_coverage_suite
   use hsd
   use hsd_error, only: make_syntax_error, make_type_error, make_error, &
       & error_message
-  use hsd_token, only: token_name, TOKEN_WHITESPACE, TOKEN_NEWLINE, TOKEN_COMMENT, &
+  use hsd_token, only: token_name, TOKEN_WHITESPACE, TOKEN_NEWLINE, &
       & TOKEN_LBRACKET, TOKEN_RBRACKET, TOKEN_SEMICOLON, TOKEN_INCLUDE_TXT, &
       & TOKEN_INCLUDE_HSD, TOKEN_EOF, hsd_token_t
   use fortuno_serial, only: test => serial_case_item, &
@@ -1676,7 +1676,6 @@ contains
     call check(token_name(TOKEN_WHITESPACE) == "whitespace", &
         msg="Whitespace name")
     call check(token_name(TOKEN_NEWLINE) == "newline", msg="Newline name")
-    call check(token_name(TOKEN_COMMENT) == "comment", msg="Comment name")
     call check(token_name(TOKEN_LBRACKET) == "opening bracket", &
         msg="Lbracket name")
     call check(token_name(TOKEN_RBRACKET) == "closing bracket", &

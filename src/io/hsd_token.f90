@@ -7,7 +7,7 @@ module hsd_token
 
   public :: hsd_token_t
   public :: TOKEN_INVALID, TOKEN_EOF, TOKEN_WHITESPACE, TOKEN_NEWLINE
-  public :: TOKEN_COMMENT, TOKEN_LBRACE, TOKEN_RBRACE, TOKEN_LBRACKET
+  public :: TOKEN_LBRACE, TOKEN_RBRACE, TOKEN_LBRACKET
   public :: TOKEN_RBRACKET, TOKEN_EQUAL, TOKEN_SEMICOLON, TOKEN_STRING
   public :: TOKEN_TEXT, TOKEN_INCLUDE_TXT, TOKEN_INCLUDE_HSD
   public :: token_name
@@ -24,7 +24,6 @@ module hsd_token
   integer, parameter :: TOKEN_EOF = 0
   integer, parameter :: TOKEN_WHITESPACE = 1
   integer, parameter :: TOKEN_NEWLINE = 2
-  integer, parameter :: TOKEN_COMMENT = 3
   integer, parameter :: TOKEN_LBRACE = 4
   integer, parameter :: TOKEN_RBRACE = 5
   integer, parameter :: TOKEN_LBRACKET = 6
@@ -81,8 +80,6 @@ contains
       name = "whitespace"
     case (TOKEN_NEWLINE)
       name = "newline"
-    case (TOKEN_COMMENT)
-      name = "comment"
     case (TOKEN_LBRACE)
       name = "opening brace"
     case (TOKEN_RBRACE)
