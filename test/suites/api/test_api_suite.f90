@@ -9,9 +9,6 @@ module test_api_suite
   private
   public :: tests
 
-  ! Module-level counters for hsd_walk tests
-  integer :: walk_table_count = 0
-  integer :: walk_value_count = 0
 
 
 contains
@@ -42,7 +39,6 @@ contains
             test("remove_child", test_remove_child), &
             test("iterator", test_iterator), &
             test("has_child", test_has_child), &
-            test("sp_values", test_sp_values), &
             test("get_table", test_get_table), &
             test("is_array", test_is_array), &
             test("set_arrays", test_set_arrays), &
@@ -51,11 +47,6 @@ contains
             test("table_equal_different", test_table_equal_different), &
             test("table_equal_nested", test_table_equal_nested), &
             test("table_equal_empty", test_table_equal_empty), &
-            test("walk_tables_only", test_walk_tables_only), &
-            test("walk_values_only", test_walk_values_only), &
-            test("walk_both", test_walk_both), &
-            test("walk_early_stop", test_walk_early_stop), &
-            test("walk_no_callbacks", test_walk_no_callbacks), &
             test("remove_child_no_index", test_remove_child_no_index), &
             test("add_child_uninit", test_add_child_uninit), &
             test("merge_attrib", test_merge_attrib), &
@@ -81,7 +72,7 @@ contains
 
   !> Test type introspection with hsd_get_type
   subroutine test_type_introspection()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     integer :: val_type
     character(len=:), allocatable :: hsd_input
@@ -117,7 +108,7 @@ contains
 
   !> Test hsd_is_table and hsd_is_value
   subroutine test_is_table_value()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     character(len=:), allocatable :: hsd_input
 
@@ -143,7 +134,7 @@ contains
 
   !> Test hsd_child_count
   subroutine test_child_count()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     integer :: count
     character(len=:), allocatable :: hsd_input
@@ -175,7 +166,7 @@ contains
 
   !> Test hsd_get_keys
   subroutine test_get_keys()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     character(len=:), allocatable :: keys(:)
     integer :: stat
@@ -199,7 +190,7 @@ contains
 
   !> Test default fallback with hsd_get and stat handling (integer)
   subroutine test_default_integer()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     integer :: val, stat
 
@@ -223,7 +214,7 @@ contains
 
   !> Test default fallback with hsd_get and stat handling (real)
   subroutine test_default_real()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     real(dp) :: val
     integer :: stat
@@ -248,7 +239,7 @@ contains
 
   !> Test default fallback with hsd_get and stat handling (string)
   subroutine test_default_string()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     character(len=:), allocatable :: val
     integer :: stat
@@ -273,7 +264,7 @@ contains
 
   !> Test default fallback with hsd_get and stat handling (logical)
   subroutine test_default_logical()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     logical :: val
     integer :: stat
@@ -301,7 +292,7 @@ contains
 
   !> Test hsd_get_attrib
   subroutine test_get_attrib()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     character(len=:), allocatable :: attrib
     integer :: stat
@@ -339,7 +330,7 @@ contains
 
   !> Test hsd_has_attrib
   subroutine test_has_attrib()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     character(len=:), allocatable :: hsd_input
 
@@ -360,7 +351,7 @@ contains
 
   !> Test hsd_require
   subroutine test_hsd_require()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error, validation_error
     character(len=:), allocatable :: hsd_input
 
@@ -398,7 +389,7 @@ contains
 
   !> Test hsd_validate_range
   subroutine test_validate_range()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error, validation_error
     character(len=:), allocatable :: hsd_input
 
@@ -441,7 +432,7 @@ contains
 
   !> Test hsd_validate_one_of
   subroutine test_validate_one_of()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error, validation_error
     character(len=:), allocatable :: hsd_input
     character(len=10) :: valid_types(3)
@@ -481,7 +472,7 @@ contains
 
   !> Test hsd_clone
   subroutine test_hsd_clone()
-    type(hsd_table) :: root, cloned
+    type(hsd_node) :: root, cloned
     type(hsd_error_t), allocatable :: error
     integer :: val1, val2, stat
     character(len=:), allocatable :: str_val
@@ -531,7 +522,7 @@ contains
 
   !> Test hsd_merge
   subroutine test_hsd_merge()
-    type(hsd_table) :: base, overlay
+    type(hsd_node) :: base, overlay
     type(hsd_error_t), allocatable :: error
     integer :: val, stat
     character(len=:), allocatable :: str_val
@@ -594,7 +585,7 @@ contains
 
   !> Test loading HSD from file using build_env paths
   subroutine test_file_load()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     character(len=512) :: filepath
     integer :: max_steps, stat
@@ -605,7 +596,7 @@ contains
     filepath = source_dir // "/test/inputs/simple.hsd"
 
     ! Load from file
-    call hsd_load(trim(filepath), root, error)
+    call hsd_load_file(trim(filepath), root, error)
     call check(.not. allocated(error), msg="File loaded without error")
 
     ! Verify parsed content
@@ -627,7 +618,7 @@ contains
 
   !> Test hsd_get_matrix for 2D array retrieval
   subroutine test_matrix_getter()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     integer, allocatable :: int_mat(:,:)
     real(dp), allocatable :: real_mat(:,:)
@@ -668,7 +659,7 @@ contains
 
   !> Test hsd_remove_child functionality
   subroutine test_remove_child()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     integer :: count, stat
 
@@ -694,10 +685,10 @@ contains
 
   !> Test iterator functionality
   subroutine test_iterator()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     type(hsd_iterator) :: iter
-    class(hsd_node), pointer :: node
+    type(hsd_node), pointer :: node
     integer :: count
 
     call hsd_load_string("x = 1" // char(10) // "y = 2" // char(10) // "z = 3", root, error)
@@ -721,7 +712,7 @@ contains
 
   !> Test hsd_has_child function
   subroutine test_has_child()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
 
     call hsd_load_string("existing = 42" // char(10) // "nested { inner = 1 }", root, error)
@@ -735,37 +726,11 @@ contains
 
   end subroutine test_has_child
 
-  !> Test single-precision real values
-  subroutine test_sp_values()
-    type(hsd_table) :: root
-    type(hsd_error_t), allocatable :: error
-    real(sp) :: sp_val
-    real(sp), allocatable :: sp_arr(:)
-    integer :: stat
-
-    call hsd_load_string("val = 3.14" // char(10) // "arr = 1.0 2.0 3.0", root, error)
-    call check(.not. allocated(error), msg="Parse OK")
-
-    call hsd_get(root, "val", sp_val, stat)
-    call check(is_equal(stat, 0), msg="Can get SP value")
-    call check(abs(sp_val - 3.14_sp) < 0.01_sp, msg="SP value correct")
-
-    call hsd_get(root, "arr", sp_arr, stat)
-    call check(is_equal(stat, 0), msg="Can get SP array")
-    call check(is_equal(size(sp_arr), 3), msg="SP array size correct")
-
-    ! Test set SP
-    call hsd_set(root, "new_sp", 2.71_sp, stat)
-    call check(is_equal(stat, 0), msg="Can set SP value")
-
-    call root%destroy()
-
-  end subroutine test_sp_values
 
   !> Test hsd_get_table function
   subroutine test_get_table()
-    type(hsd_table) :: root
-    type(hsd_table), pointer :: subtable
+    type(hsd_node) :: root
+    type(hsd_node), pointer :: subtable
     type(hsd_error_t), allocatable :: error
     integer :: stat
 
@@ -786,7 +751,7 @@ contains
 
   !> Test hsd_is_array function
   subroutine test_is_array()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     integer, allocatable :: arr(:)
     integer :: stat
@@ -808,7 +773,7 @@ contains
 
   !> Test hsd_set for arrays
   subroutine test_set_arrays()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     integer, allocatable :: int_arr(:)
     real(dp), allocatable :: real_arr(:)
@@ -845,7 +810,7 @@ contains
 
   !> Test default fallback with hsd_get and stat handling (complex)
   subroutine test_default_complex()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     complex(dp) :: cval
     integer :: stat
@@ -876,7 +841,7 @@ contains
 
   !> Test hsd_table_equal with identical tables
   subroutine test_table_equal_identical()
-    type(hsd_table) :: root1, root2
+    type(hsd_node) :: root1, root2
     type(hsd_error_t), allocatable :: error
     character(len=:), allocatable :: hsd_input
 
@@ -900,7 +865,7 @@ contains
 
   !> Test hsd_table_equal with different tables
   subroutine test_table_equal_different()
-    type(hsd_table) :: root1, root2
+    type(hsd_node) :: root1, root2
     type(hsd_error_t), allocatable :: error
 
     call hsd_load_string("a = 1" // char(10) // "b = 2", root1, error)
@@ -917,7 +882,7 @@ contains
 
   !> Test hsd_table_equal with nested tables
   subroutine test_table_equal_nested()
-    type(hsd_table) :: root1, root2
+    type(hsd_node) :: root1, root2
     type(hsd_error_t), allocatable :: error
     character(len=:), allocatable :: input1, input2
 
@@ -936,9 +901,9 @@ contains
     call root2%destroy()
   end subroutine test_table_equal_nested
 
-  !> Test hsd_walk with empty tables
+  !> Test hsd_table_equal with empty tables
   subroutine test_table_equal_empty()
-    type(hsd_table) :: root1, root2
+    type(hsd_node) :: root1, root2
 
     call new_table(root1, name="root")
     call new_table(root2, name="root")
@@ -950,109 +915,10 @@ contains
     call root2%destroy()
   end subroutine test_table_equal_empty
 
-  !> Test hsd_walk with on_table callback only
-  subroutine test_walk_tables_only()
-    type(hsd_table) :: root
-    type(hsd_error_t), allocatable :: error
-    integer :: stat
-
-    walk_table_count = 0
-    walk_value_count = 0
-
-    call hsd_load_string("a { b = 1 }" // char(10) // "c { d = 2 }", root, error)
-    call check(.not. allocated(error), msg="parse ok")
-
-    call hsd_walk(root, on_table=walk_count_table, stat=stat)
-    call check(stat == 0, msg="walk ok")
-    ! Root + a + c = 3 tables
-    call check(walk_table_count == 3, msg="should visit 3 tables")
-    call check(walk_value_count == 0, msg="no values visited")
-
-    call root%destroy()
-  end subroutine test_walk_tables_only
-
-  !> Test hsd_walk with on_value callback only
-  subroutine test_walk_values_only()
-    type(hsd_table) :: root
-    type(hsd_error_t), allocatable :: error
-    integer :: stat
-
-    walk_table_count = 0
-    walk_value_count = 0
-
-    call hsd_load_string("x = 1" // char(10) // "y = 2" // char(10) // "z = 3", &
-        & root, error)
-    call check(.not. allocated(error), msg="parse ok")
-
-    call hsd_walk(root, on_value=walk_count_value, stat=stat)
-    call check(stat == 0, msg="walk ok")
-    call check(walk_table_count == 0, msg="no tables visited")
-    call check(walk_value_count == 3, msg="should visit 3 values")
-
-    call root%destroy()
-  end subroutine test_walk_values_only
-
-  !> Test hsd_walk with both callbacks
-  subroutine test_walk_both()
-    type(hsd_table) :: root
-    type(hsd_error_t), allocatable :: error
-    integer :: stat
-
-    walk_table_count = 0
-    walk_value_count = 0
-
-    call hsd_load_string("a = 1" // char(10) // "b { c = 2 }", root, error)
-    call check(.not. allocated(error), msg="parse ok")
-
-    call hsd_walk(root, on_table=walk_count_table, &
-        & on_value=walk_count_value, stat=stat)
-    call check(stat == 0, msg="walk ok")
-    ! Root + b = 2 tables
-    call check(walk_table_count == 2, msg="should visit 2 tables")
-    ! a + c = 2 values
-    call check(walk_value_count == 2, msg="should visit 2 values")
-
-    call root%destroy()
-  end subroutine test_walk_both
-
-  !> Test hsd_walk early stop via non-zero stat
-  subroutine test_walk_early_stop()
-    type(hsd_table) :: root
-    type(hsd_error_t), allocatable :: error
-    integer :: stat
-
-    walk_value_count = 0
-
-    call hsd_load_string("a = 1" // char(10) // "b = 2" // char(10) // "c = 3", &
-        & root, error)
-    call check(.not. allocated(error), msg="parse ok")
-
-    call hsd_walk(root, on_value=walk_stop_after_one, stat=stat)
-    call check(stat /= 0, msg="walk should have stopped early")
-    call check(walk_value_count == 1, msg="should visit only 1 value")
-
-    call root%destroy()
-  end subroutine test_walk_early_stop
-
-  !> Test hsd_walk with no callbacks (should be a no-op)
-  subroutine test_walk_no_callbacks()
-    type(hsd_table) :: root
-    type(hsd_error_t), allocatable :: error
-    integer :: stat
-
-    call hsd_load_string("a = 1" // char(10) // "b { c = 2 }", root, error)
-    call check(.not. allocated(error), msg="Parse OK")
-
-    ! Walk with neither callback should succeed without error
-    call hsd_walk(root, stat=stat)
-    call check(is_equal(stat, 0), msg="walk with no callbacks succeeds")
-
-    call root%destroy()
-  end subroutine test_walk_no_callbacks
 
   !> Test remove_child_by_name when hash index is not active (linear fallback)
   subroutine test_remove_child_no_index()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     integer :: stat, count
 
@@ -1074,8 +940,8 @@ contains
 
   !> Test add_child on an uninitialized table
   subroutine test_add_child_uninit()
-    type(hsd_table) :: root
-    type(hsd_value) :: val
+    type(hsd_node) :: root
+    type(hsd_node) :: val
     integer :: count
 
     ! root is default-initialized (no children array, num_children=0)
@@ -1094,7 +960,7 @@ contains
 
   !> Test that hsd_merge propagates attributes from overlay values
   subroutine test_merge_attrib()
-    type(hsd_table) :: base, overlay
+    type(hsd_node) :: base, overlay
     type(hsd_error_t), allocatable :: error
     character(len=:), allocatable :: attrib
     integer :: stat
@@ -1119,7 +985,7 @@ contains
 
   !> Test that hsd_merge clears stale fields when overwriting a value
   subroutine test_merge_clears_stale()
-    type(hsd_table) :: base, overlay
+    type(hsd_node) :: base, overlay
     type(hsd_error_t), allocatable :: error
     integer :: stat, ival
     character(len=:), allocatable :: sval
@@ -1146,7 +1012,7 @@ contains
 
   !> Test parsing an empty string
   subroutine test_parse_empty_string()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     integer :: count
 
@@ -1161,11 +1027,11 @@ contains
 
   !> Test hsd_load with a missing file when error argument is present
   subroutine test_load_missing_noerr()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
 
     ! Load a nonexistent file — should set the error argument, not crash
-    call hsd_load("/tmp/nonexistent_hsd_file_12345.hsd", root, error)
+    call hsd_load_file("/tmp/nonexistent_hsd_file_12345.hsd", root, error)
     call check(allocated(error), msg="error is set for missing file")
 
     call root%destroy()
@@ -1173,18 +1039,18 @@ contains
 
   !> Test hsd_table_equal with children that have no names (unnamed nodes)
   subroutine test_table_equal_unnamed()
-    type(hsd_table) :: a, b
-    type(hsd_value) :: val_a, val_b
+    type(hsd_node) :: a, b
+    type(hsd_node) :: val_a, val_b
 
     call new_table(a, "root")
     call new_table(b, "root")
 
     ! Add a named child to both
-    val_a%name = "x"
+    call new_value(val_a, "x")
     call val_a%set_integer(1)
     call a%add_child(val_a)
 
-    val_b%name = "x"
+    call new_value(val_b, "x")
     call val_b%set_integer(1)
     call b%add_child(val_b)
 
@@ -1192,7 +1058,7 @@ contains
     call check(hsd_table_equal(a, b), msg="identical named children are equal")
 
     ! Now test with different children count
-    val_a%name = "y"
+    call new_value(val_a, "y")
     call val_a%set_integer(2)
     call a%add_child(val_a)
 
@@ -1202,38 +1068,10 @@ contains
     call b%destroy()
   end subroutine test_table_equal_unnamed
 
-  ! --- Walk test helper callbacks (module-level counters) ---
-
-  subroutine walk_count_table(table, path, depth, stat)
-    type(hsd_table), intent(in), target :: table
-    character(len=*), intent(in) :: path
-    integer, intent(in) :: depth
-    integer, intent(out), optional :: stat
-    walk_table_count = walk_table_count + 1
-    if (present(stat)) stat = 0
-  end subroutine walk_count_table
-
-  subroutine walk_count_value(val, path, depth, stat)
-    type(hsd_value), intent(in) :: val
-    character(len=*), intent(in) :: path
-    integer, intent(in) :: depth
-    integer, intent(out), optional :: stat
-    walk_value_count = walk_value_count + 1
-    if (present(stat)) stat = 0
-  end subroutine walk_count_value
-
-  subroutine walk_stop_after_one(val, path, depth, stat)
-    type(hsd_value), intent(in) :: val
-    character(len=*), intent(in) :: path
-    integer, intent(in) :: depth
-    integer, intent(out), optional :: stat
-    walk_value_count = walk_value_count + 1
-    if (present(stat)) stat = 1  ! Stop traversal
-  end subroutine walk_stop_after_one
 
   !> Test hsd_get_or_set writes default back to tree when key is missing
   subroutine test_get_or_set_missing()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     integer :: ival, stat
     real(dp) :: rval
     logical :: lval
@@ -1273,7 +1111,7 @@ contains
 
   !> Test hsd_get_or_set returns existing value without overwriting
   subroutine test_get_or_set_existing()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     integer :: ival, stat
 
@@ -1289,7 +1127,7 @@ contains
 
   !> Test hsd_set_attrib
   subroutine test_set_attrib()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     character(len=:), allocatable :: attrib
     integer :: stat
@@ -1315,7 +1153,7 @@ contains
 
   !> Test hsd_rename_child
   subroutine test_rename_child()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     integer :: ival, stat
 
@@ -1342,10 +1180,10 @@ contains
 
   !> Test hsd_get_choice for polymorphic dispatch
   subroutine test_get_choice()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     character(len=:), allocatable :: choice_name
-    type(hsd_table), pointer :: choice_table
+    type(hsd_node), pointer :: choice_table
     integer :: stat, max_steps
 
     call hsd_load_string( &
@@ -1373,7 +1211,7 @@ contains
 
   !> Test hsd_set with string array
   subroutine test_set_string_array()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     character(len=10) :: names(3)
     character(len=:), allocatable :: result_str
     integer :: stat
@@ -1398,7 +1236,7 @@ contains
 
   !> Test hsd_set with integer matrix
   subroutine test_set_integer_matrix()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     integer :: mat(2,3), nrows, ncols, stat
     integer, allocatable :: mat_out(:,:)
 
@@ -1421,7 +1259,7 @@ contains
 
   !> Test hsd_set with real matrix
   subroutine test_set_real_matrix()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     real(dp) :: mat(2,2)
     real(dp), allocatable :: mat_out(:,:)
     integer :: nrows, ncols, stat
@@ -1444,11 +1282,10 @@ contains
 
   !> Test hsd_get_or_set array overloads write default back to tree when key is missing
   subroutine test_get_or_set_array_missing()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     integer :: stat
     integer, allocatable :: iarr(:)
     real(dp), allocatable :: rarr(:)
-    real(sp), allocatable :: sparr(:)
     logical, allocatable :: larr(:)
 
     call new_table(root, "root")
@@ -1474,16 +1311,6 @@ contains
     call check(all(abs(rarr - [1.0_dp, 2.5_dp]) < 1.0e-10_dp), &
         & msg="real array write-back should match")
 
-    ! Real(sp) array
-    call hsd_get_or_set(root, "missing_sparr", sparr, [1.0_sp, 2.0_sp], stat=stat)
-    call check(stat == HSD_STAT_NOT_FOUND, msg="sp array stat should be NOT_FOUND")
-    call check(size(sparr) == 2, msg="sp array size should be 2")
-    call check(all(abs(sparr - [1.0_sp, 2.0_sp]) < 1.0e-5_sp), msg="sp array should match default")
-    call hsd_get(root, "missing_sparr", sparr, stat=stat)
-    call check(stat == HSD_STAT_OK, msg="sp array write-back stat should be OK")
-    call check(all(abs(sparr - [1.0_sp, 2.0_sp]) < 1.0e-5_sp), &
-        & msg="sp array write-back should match")
-
     ! Logical array
     call hsd_get_or_set(root, "missing_larr", larr, [.true., .false., .true.], stat=stat)
     call check(stat == HSD_STAT_NOT_FOUND, msg="logical array stat should be NOT_FOUND")
@@ -1499,7 +1326,7 @@ contains
 
   !> Test hsd_get_or_set array overloads return existing values without overwriting
   subroutine test_get_or_set_array_existing()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     integer :: stat
     integer, allocatable :: iarr(:)
@@ -1538,7 +1365,7 @@ contains
 
   !> Test hsd_set / hsd_get_matrix roundtrip with complex matrix
   subroutine test_set_complex_matrix()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     complex(dp) :: mat(2,3)
     complex(dp), allocatable :: mat_out(:,:)
     integer :: nrows, ncols, stat

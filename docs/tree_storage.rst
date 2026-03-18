@@ -11,32 +11,31 @@ Overview
 --------
 
 HSD represents data as a **tree of nodes**. Every parsed input file becomes a tree with a
-single root ``hsd_table`` and arbitrarily nested children. There are exactly two concrete
-node types:
+single root ``hsd_node`` (with ``node_type = NODE_TYPE_TABLE``) and arbitrarily nested
+children. There is a single unified node type ``hsd_node`` with a ``node_type`` discriminator:
 
-- **hsd_table** — a container (branch) node that holds an ordered list of child nodes
-- **hsd_value** — a leaf node that holds a single typed datum (scalar, array, or matrix)
-
-Both extend the abstract base type ``hsd_node``.
+- **NODE_TYPE_TABLE** — a container (branch) node that holds an ordered list of child nodes
+- **NODE_TYPE_VALUE** — a leaf node that holds a single typed datum (scalar, array, or matrix)
 
 .. code-block:: text
 
-   root (hsd_table)
-   ├── Geometry (hsd_table)
-   │   ├── TypeNames (hsd_value: string array ["Si", "O"])
-   │   └── Periodic (hsd_value: logical .true.)
-   ├── Hamiltonian (hsd_table)
-   │   ├── SCC (hsd_value: logical .true.)
-   │   └── MaxSccIterations (hsd_value: integer 100)
-   └── Analysis (hsd_table)
-       └── ProjectStates (hsd_table)
+   root (hsd_node, NODE_TYPE_TABLE)
+   ├── Geometry (hsd_node, NODE_TYPE_TABLE)
+   │   ├── TypeNames (hsd_node, NODE_TYPE_VALUE: string array ["Si", "O"])
+   │   └── Periodic (hsd_node, NODE_TYPE_VALUE: logical .true.)
+   ├── Hamiltonian (hsd_node, NODE_TYPE_TABLE)
+   │   ├── SCC (hsd_node, NODE_TYPE_VALUE: logical .true.)
+   │   └── MaxSccIterations (hsd_node, NODE_TYPE_VALUE: integer 100)
+   └── Analysis (hsd_node, NODE_TYPE_TABLE)
+       └── ProjectStates (hsd_node, NODE_TYPE_TABLE)
            └── ...
 
 
-The Abstract Base: ``hsd_node``
+The Unified Type: ``hsd_node``
 -------------------------------
 
-Every node in the tree carries four common fields defined on ``hsd_node``:
+Every node in the tree is a ``type(hsd_node)``. The ``node_type`` field discriminates
+between table and value nodes. All nodes carry these common fields:
 
 .. list-table::
    :header-rows: 1
@@ -45,6 +44,9 @@ Every node in the tree carries four common fields defined on ``hsd_node``:
    * - Field
      - Type
      - Description
+   * - ``node_type``
+     - ``integer``
+     - Discriminator: ``NODE_TYPE_TABLE`` (1) or ``NODE_TYPE_VALUE`` (2).
    * - ``name``
      - ``character(:), allocatable``
      - The tag name (e.g. ``"Geometry"``, ``"SCC"``). Always stored.
@@ -58,13 +60,14 @@ Every node in the tree carries four common fields defined on ``hsd_node``:
      - ``logical``
      - Whether the host application has accessed this node. See :ref:`processed_flag` below.
 
-``hsd_node`` is abstract and declares a single deferred method ``destroy()``.
+``hsd_node`` is a concrete type with a ``destroy()`` method that recursively deallocates
+children for table nodes.
 
 
-Table Nodes: ``hsd_table``
---------------------------
+Table Nodes (``node_type = NODE_TYPE_TABLE``)
+----------------------------------------------
 
-``hsd_table`` extends ``hsd_node`` and acts as a **container** for child nodes.
+When ``node_type = NODE_TYPE_TABLE``, the node acts as a **container** for child nodes.
 
 Internal storage
 ~~~~~~~~~~~~~~~~
@@ -78,13 +81,13 @@ Internal storage
      - Description
    * - ``children(:)``
      - ``hsd_node_ptr, allocatable``
-     - Array of pointers to child nodes (polymorphic: each can be ``hsd_table`` or ``hsd_value``).
+     - Array of pointers to child nodes (each wrapped ``type(hsd_node), pointer`` can be a table or value node).
    * - ``num_children``
      - ``integer``
      - Number of children currently stored (≤ ``size(children)``).
 
 The ``children`` array stores ``hsd_node_ptr`` wrappers (a type containing a single
-``class(hsd_node), pointer`` component). Pointers are used rather than allocatables so that
+``type(hsd_node), pointer`` component). Pointers are used rather than allocatables so that
 when the children array is reallocated during growth, existing pointers obtained via
 ``get_child`` / ``get_child_by_name`` remain valid.
 
@@ -107,10 +110,10 @@ node names directly. This is appropriate for configuration file parsing where ta
 typically have a small number of children.
 
 
-Value Nodes: ``hsd_value``
---------------------------
+Value Nodes (``node_type = NODE_TYPE_VALUE``)
+----------------------------------------------
 
-``hsd_value`` extends ``hsd_node`` and stores a single datum. It supports multiple
+When ``node_type = NODE_TYPE_VALUE``, the node stores a single datum. It supports multiple
 types via a tagged-union pattern: the ``value_type`` field indicates which storage
 field holds the active data.
 
@@ -211,7 +214,7 @@ The HSD tree uses a **copy-on-add** ownership model:
 
 .. code-block:: fortran
 
-   type(hsd_table) :: root
+   type(hsd_node) :: root
    type(hsd_error_t), allocatable :: err
 
    ! Parse creates a tree — caller owns root
@@ -233,11 +236,11 @@ Children are stored in an array of ``hsd_node_ptr`` — a simple wrapper type:
 .. code-block:: fortran
 
    type :: hsd_node_ptr
-     class(hsd_node), pointer :: node => null()
+     type(hsd_node), pointer :: node => null()
    end type
 
-This indirection is necessary because Fortran does not support arrays of polymorphic
-allocatables. Using pointers (rather than allocatables) ensures that when the ``children``
+This indirection is necessary because Fortran does not support arrays of pointer
+types directly. Using pointers (rather than allocatables) ensures that when the ``children``
 array is reallocated during table growth, existing pointers obtained via ``get_child``
 remain valid — only the array of ``hsd_node_ptr`` wrappers is moved, not the nodes
 themselves.

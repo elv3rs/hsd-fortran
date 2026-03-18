@@ -19,23 +19,19 @@ Types
 Core Types
 ~~~~~~~~~~
 
-``hsd_table``
-^^^^^^^^^^^^^
+``hsd_node``
+^^^^^^^^^^^^
 
-A container node that holds child nodes. This is the main type used for parsed HSD documents.
+The unified node type used for all nodes in the HSD tree. The ``node_type`` field
+discriminates between table (container) nodes and value (leaf) nodes:
 
-.. code-block:: fortran
-
-   type(hsd_table) :: root
-
-``hsd_value``
-^^^^^^^^^^^^^
-
-A leaf node containing a scalar value or array.
+- ``NODE_TYPE_TABLE`` — a container node that holds child nodes
+- ``NODE_TYPE_VALUE`` — a leaf node containing a scalar value or array
 
 .. code-block:: fortran
 
-   type(hsd_value) :: val
+   type(hsd_node) :: root    ! a table node (after hsd_load)
+   type(hsd_node) :: val     ! a value node (after new_value)
 
 ``hsd_error_t``
 ^^^^^^^^^^^^^^^
@@ -75,7 +71,15 @@ Precision Constants
 .. code-block:: fortran
 
    integer, parameter :: dp = kind(1.0d0)  ! Double precision
-   integer, parameter :: sp = kind(1.0)    ! Single precision
+
+
+Node Type Constants
+~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: fortran
+
+   integer, parameter :: NODE_TYPE_TABLE = 1   ! Container node
+   integer, parameter :: NODE_TYPE_VALUE = 2   ! Leaf node
 
 Value Type Constants
 ~~~~~~~~~~~~~~~~~~~~
@@ -118,9 +122,9 @@ Load and parse an HSD file.
 
 .. code-block:: fortran
 
-   subroutine hsd_load(filename, root, error)
+   subroutine hsd_load_file(filename, root, error)
      character(len=*), intent(in) :: filename
-     type(hsd_table), intent(out) :: root
+     type(hsd_node), intent(out) :: root
      type(hsd_error_t), allocatable, intent(out), optional :: error
    end subroutine
 
@@ -133,7 +137,7 @@ Parse HSD from a string.
 
    subroutine hsd_load_string(source, root, error, filename)
      character(len=*), intent(in) :: source
-     type(hsd_table), intent(out) :: root
+     type(hsd_node), intent(out) :: root
      type(hsd_error_t), allocatable, intent(out), optional :: error
      character(len=*), intent(in), optional :: filename  ! For error messages
    end subroutine
@@ -146,7 +150,7 @@ Write a tree to a file.
 .. code-block:: fortran
 
    subroutine hsd_dump(root, filename, error)
-     type(hsd_table), intent(in) :: root
+     type(hsd_node), intent(in) :: root
      character(len=*), intent(in) :: filename
      type(hsd_error_t), allocatable, intent(out), optional :: error
    end subroutine
@@ -159,7 +163,7 @@ Serialize a tree to a string.
 .. code-block:: fortran
 
    subroutine hsd_dump_to_string(root, output)
-     type(hsd_table), intent(in) :: root
+     type(hsd_node), intent(in) :: root
      character(len=:), allocatable, intent(out) :: output
    end subroutine
 
@@ -175,15 +179,15 @@ Get a value at the specified path. Supports multiple output types via generic in
 
    ! Scalar types
    subroutine hsd_get(root, path, value, stat)
-     type(hsd_table), intent(in) :: root
+     type(hsd_node), intent(in) :: root
      character(len=*), intent(in) :: path
-     <type>, intent(out) :: value  ! integer, real(dp), real(sp), logical, character
+     <type>, intent(out) :: value  ! integer, real(dp), logical, character
      integer, intent(out), optional :: stat
    end subroutine
 
    ! Array types
    subroutine hsd_get(root, path, array, stat)
-     type(hsd_table), intent(in) :: root
+     type(hsd_node), intent(in) :: root
      character(len=*), intent(in) :: path
      <type>, allocatable, intent(out) :: array(:)  ! integer, real(dp), logical, character
      integer, intent(out), optional :: stat
@@ -211,7 +215,7 @@ Get a 2D array from multi-line data.
 .. code-block:: fortran
 
    subroutine hsd_get_matrix(root, path, matrix, stat)
-     type(hsd_table), intent(in) :: root
+     type(hsd_node), intent(in) :: root
      character(len=*), intent(in) :: path
      real(dp), allocatable, intent(out) :: matrix(:,:)
      integer, intent(out), optional :: stat
@@ -222,7 +226,7 @@ hsd_get_inline_text
 
 Get concatenated text content of all unnamed value children. Iterates
 children of the table, collecting text from unnamed or ``#text``
-``hsd_value`` nodes. Multiple values are separated by spaces.
+value nodes (``node_type == NODE_TYPE_VALUE``). Multiple values are separated by spaces.
 
 How ``#text`` is created:
 
@@ -235,7 +239,7 @@ the parser stores that inline text as an internal value child named
 .. code-block:: fortran
 
    subroutine hsd_get_inline_text(table, text, stat)
-     type(hsd_table), intent(in), target :: table
+     type(hsd_node), intent(in), target :: table
      character(len=:), allocatable, intent(out) :: text
      integer, intent(out), optional :: stat
    end subroutine
@@ -261,7 +265,7 @@ Check if a path exists in the tree.
 .. code-block:: fortran
 
    logical function hsd_has_child(root, path)
-     type(hsd_table), intent(in) :: root
+     type(hsd_node), intent(in) :: root
      character(len=*), intent(in) :: path
    end function
 
@@ -273,7 +277,7 @@ Check if the node at path is a table (container).
 .. code-block:: fortran
 
    logical function hsd_is_table(root, path)
-     type(hsd_table), intent(in) :: root
+     type(hsd_node), intent(in) :: root
      character(len=*), intent(in) :: path
    end function
 
@@ -285,7 +289,7 @@ Check if the node at path is a value (leaf).
 .. code-block:: fortran
 
    logical function hsd_is_value(root, path)
-     type(hsd_table), intent(in) :: root
+     type(hsd_node), intent(in) :: root
      character(len=*), intent(in) :: path
    end function
 
@@ -297,7 +301,7 @@ Check if the value at path contains an array.
 .. code-block:: fortran
 
    logical function hsd_is_array(root, path)
-     type(hsd_table), intent(in) :: root
+     type(hsd_node), intent(in) :: root
      character(len=*), intent(in) :: path
    end function
 
@@ -309,7 +313,7 @@ Get the number of children in a table.
 .. code-block:: fortran
 
    integer function hsd_child_count(root, path)
-     type(hsd_table), intent(in) :: root
+     type(hsd_node), intent(in) :: root
      character(len=*), intent(in) :: path  ! Empty string for root
    end function
 
@@ -321,7 +325,7 @@ Get all child key names.
 .. code-block:: fortran
 
    subroutine hsd_get_keys(root, path, keys)
-     type(hsd_table), intent(in) :: root
+     type(hsd_node), intent(in) :: root
      character(len=*), intent(in) :: path
      character(len=:), allocatable, intent(out) :: keys(:)
    end subroutine
@@ -334,7 +338,7 @@ Get the value type at a path.
 .. code-block:: fortran
 
    integer function hsd_get_type(root, path)
-     type(hsd_table), intent(in) :: root
+     type(hsd_node), intent(in) :: root
      character(len=*), intent(in) :: path
    end function
    ! Returns VALUE_TYPE_* constant
@@ -347,7 +351,7 @@ Get the attribute (e.g., unit) at a path.
 .. code-block:: fortran
 
    subroutine hsd_get_attrib(root, path, attrib, stat)
-     type(hsd_table), intent(in) :: root
+     type(hsd_node), intent(in) :: root
      character(len=*), intent(in) :: path
      character(len=:), allocatable, intent(out) :: attrib
      integer, intent(out), optional :: stat
@@ -361,7 +365,7 @@ Check if a node has an attribute.
 .. code-block:: fortran
 
    logical function hsd_has_attrib(root, path)
-     type(hsd_table), intent(in) :: root
+     type(hsd_node), intent(in) :: root
      character(len=*), intent(in) :: path
    end function
 
@@ -373,9 +377,9 @@ Get a child node by name.
 .. code-block:: fortran
 
    subroutine hsd_get_child(root, name, child, stat)
-     type(hsd_table), intent(in) :: root
+     type(hsd_node), intent(in) :: root
      character(len=*), intent(in) :: name
-     class(hsd_node), pointer, intent(out) :: child
+     type(hsd_node), pointer, intent(out) :: child
      integer, intent(out), optional :: stat
    end subroutine
 
@@ -387,9 +391,9 @@ Get a child table by path.
 .. code-block:: fortran
 
    subroutine hsd_get_table(root, path, table, stat)
-     type(hsd_table), intent(in) :: root
+     type(hsd_node), intent(in) :: root
      character(len=*), intent(in) :: path
-     type(hsd_table), pointer, intent(out) :: table
+     type(hsd_node), pointer, intent(out) :: table
      integer, intent(out), optional :: stat
    end subroutine
 
@@ -401,7 +405,7 @@ Collect all children matching a (possibly path-qualified) name.
 .. code-block:: fortran
 
    subroutine hsd_get_children(root, path, children, stat)
-     type(hsd_table), intent(in), target :: root
+     type(hsd_node), intent(in), target :: root
      character(len=*), intent(in) :: path
      type(hsd_child_ptr), allocatable, intent(out) :: children(:)
      integer, intent(out), optional :: stat
@@ -416,7 +420,7 @@ Collect all matching table children. ``hsd_table_ptr`` reuses the same
 .. code-block:: fortran
 
    subroutine hsd_get_child_tables(root, path, children, stat)
-     type(hsd_table), intent(in), target :: root
+     type(hsd_node), intent(in), target :: root
      character(len=*), intent(in) :: path
      type(hsd_table_ptr), allocatable, intent(out) :: children(:)
      integer, intent(out), optional :: stat
@@ -430,7 +434,7 @@ Check whether a table has any value children (inline data).
 .. code-block:: fortran
 
    logical function hsd_has_value_children(table)
-     type(hsd_table), intent(in), target :: table
+     type(hsd_node), intent(in), target :: table
    end function
 
 **Example:**
@@ -451,7 +455,7 @@ provided).
 .. code-block:: fortran
 
    subroutine hsd_get_name(node, name, default)
-     class(hsd_node), intent(in) :: node
+     type(hsd_node), intent(in) :: node
      character(len=:), allocatable, intent(out) :: name
      character(len=*), intent(in), optional :: default
    end subroutine
@@ -476,7 +480,7 @@ Set a value at the specified path (creates intermediate tables as needed).
 .. code-block:: fortran
 
    subroutine hsd_set(root, path, value)
-     type(hsd_table), intent(inout) :: root
+     type(hsd_node), intent(inout) :: root
      character(len=*), intent(in) :: path
      <type>, intent(in) :: value  ! integer, real(dp), logical, character, arrays
    end subroutine
@@ -489,7 +493,7 @@ Remove a child node.
 .. code-block:: fortran
 
    subroutine hsd_remove_child(root, path, stat)
-     type(hsd_table), intent(inout) :: root
+     type(hsd_node), intent(inout) :: root
      character(len=*), intent(in) :: path
      integer, intent(out), optional :: stat
    end subroutine
@@ -505,8 +509,8 @@ Create a deep copy of a tree.
 .. code-block:: fortran
 
    subroutine hsd_clone(source, dest)
-     type(hsd_table), intent(in) :: source
-     type(hsd_table), intent(out) :: dest
+     type(hsd_node), intent(in) :: source
+     type(hsd_node), intent(out) :: dest
    end subroutine
 
 hsd_merge
@@ -517,8 +521,8 @@ Merge source into target (source values override target on conflict).
 .. code-block:: fortran
 
    subroutine hsd_merge(target, source)
-     type(hsd_table), intent(inout) :: target
-     type(hsd_table), intent(in) :: source
+     type(hsd_node), intent(inout) :: target
+     type(hsd_node), intent(in) :: source
    end subroutine
 
 Validation Procedures
@@ -532,7 +536,7 @@ Check that a required field exists (optionally check its type).
 .. code-block:: fortran
 
    subroutine hsd_require(table, path, error, expected_type, context)
-     type(hsd_table), intent(in), target :: table
+     type(hsd_node), intent(in), target :: table
      character(len=*), intent(in) :: path
      type(hsd_error_t), allocatable, intent(out) :: error
      integer, intent(in), optional :: expected_type  ! FIELD_TYPE_* constant
@@ -547,7 +551,7 @@ Validate that a numeric value at a path is within a range.
 .. code-block:: fortran
 
    subroutine hsd_validate_range(table, path, min_val, max_val, error, context)
-     type(hsd_table), intent(in), target :: table
+     type(hsd_node), intent(in), target :: table
      character(len=*), intent(in) :: path
      real(dp), intent(in) :: min_val, max_val
      type(hsd_error_t), allocatable, intent(out) :: error
@@ -562,7 +566,7 @@ Validate that a string value at a path is one of the allowed choices.
 .. code-block:: fortran
 
    subroutine hsd_validate_one_of(table, path, choices, error, context)
-     type(hsd_table), intent(in), target :: table
+     type(hsd_node), intent(in), target :: table
      character(len=*), intent(in) :: path
      character(len=*), intent(in) :: choices(:)
      type(hsd_error_t), allocatable, intent(out) :: error
@@ -577,7 +581,7 @@ Get a value with unit conversion via a user-supplied converter function.
 .. code-block:: fortran
 
    subroutine hsd_get_with_unit(table, path, val, target_unit, converter, stat)
-     type(hsd_table), intent(in), target :: table
+     type(hsd_node), intent(in), target :: table
      character(len=*), intent(in) :: path
      real(dp), intent(out) :: val
      character(len=*), intent(in) :: target_unit
@@ -608,7 +612,7 @@ Create a new table node.
 
    function new_table(name) result(table)
      character(len=*), intent(in) :: name
-     type(hsd_table) :: table
+     type(hsd_node) :: table
    end function
 
 new_value
@@ -621,5 +625,5 @@ Create a new value node.
    function new_value(name, val) result(value)
      character(len=*), intent(in) :: name
      <type>, intent(in) :: val
-     type(hsd_value) :: value
+     type(hsd_node) :: value
    end function

@@ -37,10 +37,10 @@ contains
   !> Loading a nonexistent file without the error arg should NOT crash.
   !> It should silently return an empty but valid table.
   subroutine test_load_missing_no_error_arg()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
 
     ! No error argument — must not abort or segfault
-    call hsd_load("/tmp/nonexistent_hsd_file_edge_test.hsd", root)
+    call hsd_load_file("/tmp/nonexistent_hsd_file_edge_test.hsd", root)
 
     ! The table should be empty but valid (num_children == 0)
     call check(root%num_children == 0, &
@@ -51,7 +51,7 @@ contains
 
   !> Loading from string without error arg should succeed normally
   subroutine test_load_string_no_error_arg()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     integer :: ival, stat
 
     call hsd_load_string("x = 42", root)
@@ -67,7 +67,7 @@ contains
   !> An unclosed double-quote should not crash the parser.
   !> The parser may silently consume until EOF — the key test is no crash.
   subroutine test_unclosed_double_quote()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
 
     call hsd_load_string('key = "unclosed value', root, error)
@@ -81,7 +81,7 @@ contains
 
   !> An unclosed single-quote should not crash the parser.
   subroutine test_unclosed_single_quote()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
 
     call hsd_load_string("key = 'unclosed value", root, error)
@@ -95,7 +95,7 @@ contains
 
   !> Parsing a completely garbage string as complex should return a type error
   subroutine test_malformed_complex_garbage()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     complex(dp) :: val
     integer :: stat
@@ -112,7 +112,7 @@ contains
 
   !> Parsing "1.0+i" (missing imaginary coefficient) as complex
   subroutine test_malformed_complex_partial()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     complex(dp) :: val
     integer :: stat
@@ -129,7 +129,7 @@ contains
 
   !> Parsing "(1.0,)" (missing imaginary in parens) as complex
   subroutine test_malformed_complex_paren()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     complex(dp) :: val
     integer :: stat
@@ -150,7 +150,7 @@ contains
   !> Default hash table starts at 32 buckets with 0.75 load factor,
   !> so rehash occurs at 24, 48, 96, 192 entries.
   subroutine test_many_children_rehash()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     integer :: i, val, stat
     character(len=20) :: key
     logical :: all_ok

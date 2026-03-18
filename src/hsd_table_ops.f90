@@ -1,8 +1,8 @@
 !> Table and iterator operations for HSD types
 !>
-!> This submodule implements all type-bound procedures for hsd_table
-!> and hsd_iterator. See hsd_types.f90 for type definitions and
-!> interface declarations.
+!> This submodule implements all type-bound procedures for table
+!> and iterator operations on hsd_node. See hsd_types.f90 for type
+!> definitions and interface declarations.
 submodule (hsd_types) hsd_table_ops
   implicit none (type, external)
 
@@ -59,7 +59,7 @@ contains
 
   end procedure table_get_child
 
-  !> Get child by name (linear search, returns last match for override behavior)
+  !> Get child by name (linear search, returns last match)
   module procedure table_get_child_by_name
 
     integer :: idx
@@ -83,7 +83,7 @@ contains
   !> Check if table has a child with given name
   module procedure table_has_child
 
-    class(hsd_node), pointer :: child
+    type(hsd_node), pointer :: child
 
     call self%get_child_by_name(name, child)
     has = associated(child)
@@ -105,14 +105,16 @@ contains
     do i = 1, self%num_children
       if (associated(self%children(i)%node)) then
         if (allocated(self%children(i)%node%name)) then
-          max_len = max(max_len, len(self%children(i)%node%name))
+          max_len = max(max_len, &
+              & len(self%children(i)%node%name))
         end if
       end if
     end do
 
     ! Allocate and fill keys
     if (max_len > 0) then
-      allocate(character(len=max_len) :: keys(self%num_children))
+      allocate(character(len=max_len) :: &
+          & keys(self%num_children))
       do i = 1, self%num_children
         if (associated(self%children(i)%node)) then
           if (allocated(self%children(i)%node%name)) then
@@ -172,7 +174,8 @@ contains
     do idx = self%num_children, 1, -1
       if (.not. associated(self%children(idx)%node)) cycle
       if (.not. allocated(self%children(idx)%node%name)) cycle
-      if (to_lower(self%children(idx)%node%name) == lower_name) then
+      if (to_lower(self%children(idx)%node%name) == &
+          & lower_name) then
         call self%remove_child(idx, stat)
         return
       end if
@@ -182,28 +185,36 @@ contains
 
   end procedure table_remove_child_by_name
 
-  !> Destroy table and all children
+  !> Destroy node and all children
   !>
   !> Recursively deallocates all child nodes and frees all allocated
   !> memory. Must be called explicitly to avoid memory leaks.
-  module procedure table_destroy
+  module procedure node_destroy
 
     integer :: i
 
-    do i = 1, self%num_children
-      if (associated(self%children(i)%node)) then
-        call self%children(i)%node%destroy()
-        deallocate(self%children(i)%node)
-      end if
-    end do
+    ! Destroy children if this is a table node
+    if (self%node_type == NODE_TYPE_TABLE) then
+      do i = 1, self%num_children
+        if (associated(self%children(i)%node)) then
+          call self%children(i)%node%destroy()
+          deallocate(self%children(i)%node)
+        end if
+      end do
+      if (allocated(self%children)) deallocate(self%children)
+      self%num_children = 0
+    end if
 
-    if (allocated(self%children)) deallocate(self%children)
+    ! Clean up value fields
+    if (allocated(self%string_value)) &
+        & deallocate(self%string_value)
+    self%value_type = VALUE_TYPE_NONE
+
+    ! Clean up common fields
     if (allocated(self%name)) deallocate(self%name)
     if (allocated(self%attrib)) deallocate(self%attrib)
 
-    self%num_children = 0
-
-  end procedure table_destroy
+  end procedure node_destroy
 
   !> Initialize iterator for a table
   module procedure iterator_init
@@ -224,7 +235,8 @@ contains
 
     self%pos = self%pos + 1
     if (self%pos <= self%table%num_children) then
-      if (associated(self%table%children(self%pos)%node)) then
+      if (associated( &
+          & self%table%children(self%pos)%node)) then
         child => self%table%children(self%pos)%node
         has_more = .true.
       end if

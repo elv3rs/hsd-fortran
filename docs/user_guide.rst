@@ -16,11 +16,11 @@ The most common operation is loading an HSD file into a tree structure:
    use hsd
    implicit none
 
-   type(hsd_table) :: root
+   type(hsd_node) :: root
    type(hsd_error_t), allocatable :: error
 
    ! Load from file
-   call hsd_load("config.hsd", root, error)
+   call hsd_load_file("config.hsd", root, error)
 
    if (allocated(error)) then
      call error%print()  ! Print formatted error message
@@ -241,7 +241,7 @@ Create an independent copy of a tree:
 
 .. code-block:: fortran
 
-   type(hsd_table) :: copy
+   type(hsd_node) :: copy
 
    call hsd_clone(root, copy)
    ! Modify copy without affecting root
@@ -253,10 +253,10 @@ Combine two trees (source overwrites target for conflicts):
 
 .. code-block:: fortran
 
-   type(hsd_table) :: defaults, user_config, merged
+   type(hsd_node) :: defaults, user_config, merged
 
-   call hsd_load("defaults.hsd", defaults, error)
-   call hsd_load("user.hsd", user_config, error)
+   call hsd_load_file("defaults.hsd", defaults, error)
+   call hsd_load_file("user.hsd", user_config, error)
 
    call hsd_clone(defaults, merged)
    call hsd_merge(merged, user_config)  ! User settings override defaults
@@ -269,7 +269,7 @@ To process all children of a table, including duplicate keys, use the ``hsd_iter
 .. code-block:: fortran
 
    type(hsd_iterator) :: it
-   class(hsd_node), pointer :: node
+   type(hsd_node), pointer :: node
    integer :: val, stat
 
    call it%init(root)
@@ -277,13 +277,12 @@ To process all children of a table, including duplicate keys, use the ``hsd_iter
      print *, "Found node: ", node%name
 
      ! Check node type and extract value
-     select type (node)
-     type is (hsd_value)
+     if (node%node_type == NODE_TYPE_VALUE) then
        if (node%name == "MyKey") then
           call node%get_integer(val, stat)
           print *, "Value:", val
        end if
-     end select
+     end if
    end do
 
 This is particularly useful when handling duplicate keys, as ``hsd_get`` only returns the last occurrence.
@@ -340,11 +339,11 @@ Example: Complete Configuration Parser
      type(my_config), intent(out) :: config
      type(hsd_error_t), allocatable, intent(out) :: error
 
-     type(hsd_table) :: root
+     type(hsd_node) :: root
      integer :: stat
 
      ! Load file
-     call hsd_load(filename, root, error)
+     call hsd_load_file(filename, root, error)
      if (allocated(error)) return
 
      ! Extract values

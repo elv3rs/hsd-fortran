@@ -17,7 +17,6 @@ set(HSD_IO_SOURCES
 
 # API modules (public operations)
 set(HSD_API_SOURCES
-  api/hsd_walk.f90
   api/hsd_api.f90
   api/hsd_validation.f90
 )

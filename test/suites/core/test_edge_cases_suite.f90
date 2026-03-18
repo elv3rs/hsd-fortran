@@ -35,7 +35,6 @@ contains
             test("deep_tree", test_deep_tree), &
             test("parse_quoted_strings", test_parse_quoted_strings), &
             test("logical_variations", test_logical_variations), &
-            test("real_sp_values", test_real_sp_values), &
             test("complex_dp_values", test_complex_dp_values), &
             test("matrix_in_block", test_matrix_in_block), &
             test("nested_blocks", test_nested_blocks), &
@@ -47,8 +46,7 @@ contains
             test("clone_with_arrays", test_clone_with_arrays), &
             test("merge_value_types", test_merge_value_types), &
             test("get_child_direct", test_get_child_direct), &
-            test("string_escapes", test_string_escapes), &
-            test("sp_array_values", test_sp_array_values) &
+            test("string_escapes", test_string_escapes) &
         ])) &
     ])
 
@@ -56,7 +54,7 @@ contains
 
   !> Test matrix parsing with semicolon row separators
   subroutine test_matrix_with_semicolons()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     integer, allocatable :: mat(:,:), arr(:)
     integer :: nrows, ncols, stat
@@ -76,7 +74,7 @@ contains
 
   !> Test matrix with irregular row lengths
   subroutine test_matrix_irregular_rows()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     integer, allocatable :: mat(:,:)
     integer :: nrows, ncols, stat
@@ -99,7 +97,7 @@ contains
 
   !> Test matrix with empty rows
   subroutine test_matrix_empty_rows()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     integer, allocatable :: arr(:)
     integer :: stat
@@ -117,7 +115,7 @@ contains
 
   !> Test complex with 'j' notation
   subroutine test_complex_j_notation()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     complex(dp) :: val
     integer :: stat
@@ -136,7 +134,7 @@ contains
 
   !> Test complex with capital I notation
   subroutine test_complex_capital_i()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     complex(dp) :: val
     integer :: stat
@@ -162,7 +160,7 @@ contains
 
   !> Test complex with negative imaginary
   subroutine test_complex_negative_imaginary()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     complex(dp) :: val
     integer :: stat
@@ -180,7 +178,7 @@ contains
 
   !> Test pure imaginary values
   subroutine test_pure_imaginary_values()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     complex(dp) :: val
     integer :: stat
@@ -199,11 +197,10 @@ contains
 
   !> Test default fallback with hsd_get and stat handling for all types
   subroutine test_get_or_fallback_all_types()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     integer :: int_val
     real(dp) :: real_val
-    real(sp) :: sp_val
     logical :: log_val
     character(len=:), allocatable :: str_val
     complex(dp) :: cpx_val
@@ -220,10 +217,6 @@ contains
     call hsd_get(root, "missing_real", real_val, stat)
     if (stat == HSD_STAT_NOT_FOUND) real_val = 3.14_dp
     call check(abs(real_val - 3.14_dp) < 0.001_dp, msg="Real fallback is 3.14")
-
-    call hsd_get(root, "missing_sp", sp_val, stat)
-    if (stat == HSD_STAT_NOT_FOUND) sp_val = 2.0_sp
-    call check(abs(sp_val - 2.0_sp) < 0.001_sp, msg="SP fallback is 2.0")
 
     call hsd_get(root, "missing_log", log_val, stat)
     if (stat == HSD_STAT_NOT_FOUND) log_val = .true.
@@ -243,12 +236,11 @@ contains
 
   !> Test setting all value types
   subroutine test_set_all_types()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     integer :: stat
     integer :: int_val
     real(dp) :: real_val
-    real(sp) :: sp_val
     logical :: log_val
     character(len=:), allocatable :: str_val
     complex(dp) :: cpx_val
@@ -261,9 +253,6 @@ contains
 
     call hsd_set(root, "real_key", 4.56_dp, stat)
     call check(is_equal(stat, 0), msg="Set real OK")
-
-    call hsd_set(root, "sp_key", 7.89_sp, stat)
-    call check(is_equal(stat, 0), msg="Set SP OK")
 
     call hsd_set(root, "log_key", .true., stat)
     call check(is_equal(stat, 0), msg="Set logical OK")
@@ -290,8 +279,8 @@ contains
 
   !> Test table children array growth
   subroutine test_table_grow_capacity()
-    type(hsd_table) :: root
-    type(hsd_value) :: val
+    type(hsd_node) :: root
+    type(hsd_node) :: val
     integer :: i
 
     call new_table(root)
@@ -312,10 +301,10 @@ contains
 
   !> Test iterator reset
   subroutine test_iterator_reset()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     type(hsd_iterator) :: iter
-    class(hsd_node), pointer :: node
+    type(hsd_node), pointer :: node
     integer :: count1, count2
 
     call hsd_load_string("a = 1; b = 2; c = 3", root, error)
@@ -343,7 +332,7 @@ contains
 
   !> Test remove_child edge cases
   subroutine test_remove_child_edge_cases()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     integer :: stat
 
@@ -368,7 +357,7 @@ contains
 
   !> Test get_keys variations
   subroutine test_get_keys_variations()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     character(len=:), allocatable :: keys(:)
     integer :: stat
@@ -395,7 +384,7 @@ contains
 
   !> Test deep tree parsing
   subroutine test_deep_tree()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
 
     call hsd_load_string("l1 { l2 { l3 { l4 { l5 { l6 { l7 { l8 { val = 42 } } } } } } } }", &
@@ -410,7 +399,7 @@ contains
 
   !> Test parsing quoted strings in arrays
   subroutine test_parse_quoted_strings()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     character(len=:), allocatable :: arr(:)
     integer :: stat
@@ -427,7 +416,7 @@ contains
 
   !> Test logical value variations
   subroutine test_logical_variations()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     logical :: val
     integer :: stat
@@ -458,27 +447,10 @@ contains
 
   end subroutine test_logical_variations
 
-  !> Test single precision real values
-  subroutine test_real_sp_values()
-    type(hsd_table) :: root
-    type(hsd_error_t), allocatable :: error
-    real(sp) :: val
-    integer :: stat
-
-    call hsd_load_string("sp_val = 3.14159", root, error)
-    call check(.not. allocated(error), msg="Parse OK")
-
-    call hsd_get(root, "sp_val", val, stat)
-    call check(is_equal(stat, 0), msg="Get SP OK")
-    call check(abs(val - 3.14159_sp) < 0.001_sp, msg="SP value correct")
-
-    call root%destroy()
-
-  end subroutine test_real_sp_values
 
   !> Test double precision complex values with various formats
   subroutine test_complex_dp_values()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     complex(dp) :: val
     integer :: stat
@@ -497,7 +469,7 @@ contains
 
   !> Test matrix inside a block
   subroutine test_matrix_in_block()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     integer, allocatable :: mat(:,:)
     integer :: nrows, ncols, stat
@@ -516,7 +488,7 @@ contains
 
   !> Test deeply nested blocks
   subroutine test_nested_blocks()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     integer :: val, stat
 
@@ -533,7 +505,7 @@ contains
 
   !> Test get_child with type mismatch
   subroutine test_get_child_type_mismatch()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     integer :: int_val, stat
     character(len=:), allocatable :: str_val
@@ -557,8 +529,8 @@ contains
 
   !> Test formatting large numbers
   subroutine test_format_large_numbers()
-    type(hsd_table) :: root
-    type(hsd_value) :: val
+    type(hsd_node) :: root
+    type(hsd_node) :: val
     character(len=:), allocatable :: output
 
     call new_table(root)
@@ -580,8 +552,8 @@ contains
 
   !> Test formatting small numbers
   subroutine test_format_small_numbers()
-    type(hsd_table) :: root
-    type(hsd_value) :: val
+    type(hsd_node) :: root
+    type(hsd_node) :: val
     character(len=:), allocatable :: output
 
     call new_table(root)
@@ -603,8 +575,8 @@ contains
 
   !> Test integer formatting edge cases
   subroutine test_format_integer_edge()
-    type(hsd_table) :: root
-    type(hsd_value) :: val
+    type(hsd_node) :: root
+    type(hsd_node) :: val
     character(len=:), allocatable :: output
 
     call new_table(root)
@@ -631,7 +603,7 @@ contains
 
   !> Test hsd_require with type variations
   subroutine test_require_type_variations()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error, req_error
 
     call hsd_load_string("int_val = 42; str_val = hello; table { x = 1 }", root, error)
@@ -657,7 +629,7 @@ contains
 
   !> Test cloning with arrays
   subroutine test_clone_with_arrays()
-    type(hsd_table) :: root, clone
+    type(hsd_node) :: root, clone
     type(hsd_error_t), allocatable :: error
     integer, allocatable :: arr1(:), arr2(:)
     integer :: stat
@@ -679,7 +651,7 @@ contains
 
   !> Test merging different value types
   subroutine test_merge_value_types()
-    type(hsd_table) :: base, overlay
+    type(hsd_node) :: base, overlay
     type(hsd_error_t), allocatable :: error
     integer :: int_val, stat
     real(dp) :: real_val
@@ -706,9 +678,9 @@ contains
 
   !> Test getting child directly
   subroutine test_get_child_direct()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
-    class(hsd_node), pointer :: child
+    type(hsd_node), pointer :: child
 
     call hsd_load_string("a = 1; b { c = 2 }", root, error)
     call check(.not. allocated(error), msg="Parse OK")
@@ -730,7 +702,7 @@ contains
 
   !> Test string with escape sequences
   subroutine test_string_escapes()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     character(len=:), allocatable :: val
     integer :: stat
@@ -756,22 +728,5 @@ contains
 
   end subroutine test_string_escapes
 
-  !> Test SP array values
-  subroutine test_sp_array_values()
-    type(hsd_table) :: root
-    type(hsd_error_t), allocatable :: error
-    real(sp), allocatable :: arr(:)
-    integer :: stat
-
-    call hsd_load_string("sp_arr = 1.1 2.2 3.3", root, error)
-    call check(.not. allocated(error), msg="Parse OK")
-
-    call hsd_get(root, "sp_arr", arr, stat)
-    call check(is_equal(stat, 0), msg="Get SP array OK")
-    call check(is_equal(size(arr), 3), msg="3 SP values")
-
-    call root%destroy()
-
-  end subroutine test_sp_array_values
 
 end module test_edge_cases_suite

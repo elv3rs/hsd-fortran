@@ -38,13 +38,13 @@ program example
   use hsd
   implicit none
   
-  type(hsd_table) :: root
+  type(hsd_node) :: root
   type(hsd_error_t), allocatable :: error
   integer :: max_steps, stat
   real(dp) :: temperature
   
   ! Load HSD file
-  call hsd_load("input.hsd", root, error)
+  call hsd_load_file("input.hsd", root, error)
   if (allocated(error)) then
     call error%print()
     stop 1
@@ -138,7 +138,7 @@ fpm run --example simple_read
 
 | Procedure | Description |
 |-----------|-------------|
-| `hsd_load(file, root, error)` | Parse HSD file into tree |
+| `hsd_load_file(file, root, error)` | Parse HSD file into tree |
 | `hsd_load_string(str, root, error)` | Parse HSD string |
 | `hsd_dump(root, file)` | Write tree to file |
 | `hsd_dump_to_string(root, str)` | Serialize tree to string |
@@ -239,7 +239,7 @@ All parsing and access operations can return detailed errors:
 ```fortran
 type(hsd_error_t), allocatable :: error
 
-call hsd_load("config.hsd", root, error)
+call hsd_load_file("config.hsd", root, error)
 if (allocated(error)) then
   call error%print()  ! Prints formatted error with location
   ! Access details: error%code, error%message, error%line_start, error%hint

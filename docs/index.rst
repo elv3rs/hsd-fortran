@@ -35,7 +35,7 @@ Quick Start
      real(dp) :: temperature
      
      ! Load HSD file
-     call hsd_load("input.hsd", root, error)
+     call hsd_load_file("input.hsd", root, error)
      if (allocated(error)) then
        call error%print()
        stop 1

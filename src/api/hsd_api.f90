@@ -1,10 +1,11 @@
 !> Unified HSD API module
 !> Merges functionality from accessors, mutators, and query modules.
 module hsd_api
-  use hsd_constants, only: dp, sp
+  use hsd_constants, only: dp
   use hsd_utils, only: to_lower, string_buffer_t
   use hsd_error, only: HSD_STAT_OK, HSD_STAT_NOT_FOUND, HSD_STAT_TYPE_ERROR
-  use hsd_types, only: hsd_node, hsd_table, hsd_value, new_table, new_value, &
+  use hsd_types, only: hsd_node, new_table, new_value, &
+    & NODE_TYPE_TABLE, NODE_TYPE_VALUE, &
     & VALUE_TYPE_NONE, VALUE_TYPE_STRING, VALUE_TYPE_INTEGER, &
     & VALUE_TYPE_REAL, VALUE_TYPE_LOGICAL, VALUE_TYPE_ARRAY, &
     & VALUE_TYPE_COMPLEX
@@ -20,7 +21,7 @@ module hsd_api
 
   !> Pointer wrapper for returning references to existing child nodes
   type :: hsd_child_ptr
-    class(hsd_node), pointer :: ptr => null()
+    type(hsd_node), pointer :: ptr => null()
   end type hsd_child_ptr
 
   !> Pointer wrapper for returning references to table children only.
@@ -66,12 +67,10 @@ module hsd_api
     module procedure :: hsd_get_string
     module procedure :: hsd_get_integer
     module procedure :: hsd_get_real_dp
-    module procedure :: hsd_get_real_sp
     module procedure :: hsd_get_logical
     module procedure :: hsd_get_complex_dp
     module procedure :: hsd_get_integer_array
     module procedure :: hsd_get_real_dp_array
-    module procedure :: hsd_get_real_sp_array
     module procedure :: hsd_get_logical_array
     module procedure :: hsd_get_string_array
     module procedure :: hsd_get_complex_dp_array
@@ -87,12 +86,10 @@ module hsd_api
     module procedure :: hsd_get_or_set_string
     module procedure :: hsd_get_or_set_integer
     module procedure :: hsd_get_or_set_real_dp
-    module procedure :: hsd_get_or_set_real_sp
     module procedure :: hsd_get_or_set_logical
     module procedure :: hsd_get_or_set_complex_dp
     module procedure :: hsd_get_or_set_integer_array
     module procedure :: hsd_get_or_set_real_dp_array
-    module procedure :: hsd_get_or_set_real_sp_array
     module procedure :: hsd_get_or_set_logical_array
   end interface hsd_get_or_set
 
@@ -118,12 +115,10 @@ module hsd_api
     module procedure :: hsd_set_string
     module procedure :: hsd_set_integer
     module procedure :: hsd_set_real_dp
-    module procedure :: hsd_set_real_sp
     module procedure :: hsd_set_logical
     module procedure :: hsd_set_complex_dp
     module procedure :: hsd_set_integer_array
     module procedure :: hsd_set_real_dp_array
-    module procedure :: hsd_set_real_sp_array
     module procedure :: hsd_set_logical_array
     module procedure :: hsd_set_complex_dp_array
     module procedure :: hsd_set_string_array
@@ -187,13 +182,13 @@ module hsd_api
 
   !> Resolve a path into parent table + leaf name.
   subroutine resolve_path_parent_(table, path, parent_table, child_name, stat)
-    type(hsd_table), intent(in), target :: table
+    type(hsd_node), intent(in), target :: table
     character(len=*), intent(in) :: path
-    type(hsd_table), pointer, intent(out) :: parent_table
+    type(hsd_node), pointer, intent(out) :: parent_table
     character(len=:), allocatable, intent(out) :: child_name
     integer, intent(out) :: stat
 
-    class(hsd_node), pointer :: parent_node
+    type(hsd_node), pointer :: parent_node
     character(len=:), allocatable :: norm, parent_path
     integer :: last_slash, local_stat
 
@@ -214,13 +209,12 @@ module hsd_api
         stat = HSD_STAT_NOT_FOUND
         return
       end if
-      select type (parent_node)
-      type is (hsd_table)
+      if (parent_node%node_type == NODE_TYPE_TABLE) then
         parent_table => parent_node
-      class default
+      else
         stat = HSD_STAT_TYPE_ERROR
         return
-      end select
+      end if
     else
       parent_table => table
       child_name = norm
@@ -231,11 +225,11 @@ module hsd_api
 
   !> Check if a table has a child with given name
   function hsd_has_child(table, name) result(has)
-    type(hsd_table), intent(in), target :: table
+    type(hsd_node), intent(in), target :: table
     character(len=*), intent(in) :: name
     logical :: has
 
-    class(hsd_node), pointer :: child
+    type(hsd_node), pointer :: child
     integer :: stat
 
     if (index(name, "/") > 0) then
@@ -253,11 +247,11 @@ module hsd_api
   !> Supports path-based navigation with "/" separator for nested tables.
   !> The last component of the path is the child to remove.
   subroutine hsd_remove_child(table, path, stat)
-    type(hsd_table), intent(inout), target :: table
+    type(hsd_node), intent(inout), target :: table
     character(len=*), intent(in) :: path
     integer, intent(out), optional :: stat
 
-    type(hsd_table), pointer :: parent_table
+    type(hsd_node), pointer :: parent_table
     character(len=:), allocatable :: child_name
     integer :: local_stat
 
@@ -278,11 +272,11 @@ module hsd_api
   !> VALUE_TYPE_INTEGER, VALUE_TYPE_REAL, VALUE_TYPE_LOGICAL, VALUE_TYPE_ARRAY,
   !> VALUE_TYPE_COMPLEX
   function hsd_get_type(table, path) result(val_type)
-    type(hsd_table), intent(in), target :: table
+    type(hsd_node), intent(in), target :: table
     character(len=*), intent(in) :: path
     integer :: val_type
 
-    class(hsd_node), pointer :: child
+    type(hsd_node), pointer :: child
     integer :: local_stat
 
     val_type = VALUE_TYPE_NONE
@@ -290,20 +284,19 @@ module hsd_api
 
     if (local_stat /= 0 .or. .not. associated(child)) return
 
-    select type (child)
-    type is (hsd_value)
+    if (child%node_type == NODE_TYPE_VALUE) then
       val_type = child%value_type
-    end select
+    end if
 
   end function hsd_get_type
 
   !> Check if the node at path is a table (container)
   function hsd_is_table(table, path) result(is_tbl)
-    type(hsd_table), intent(in), target :: table
+    type(hsd_node), intent(in), target :: table
     character(len=*), intent(in) :: path
     logical :: is_tbl
 
-    class(hsd_node), pointer :: child
+    type(hsd_node), pointer :: child
     integer :: local_stat
 
     is_tbl = .false.
@@ -311,20 +304,19 @@ module hsd_api
 
     if (local_stat /= 0 .or. .not. associated(child)) return
 
-    select type (child)
-    type is (hsd_table)
+    if (child%node_type == NODE_TYPE_TABLE) then
       is_tbl = .true.
-    end select
+    end if
 
   end function hsd_is_table
 
   !> Check if the node at path is a value (leaf)
   function hsd_is_value(table, path) result(is_val)
-    type(hsd_table), intent(in), target :: table
+    type(hsd_node), intent(in), target :: table
     character(len=*), intent(in) :: path
     logical :: is_val
 
-    class(hsd_node), pointer :: child
+    type(hsd_node), pointer :: child
     integer :: local_stat
 
     is_val = .false.
@@ -332,16 +324,15 @@ module hsd_api
 
     if (local_stat /= 0 .or. .not. associated(child)) return
 
-    select type (child)
-    type is (hsd_value)
+    if (child%node_type == NODE_TYPE_VALUE) then
       is_val = .true.
-    end select
+    end if
 
   end function hsd_is_value
 
   !> Check if the node at path contains array data
   function hsd_is_array(table, path) result(is_arr)
-    type(hsd_table), intent(in), target :: table
+    type(hsd_node), intent(in), target :: table
     character(len=*), intent(in) :: path
     logical :: is_arr
 
@@ -353,11 +344,11 @@ module hsd_api
   !>
   !> Returns 0 if path not found or is not a table
   function hsd_child_count(table, path) result(count)
-    type(hsd_table), intent(in), target :: table
+    type(hsd_node), intent(in), target :: table
     character(len=*), intent(in) :: path
     integer :: count
 
-    class(hsd_node), pointer :: child
+    type(hsd_node), pointer :: child
     integer :: local_stat
 
     count = 0
@@ -372,21 +363,20 @@ module hsd_api
 
     if (local_stat /= 0 .or. .not. associated(child)) return
 
-    select type (child)
-    type is (hsd_table)
+    if (child%node_type == NODE_TYPE_TABLE) then
       count = child%num_children
-    end select
+    end if
 
   end function hsd_child_count
 
   !> Get the keys (child names) from a table at the given path
   subroutine hsd_get_keys(table, path, keys, stat)
-    type(hsd_table), intent(in), target :: table
+    type(hsd_node), intent(in), target :: table
     character(len=*), intent(in) :: path
     character(len=:), allocatable, intent(out) :: keys(:)
     integer, intent(out), optional :: stat
 
-    class(hsd_node), pointer :: child
+    type(hsd_node), pointer :: child
     integer :: local_stat
 
     if (present(stat)) stat = HSD_STAT_OK
@@ -405,21 +395,20 @@ module hsd_api
       return
     end if
 
-    select type (child)
-    type is (hsd_table)
+    if (child%node_type == NODE_TYPE_TABLE) then
       call child%get_keys(keys)
-    class default
+    else
       allocate(character(len=1) :: keys(0))
       if (present(stat)) stat = HSD_STAT_TYPE_ERROR
-    end select
+    end if
 
   end subroutine hsd_get_keys
 
   !> Get a child node by path (using / as separator)
   subroutine hsd_get_child(table, path, child, stat)
-    type(hsd_table), intent(in), target :: table
+    type(hsd_node), intent(in), target :: table
     character(len=*), intent(in) :: path
-    class(hsd_node), pointer, intent(out) :: child
+    type(hsd_node), pointer, intent(out) :: child
     integer, intent(out), optional :: stat
 
     character(len=:), allocatable :: norm
@@ -441,13 +430,13 @@ module hsd_api
 
   !> Helper to navigate path and get child
   recursive subroutine get_first_child_table(table, path, child, stat)
-    type(hsd_table), intent(in), target :: table
+    type(hsd_node), intent(in), target :: table
     character(len=*), intent(in) :: path
-    class(hsd_node), pointer, intent(out) :: child
+    type(hsd_node), pointer, intent(out) :: child
     integer, intent(out), optional :: stat
 
     character(len=:), allocatable :: remaining, segment
-    class(hsd_node), pointer :: current
+    type(hsd_node), pointer :: current
     integer :: sep_pos
 
     child => null()
@@ -479,37 +468,35 @@ module hsd_api
     end if
 
     ! Otherwise, recurse into child table
-    select type (current)
-    type is (hsd_table)
+    if (current%node_type == NODE_TYPE_TABLE) then
       call get_first_child_table(current, remaining, child, stat)
-    class default
+    else
       if (present(stat)) stat = HSD_STAT_NOT_FOUND
-    end select
+    end if
 
   end subroutine get_first_child_table
 
   !> Get a table child by path
   subroutine hsd_get_table(table, path, child_table, stat)
-    type(hsd_table), intent(in), target :: table
+    type(hsd_node), intent(in), target :: table
     character(len=*), intent(in) :: path
-    type(hsd_table), pointer, intent(out) :: child_table
+    type(hsd_node), pointer, intent(out) :: child_table
     integer, intent(out), optional :: stat
 
-    class(hsd_node), pointer :: child
+    type(hsd_node), pointer :: child
     integer :: local_stat
 
     child_table => null()
     call hsd_get_child(table, path, child, local_stat)
 
     if (associated(child)) then
-      select type (child)
-      type is (hsd_table)
+      if (child%node_type == NODE_TYPE_TABLE) then
         child_table => child
         child_table%processed = .true.
         if (present(stat)) stat = HSD_STAT_OK
-      class default
+      else
         if (present(stat)) stat = HSD_STAT_NOT_FOUND
-      end select
+      end if
     else
       if (present(stat)) stat = local_stat
     end if
@@ -520,12 +507,12 @@ module hsd_api
   !>
   !> Example: For `LatticeConstant [Angstrom] = 5.4`, the attribute is "Angstrom"
   subroutine hsd_get_attrib(table, path, attrib, stat)
-    type(hsd_table), intent(in), target :: table
+    type(hsd_node), intent(in), target :: table
     character(len=*), intent(in) :: path
     character(len=:), allocatable, intent(out) :: attrib
     integer, intent(out), optional :: stat
 
-    class(hsd_node), pointer :: child
+    type(hsd_node), pointer :: child
     integer :: local_stat
 
     call hsd_get_child(table, path, child, local_stat)
@@ -548,11 +535,11 @@ module hsd_api
 
   !> Check if a node at the given path has an attribute
   function hsd_has_attrib(table, path) result(has)
-    type(hsd_table), intent(in), target :: table
+    type(hsd_node), intent(in), target :: table
     character(len=*), intent(in) :: path
     logical :: has
 
-    class(hsd_node), pointer :: child
+    type(hsd_node), pointer :: child
     integer :: local_stat
 
     has = .false.
@@ -569,12 +556,12 @@ module hsd_api
   !> Example: Setting "Angstrom" on `LatticeConstant` makes it render as
   !> `LatticeConstant [Angstrom] = 5.4`
   subroutine hsd_set_attrib(table, path, attrib, stat)
-    type(hsd_table), intent(inout), target :: table
+    type(hsd_node), intent(inout), target :: table
     character(len=*), intent(in) :: path
     character(len=*), intent(in) :: attrib
     integer, intent(out), optional :: stat
 
-    class(hsd_node), pointer :: child
+    type(hsd_node), pointer :: child
     integer :: local_stat
 
     call hsd_get_child(table, path, child, local_stat)
@@ -595,14 +582,14 @@ module hsd_api
   !> The child's position in the table is preserved. The name index is
   !> invalidated and rebuilt on next lookup.
   subroutine hsd_rename_child(table, old_name, new_name, stat)
-    type(hsd_table), intent(inout), target :: table
+    type(hsd_node), intent(inout), target :: table
     character(len=*), intent(in) :: old_name
     character(len=*), intent(in) :: new_name
     integer, intent(out), optional :: stat
 
-    class(hsd_node), pointer :: child
+    type(hsd_node), pointer :: child
     integer :: local_stat
-    type(hsd_table), pointer :: parent_table
+    type(hsd_node), pointer :: parent_table
     character(len=:), allocatable :: child_old_name
 
     call resolve_path_parent_(table, old_name, parent_table, child_old_name, local_stat)
@@ -637,14 +624,14 @@ module hsd_api
   !> If `path` is empty, looks at the direct children of `table`.
   !> Returns the name and typed table pointer of the first table child found.
   subroutine hsd_get_choice(table, path, choice_name, choice_table, stat)
-    type(hsd_table), intent(in), target :: table
+    type(hsd_node), intent(in), target :: table
     character(len=*), intent(in) :: path
     character(len=:), allocatable, intent(out) :: choice_name
-    type(hsd_table), pointer, intent(out) :: choice_table
+    type(hsd_node), pointer, intent(out) :: choice_table
     integer, intent(out), optional :: stat
 
-    class(hsd_node), pointer :: parent_node, child
-    type(hsd_table), pointer :: parent_table
+    type(hsd_node), pointer :: parent_node, child
+    type(hsd_node), pointer :: parent_table
     integer :: ii, local_stat
 
     choice_name = ""
@@ -657,13 +644,12 @@ module hsd_api
         if (present(stat)) stat = HSD_STAT_NOT_FOUND
         return
       end if
-      select type (parent_node)
-      type is (hsd_table)
+      if (parent_node%node_type == NODE_TYPE_TABLE) then
         parent_table => parent_node
-      class default
+      else
         if (present(stat)) stat = HSD_STAT_TYPE_ERROR
         return
-      end select
+      end if
     else
       parent_table => table
     end if
@@ -672,8 +658,7 @@ module hsd_api
     do ii = 1, parent_table%num_children
       call parent_table%get_child(ii, child)
       if (.not. associated(child)) cycle
-      select type (child)
-      type is (hsd_table)
+      if (child%node_type == NODE_TYPE_TABLE) then
         if (allocated(child%name)) then
           choice_name = to_lower(child%name)
         end if
@@ -681,15 +666,14 @@ module hsd_api
         choice_table%processed = .true.
         if (present(stat)) stat = HSD_STAT_OK
         return
-      end select
+      end if
     end do
 
     ! No table child found - check if there's a value child (leaf dispatch)
     do ii = 1, parent_table%num_children
       call parent_table%get_child(ii, child)
       if (.not. associated(child)) cycle
-      select type (child)
-      type is (hsd_value)
+      if (child%node_type == NODE_TYPE_VALUE) then
         if (allocated(child%string_value)) then
           choice_name = to_lower(child%string_value)
         else if (allocated(child%name)) then
@@ -697,7 +681,7 @@ module hsd_api
         end if
         if (present(stat)) stat = HSD_STAT_OK
         return
-      end select
+      end if
     end do
 
     if (present(stat)) stat = HSD_STAT_NOT_FOUND
@@ -711,7 +695,7 @@ module hsd_api
   !> Returns an array of hsd_child_ptr pointing to the matching children.
   !> If no children match, an empty (size-0) array is returned and stat is OK.
   subroutine hsd_get_children(table, path, children, stat)
-    type(hsd_table), intent(in), target :: table
+    type(hsd_node), intent(in), target :: table
     character(len=*), intent(in) :: path
     type(hsd_child_ptr), allocatable, intent(out) :: children(:)
     integer, intent(out), optional :: stat
@@ -728,14 +712,14 @@ module hsd_api
   !> "Geometry" table then collect all table children named "Atom".
   !> If no children match, an empty (size-0) array is returned.
   subroutine hsd_get_child_tables(table, path, children, stat)
-    type(hsd_table), intent(in), target :: table
+    type(hsd_node), intent(in), target :: table
     character(len=*), intent(in) :: path
     type(hsd_table_ptr), allocatable, intent(out) :: children(:)
     integer, intent(out), optional :: stat
 
     character(len=:), allocatable :: child_name
-    class(hsd_node), pointer :: child
-    type(hsd_table), pointer :: parent_table
+    type(hsd_node), pointer :: child
+    type(hsd_node), pointer :: parent_table
     integer :: local_stat, i, count
     character(len=:), allocatable :: lower_name
 
@@ -755,10 +739,9 @@ module hsd_api
       if (.not. associated(child)) cycle
       if (.not. allocated(child%name)) cycle
       if (to_lower(child%name) /= lower_name) cycle
-      select type (child)
-      type is (hsd_table)
+      if (child%node_type == NODE_TYPE_TABLE) then
         count = count + 1
-      end select
+      end if
     end do
 
     ! Allocate result
@@ -771,12 +754,11 @@ module hsd_api
       if (.not. associated(child)) cycle
       if (.not. allocated(child%name)) cycle
       if (to_lower(child%name) /= lower_name) cycle
-      select type (child)
-      type is (hsd_table)
+      if (child%node_type == NODE_TYPE_TABLE) then
         count = count + 1
         children(count)%ptr => child
         child%processed = .true.
-      end select
+      end if
     end do
 
     if (present(stat)) stat = HSD_STAT_OK
@@ -790,13 +772,13 @@ module hsd_api
   !> the value from `overlay` takes precedence (unless it's a table,
   !> in which case they are merged recursively).
   recursive subroutine hsd_merge(base, overlay, stat)
-    type(hsd_table), intent(inout) :: base
-    type(hsd_table), intent(in) :: overlay
+    type(hsd_node), intent(inout) :: base
+    type(hsd_node), intent(in) :: overlay
     integer, intent(out), optional :: stat
 
-    class(hsd_node), pointer :: overlay_child, base_child
-    type(hsd_table) :: cloned_table
-    type(hsd_value) :: cloned_value
+    type(hsd_node), pointer :: overlay_child, base_child
+    type(hsd_node) :: cloned_table
+    type(hsd_node) :: cloned_value
     integer :: i, local_stat
 
     if (present(stat)) stat = HSD_STAT_OK
@@ -812,30 +794,26 @@ module hsd_api
 
       if (.not. associated(base_child)) then
         ! Child doesn't exist in base - clone and add it
-        select type (overlay_child)
-        type is (hsd_table)
+        if (overlay_child%node_type == NODE_TYPE_TABLE) then
           call clone_table(overlay_child, cloned_table)
           call base%add_child(cloned_table)
-        type is (hsd_value)
+        else if (overlay_child%node_type == NODE_TYPE_VALUE) then
           call clone_value(overlay_child, cloned_value)
           call base%add_child(cloned_value)
-        end select
+        end if
       else
         ! Child exists - handle based on type
-        select type (overlay_child)
-        type is (hsd_table)
+        if (overlay_child%node_type == NODE_TYPE_TABLE) then
           ! If both are tables, merge recursively
-          select type (base_child)
-          type is (hsd_table)
+          if (base_child%node_type == NODE_TYPE_TABLE) then
             call hsd_merge(base_child, overlay_child, local_stat)
             if (present(stat) .and. local_stat /= HSD_STAT_OK) stat = local_stat
-          class default
+          else
             ! Base is not a table but overlay is - skip (could log warning)
-          end select
-        type is (hsd_value)
+          end if
+        else if (overlay_child%node_type == NODE_TYPE_VALUE) then
           ! Overlay value replaces base value
-          select type (base_child)
-          type is (hsd_value)
+          if (base_child%node_type == NODE_TYPE_VALUE) then
             call clone_value(overlay_child, cloned_value)
             ! Replace the value content
             base_child%value_type = cloned_value%value_type
@@ -851,10 +829,10 @@ module hsd_api
             ! Copy new values from clone
             if (allocated(cloned_value%string_value)) &
                 & base_child%string_value = cloned_value%string_value
-          class default
+          else
             ! Type mismatch - skip
-          end select
-        end select
+          end if
+        end if
       end if
     end do
 
@@ -862,12 +840,12 @@ module hsd_api
 
   !> Clone a table (deep copy)
   recursive subroutine clone_table(source, dest)
-    type(hsd_table), intent(in) :: source
-    type(hsd_table), intent(out) :: dest
+    type(hsd_node), intent(in) :: source
+    type(hsd_node), intent(out) :: dest
 
-    class(hsd_node), pointer :: child
-    type(hsd_table) :: cloned_subtable
-    type(hsd_value) :: cloned_value
+    type(hsd_node), pointer :: child
+    type(hsd_node) :: cloned_subtable
+    type(hsd_node) :: cloned_value
     integer :: i
 
     call new_table(dest, name=source%name)
@@ -878,22 +856,21 @@ module hsd_api
       call source%get_child(i, child)
       if (.not. associated(child)) cycle
 
-      select type (child)
-      type is (hsd_table)
+      if (child%node_type == NODE_TYPE_TABLE) then
         call clone_table(child, cloned_subtable)
         call dest%add_child(cloned_subtable)
-      type is (hsd_value)
+      else if (child%node_type == NODE_TYPE_VALUE) then
         call clone_value(child, cloned_value)
         call dest%add_child(cloned_value)
-      end select
+      end if
     end do
 
   end subroutine clone_table
 
   !> Clone a value (deep copy)
   subroutine clone_value(source, dest)
-    type(hsd_value), intent(in) :: source
-    type(hsd_value), intent(out) :: dest
+    type(hsd_node), intent(in) :: source
+    type(hsd_node), intent(out) :: dest
 
     call new_value(dest, name=source%name)
     if (allocated(source%attrib)) dest%attrib = source%attrib
@@ -906,8 +883,8 @@ module hsd_api
 
   !> Deep clone an entire HSD table tree
   subroutine hsd_clone(source, dest, stat)
-    type(hsd_table), intent(in) :: source
-    type(hsd_table), intent(out) :: dest
+    type(hsd_node), intent(in) :: source
+    type(hsd_node), intent(out) :: dest
     integer, intent(out), optional :: stat
 
     call clone_table(source, dest)
@@ -923,11 +900,11 @@ module hsd_api
     !> Child order does not matter — children are matched by name.
     !> Name comparison is case-insensitive to match HSD conventions.
     recursive function hsd_table_equal(a, b) result(equal)
-      type(hsd_table), intent(in), target :: a
-      type(hsd_table), intent(in), target :: b
+      type(hsd_node), intent(in), target :: a
+      type(hsd_node), intent(in), target :: b
       logical :: equal
 
-      class(hsd_node), pointer :: child_a, child_b
+      type(hsd_node), pointer :: child_a, child_b
       integer :: i
 
       equal = .false.
@@ -955,33 +932,30 @@ module hsd_api
 
     !> Compare two nodes for equality (recursive for tables)
     recursive function nodes_equal(a, b) result(equal)
-      class(hsd_node), intent(in), target :: a
-      class(hsd_node), intent(in), target :: b
+      type(hsd_node), intent(in), target :: a
+      type(hsd_node), intent(in), target :: b
       logical :: equal
 
       equal = .false.
 
       ! Both must be the same dynamic type
-      select type (a)
-      type is (hsd_table)
-        select type (b)
-        type is (hsd_table)
+      if (a%node_type == NODE_TYPE_TABLE) then
+        if (b%node_type == NODE_TYPE_TABLE) then
           equal = hsd_table_equal(a, b)
-        end select
+        end if
 
-      type is (hsd_value)
-        select type (b)
-        type is (hsd_value)
+      else if (a%node_type == NODE_TYPE_VALUE) then
+        if (b%node_type == NODE_TYPE_VALUE) then
           equal = values_equal(a, b)
-        end select
-      end select
+        end if
+      end if
 
     end function nodes_equal
 
     !> Compare two value nodes for equality
     function values_equal(a, b) result(equal)
-      type(hsd_value), intent(in) :: a
-      type(hsd_value), intent(in) :: b
+      type(hsd_node), intent(in) :: a
+      type(hsd_node), intent(in) :: b
       logical :: equal
 
       equal = .false.
@@ -1008,12 +982,12 @@ module hsd_api
   !> When `recursive` is `.false.` (the default), only the given table itself
   !> is marked.
   recursive subroutine hsd_set_processed(table, recursive)
-    type(hsd_table), intent(inout), target :: table
+    type(hsd_node), intent(inout), target :: table
     logical, intent(in), optional :: recursive
 
     logical :: do_recurse
     integer :: ii
-    class(hsd_node), pointer :: child
+    type(hsd_node), pointer :: child
 
     do_recurse = .false.
     if (present(recursive)) do_recurse = recursive
@@ -1026,12 +1000,11 @@ module hsd_api
       call table%get_child(ii, child)
       if (.not. associated(child)) cycle
 
-      select type (child)
-      type is (hsd_table)
+      if (child%node_type == NODE_TYPE_TABLE) then
         call hsd_set_processed(child, recursive=.true.)
-      type is (hsd_value)
+      else if (child%node_type == NODE_TYPE_VALUE) then
         child%processed = .true.
-      end select
+      end if
     end do
 
   end subroutine hsd_set_processed
@@ -1039,21 +1012,20 @@ module hsd_api
 
   !> Check whether a table has any value children (inline data).
   function hsd_has_value_children(table) result(has)
-    type(hsd_table), intent(in), target :: table
+    type(hsd_node), intent(in), target :: table
     logical :: has
 
     integer :: ii
-    class(hsd_node), pointer :: child
+    type(hsd_node), pointer :: child
 
     has = .false.
     do ii = 1, table%num_children
       call table%get_child(ii, child)
       if (.not. associated(child)) cycle
-      select type (child)
-      type is (hsd_value)
+      if (child%node_type == NODE_TYPE_VALUE) then
         has = .true.
         return
-      end select
+      end if
     end do
 
   end function hsd_has_value_children
@@ -1064,7 +1036,7 @@ module hsd_api
   !> If the node's name is unset or blank, returns the `default` string
   !> (which itself defaults to "" if not provided).
   subroutine hsd_get_name(node, name, default)
-    class(hsd_node), intent(in) :: node
+    type(hsd_node), intent(in) :: node
     character(len=:), allocatable, intent(out) :: name
     character(len=*), intent(in), optional :: default
 
@@ -1092,21 +1064,20 @@ module hsd_api
   !>
   !> Looks for a child named "#text" and returns the hsd_value pointer.
   subroutine get_inline_value_(table, val_node, stat)
-    type(hsd_table), intent(in), target :: table
-    type(hsd_value), pointer, intent(out) :: val_node
+    type(hsd_node), intent(in), target :: table
+    type(hsd_node), pointer, intent(out) :: val_node
     integer, intent(out) :: stat
 
-    class(hsd_node), pointer :: child
+    type(hsd_node), pointer :: child
 
     nullify(val_node)
     call table%get_child_by_name("#text", child)
     if (associated(child)) then
-      select type (child)
-      type is (hsd_value)
+      if (child%node_type == NODE_TYPE_VALUE) then
         val_node => child
         stat = HSD_STAT_OK
         return
-      end select
+      end if
     end if
 
     stat = HSD_STAT_NOT_FOUND
@@ -1115,12 +1086,12 @@ module hsd_api
 
   !> Helper: Get the value node at the given path, handling inline text tables transparently
   subroutine get_value_node_(table, path, val_node, stat)
-    type(hsd_table), intent(in), target :: table
+    type(hsd_node), intent(in), target :: table
     character(len=*), intent(in) :: path
-    type(hsd_value), pointer, intent(out) :: val_node
+    type(hsd_node), pointer, intent(out) :: val_node
     integer, intent(out) :: stat
 
-    class(hsd_node), pointer :: child
+    type(hsd_node), pointer :: child
 
     nullify(val_node)
 
@@ -1132,27 +1103,26 @@ module hsd_api
 
     child%processed = .true.
 
-    select type (child)
-    type is (hsd_value)
+    if (child%node_type == NODE_TYPE_VALUE) then
       val_node => child
       stat = HSD_STAT_OK
-    type is (hsd_table)
+    else if (child%node_type == NODE_TYPE_TABLE) then
       ! Try to extract inline value
       call get_inline_value_(child, val_node, stat)
       if (stat == HSD_STAT_NOT_FOUND) stat = HSD_STAT_TYPE_ERROR
-    class default
+    else
       stat = HSD_STAT_TYPE_ERROR
-    end select
+    end if
   end subroutine get_value_node_
 
   !> Get string value by path
   subroutine hsd_get_string(table, path, val, stat)
-    type(hsd_table), intent(in), target :: table
+    type(hsd_node), intent(in), target :: table
     character(len=*), intent(in) :: path
     character(len=:), allocatable, intent(out) :: val
     integer, intent(out), optional :: stat
 
-    type(hsd_value), pointer :: vnode
+    type(hsd_node), pointer :: vnode
     integer :: local_stat
 
     call get_value_node_(table, path, vnode, local_stat)
@@ -1169,12 +1139,12 @@ module hsd_api
 
   !> Get integer value by path
   subroutine hsd_get_integer(table, path, val, stat)
-    type(hsd_table), intent(in), target :: table
+    type(hsd_node), intent(in), target :: table
     character(len=*), intent(in) :: path
     integer, intent(out) :: val
     integer, intent(out), optional :: stat
 
-    type(hsd_value), pointer :: vnode
+    type(hsd_node), pointer :: vnode
     integer :: local_stat
 
     call get_value_node_(table, path, vnode, local_stat)
@@ -1190,12 +1160,12 @@ module hsd_api
 
   !> Get double precision real value by path
   subroutine hsd_get_real_dp(table, path, val, stat)
-    type(hsd_table), intent(in), target :: table
+    type(hsd_node), intent(in), target :: table
     character(len=*), intent(in) :: path
     real(dp), intent(out) :: val
     integer, intent(out), optional :: stat
 
-    type(hsd_value), pointer :: vnode
+    type(hsd_node), pointer :: vnode
     integer :: local_stat
 
     call get_value_node_(table, path, vnode, local_stat)
@@ -1209,30 +1179,14 @@ module hsd_api
     if (present(stat)) stat = local_stat
   end subroutine hsd_get_real_dp
 
-  !> Get single precision real value by path
-  subroutine hsd_get_real_sp(table, path, val, stat)
-    type(hsd_table), intent(in), target :: table
-    character(len=*), intent(in) :: path
-    real(sp), intent(out) :: val
-    integer, intent(out), optional :: stat
-
-    real(dp) :: val_dp
-    integer :: local_stat
-
-    call hsd_get_real_dp(table, path, val_dp, local_stat)
-    val = real(val_dp, sp)
-    if (present(stat)) stat = local_stat
-
-  end subroutine hsd_get_real_sp
-
   !> Get logical value by path
   subroutine hsd_get_logical(table, path, val, stat)
-    type(hsd_table), intent(in), target :: table
+    type(hsd_node), intent(in), target :: table
     character(len=*), intent(in) :: path
     logical, intent(out) :: val
     integer, intent(out), optional :: stat
 
-    type(hsd_value), pointer :: vnode
+    type(hsd_node), pointer :: vnode
     integer :: local_stat
 
     call get_value_node_(table, path, vnode, local_stat)
@@ -1248,12 +1202,12 @@ module hsd_api
 
   !> Get complex value by path
   subroutine hsd_get_complex_dp(table, path, val, stat)
-    type(hsd_table), intent(in), target :: table
+    type(hsd_node), intent(in), target :: table
     character(len=*), intent(in) :: path
     complex(dp), intent(out) :: val
     integer, intent(out), optional :: stat
 
-    type(hsd_value), pointer :: vnode
+    type(hsd_node), pointer :: vnode
     integer :: local_stat
 
     call get_value_node_(table, path, vnode, local_stat)
@@ -1269,12 +1223,12 @@ module hsd_api
 
   !> Get integer array by path (supports space/comma/newline separated values)
   subroutine hsd_get_integer_array(table, path, val, stat)
-    type(hsd_table), intent(in), target :: table
+    type(hsd_node), intent(in), target :: table
     character(len=*), intent(in) :: path
     integer, allocatable, intent(out) :: val(:)
     integer, intent(out), optional :: stat
 
-    class(hsd_node), pointer :: child
+    type(hsd_node), pointer :: child
     integer :: local_stat
 
     call hsd_get_child(table, path, child, local_stat)
@@ -1287,13 +1241,12 @@ module hsd_api
 
     child%processed = .true.
 
-    select type (child)
-    type is (hsd_value)
+    if (child%node_type == NODE_TYPE_VALUE) then
       call child%get_int_array(val, local_stat)
       if (present(stat)) stat = local_stat
-    type is (hsd_table)
+    else if (child%node_type == NODE_TYPE_TABLE) then
       block
-        type(hsd_value), pointer :: vnode
+        type(hsd_node), pointer :: vnode
         call get_inline_value_(child, vnode, local_stat)
         if (local_stat == 0) then
           call vnode%get_int_array(val, local_stat)
@@ -1303,21 +1256,21 @@ module hsd_api
           allocate(val(0))
         end if
       end block
-    class default
+    else
       if (present(stat)) stat = HSD_STAT_TYPE_ERROR
       allocate(val(0))
-    end select
+    end if
 
   end subroutine hsd_get_integer_array
 
   !> Get double precision real array by path
   subroutine hsd_get_real_dp_array(table, path, val, stat)
-    type(hsd_table), intent(in), target :: table
+    type(hsd_node), intent(in), target :: table
     character(len=*), intent(in) :: path
     real(dp), allocatable, intent(out) :: val(:)
     integer, intent(out), optional :: stat
 
-    class(hsd_node), pointer :: child
+    type(hsd_node), pointer :: child
     integer :: local_stat
 
     call hsd_get_child(table, path, child, local_stat)
@@ -1330,13 +1283,12 @@ module hsd_api
 
     child%processed = .true.
 
-    select type (child)
-    type is (hsd_value)
+    if (child%node_type == NODE_TYPE_VALUE) then
       call child%get_real_array(val, local_stat)
       if (present(stat)) stat = local_stat
-    type is (hsd_table)
+    else if (child%node_type == NODE_TYPE_TABLE) then
       block
-        type(hsd_value), pointer :: vnode
+        type(hsd_node), pointer :: vnode
         call get_inline_value_(child, vnode, local_stat)
         if (local_stat == 0) then
           call vnode%get_real_array(val, local_stat)
@@ -1346,45 +1298,21 @@ module hsd_api
           allocate(val(0))
         end if
       end block
-    class default
+    else
       if (present(stat)) stat = HSD_STAT_TYPE_ERROR
       allocate(val(0))
-    end select
+    end if
 
   end subroutine hsd_get_real_dp_array
 
-  !> Get single precision real array by path
-  subroutine hsd_get_real_sp_array(table, path, val, stat)
-    type(hsd_table), intent(in), target :: table
-    character(len=*), intent(in) :: path
-    real(sp), allocatable, intent(out) :: val(:)
-    integer, intent(out), optional :: stat
-
-    real(dp), allocatable :: val_dp(:)
-    integer :: local_stat
-
-    call hsd_get_real_dp_array(table, path, val_dp, local_stat)
-
-    if (local_stat /= 0) then
-      if (present(stat)) stat = local_stat
-      allocate(val(0))
-      return
-    end if
-
-    allocate(val(size(val_dp)))
-    val = real(val_dp, sp)
-    if (present(stat)) stat = HSD_STAT_OK
-
-  end subroutine hsd_get_real_sp_array
-
   !> Get logical array by path
   subroutine hsd_get_logical_array(table, path, val, stat)
-    type(hsd_table), intent(in), target :: table
+    type(hsd_node), intent(in), target :: table
     character(len=*), intent(in) :: path
     logical, allocatable, intent(out) :: val(:)
     integer, intent(out), optional :: stat
 
-    class(hsd_node), pointer :: child
+    type(hsd_node), pointer :: child
     integer :: local_stat
 
     call hsd_get_child(table, path, child, local_stat)
@@ -1397,13 +1325,12 @@ module hsd_api
 
     child%processed = .true.
 
-    select type (child)
-    type is (hsd_value)
+    if (child%node_type == NODE_TYPE_VALUE) then
       call child%get_logical_array(val, local_stat)
       if (present(stat)) stat = local_stat
-    type is (hsd_table)
+    else if (child%node_type == NODE_TYPE_TABLE) then
       block
-        type(hsd_value), pointer :: vnode
+        type(hsd_node), pointer :: vnode
         call get_inline_value_(child, vnode, local_stat)
         if (local_stat == 0) then
           call vnode%get_logical_array(val, local_stat)
@@ -1413,21 +1340,21 @@ module hsd_api
           allocate(val(0))
         end if
       end block
-    class default
+    else
       if (present(stat)) stat = HSD_STAT_TYPE_ERROR
       allocate(val(0))
-    end select
+    end if
 
   end subroutine hsd_get_logical_array
 
   !> Get string array by path (preserves quoted strings)
   subroutine hsd_get_string_array(table, path, val, stat)
-    type(hsd_table), intent(in), target :: table
+    type(hsd_node), intent(in), target :: table
     character(len=*), intent(in) :: path
     character(len=:), allocatable, intent(out) :: val(:)
     integer, intent(out), optional :: stat
 
-    class(hsd_node), pointer :: child
+    type(hsd_node), pointer :: child
     integer :: local_stat
 
     call hsd_get_child(table, path, child, local_stat)
@@ -1440,13 +1367,12 @@ module hsd_api
 
     child%processed = .true.
 
-    select type (child)
-    type is (hsd_value)
+    if (child%node_type == NODE_TYPE_VALUE) then
       call child%get_string_array(val, local_stat)
       if (present(stat)) stat = local_stat
-    type is (hsd_table)
+    else if (child%node_type == NODE_TYPE_TABLE) then
       block
-        type(hsd_value), pointer :: vnode
+        type(hsd_node), pointer :: vnode
         call get_inline_value_(child, vnode, local_stat)
         if (local_stat == 0) then
           call vnode%get_string_array(val, local_stat)
@@ -1456,21 +1382,21 @@ module hsd_api
           allocate(character(len=1) :: val(0))
         end if
       end block
-    class default
+    else
       if (present(stat)) stat = HSD_STAT_TYPE_ERROR
       allocate(character(len=1) :: val(0))
-    end select
+    end if
 
   end subroutine hsd_get_string_array
 
   !> Get complex array by path
   subroutine hsd_get_complex_dp_array(table, path, val, stat)
-    type(hsd_table), intent(in), target :: table
+    type(hsd_node), intent(in), target :: table
     character(len=*), intent(in) :: path
     complex(dp), allocatable, intent(out) :: val(:)
     integer, intent(out), optional :: stat
 
-    class(hsd_node), pointer :: child
+    type(hsd_node), pointer :: child
     integer :: local_stat
 
     call hsd_get_child(table, path, child, local_stat)
@@ -1483,13 +1409,12 @@ module hsd_api
 
     child%processed = .true.
 
-    select type (child)
-    type is (hsd_value)
+    if (child%node_type == NODE_TYPE_VALUE) then
       call child%get_complex_array(val, local_stat)
       if (present(stat)) stat = local_stat
-    type is (hsd_table)
+    else if (child%node_type == NODE_TYPE_TABLE) then
       block
-        type(hsd_value), pointer :: vnode
+        type(hsd_node), pointer :: vnode
         call get_inline_value_(child, vnode, local_stat)
         if (local_stat == 0) then
           call vnode%get_complex_array(val, local_stat)
@@ -1499,10 +1424,10 @@ module hsd_api
           allocate(val(0))
         end if
       end block
-    class default
+    else
       if (present(stat)) stat = HSD_STAT_TYPE_ERROR
       allocate(val(0))
-    end select
+    end if
 
   end subroutine hsd_get_complex_dp_array
 
@@ -1513,14 +1438,14 @@ module hsd_api
   !> transposed so that text rows map to Fortran columns (column-major layout).
   !> Default is text-layout (row-major).
   subroutine hsd_get_integer_matrix(table, path, val, nrows, ncols, stat, order)
-    type(hsd_table), intent(in), target :: table
+    type(hsd_node), intent(in), target :: table
     character(len=*), intent(in) :: path
     integer, allocatable, intent(out) :: val(:,:)
     integer, intent(out) :: nrows, ncols
     integer, intent(out), optional :: stat
     character(len=*), intent(in), optional :: order
 
-    class(hsd_node), pointer :: child
+    type(hsd_node), pointer :: child
     integer :: local_stat
 
     call hsd_get_child(table, path, child, local_stat)
@@ -1535,20 +1460,19 @@ module hsd_api
 
     child%processed = .true.
 
-    select type (child)
-    type is (hsd_value)
+    if (child%node_type == NODE_TYPE_VALUE) then
       call child%get_int_matrix(val, nrows, ncols, local_stat)
       if (present(stat)) stat = local_stat
-    type is (hsd_table)
+    else if (child%node_type == NODE_TYPE_TABLE) then
       ! Table nodes store matrix data as unnamed child values
       call get_int_matrix_from_table(child, val, nrows, ncols, local_stat)
       if (present(stat)) stat = local_stat
-    class default
+    else
       if (present(stat)) stat = HSD_STAT_TYPE_ERROR
       allocate(val(0,0))
       nrows = 0
       ncols = 0
-    end select
+    end if
 
     ! Transpose if column-major order requested
     if (present(order)) then
@@ -1575,14 +1499,14 @@ module hsd_api
   !> transposed so that text rows map to Fortran columns (column-major layout).
   !> Default is text-layout (row-major).
   subroutine hsd_get_real_dp_matrix(table, path, val, nrows, ncols, stat, order)
-    type(hsd_table), intent(in), target :: table
+    type(hsd_node), intent(in), target :: table
     character(len=*), intent(in) :: path
     real(dp), allocatable, intent(out) :: val(:,:)
     integer, intent(out) :: nrows, ncols
     integer, intent(out), optional :: stat
     character(len=*), intent(in), optional :: order
 
-    class(hsd_node), pointer :: child
+    type(hsd_node), pointer :: child
     integer :: local_stat
 
     call hsd_get_child(table, path, child, local_stat)
@@ -1597,20 +1521,19 @@ module hsd_api
 
     child%processed = .true.
 
-    select type (child)
-    type is (hsd_value)
+    if (child%node_type == NODE_TYPE_VALUE) then
       call child%get_real_matrix(val, nrows, ncols, local_stat)
       if (present(stat)) stat = local_stat
-    type is (hsd_table)
+    else if (child%node_type == NODE_TYPE_TABLE) then
       ! Table nodes store matrix data as unnamed child values
       call get_real_matrix_from_table(child, val, nrows, ncols, local_stat)
       if (present(stat)) stat = local_stat
-    class default
+    else
       if (present(stat)) stat = HSD_STAT_TYPE_ERROR
       allocate(val(0,0))
       nrows = 0
       ncols = 0
-    end select
+    end if
 
     ! Transpose if column-major order requested
     if (present(order)) then
@@ -1632,11 +1555,11 @@ module hsd_api
 
   !> Extract integer matrix from table with unnamed value children
   subroutine get_int_matrix_from_table(tbl, mat, nrows, ncols, stat)
-    type(hsd_table), intent(in) :: tbl
+    type(hsd_node), intent(in) :: tbl
     integer, allocatable, intent(out) :: mat(:,:)
     integer, intent(out) :: nrows, ncols, stat
 
-    class(hsd_node), pointer :: child
+    type(hsd_node), pointer :: child
     character(len=:), allocatable :: combined_text, str_val
     integer :: i, local_stat
 
@@ -1645,8 +1568,7 @@ module hsd_api
     do i = 1, tbl%num_children
       call tbl%get_child(i, child)
       if (associated(child)) then
-        select type (child)
-        type is (hsd_value)
+        if (child%node_type == NODE_TYPE_VALUE) then
           ! Include unnamed, empty-named, or #text-named value nodes
           block
             logical :: is_text_child
@@ -1664,7 +1586,7 @@ module hsd_api
               end if
             end if
           end block
-        end select
+        end if
       end if
     end do
 
@@ -1678,7 +1600,7 @@ module hsd_api
 
     ! Parse the combined text as a matrix
     block
-      type(hsd_value) :: temp_val
+      type(hsd_node) :: temp_val
       call new_value(temp_val)
       call temp_val%set_raw(combined_text)
       call temp_val%get_int_matrix(mat, nrows, ncols, stat)
@@ -1689,11 +1611,11 @@ module hsd_api
 
   !> Extract real matrix from table with unnamed value children
   subroutine get_real_matrix_from_table(tbl, mat, nrows, ncols, stat)
-    type(hsd_table), intent(in) :: tbl
+    type(hsd_node), intent(in) :: tbl
     real(dp), allocatable, intent(out) :: mat(:,:)
     integer, intent(out) :: nrows, ncols, stat
 
-    class(hsd_node), pointer :: child
+    type(hsd_node), pointer :: child
     character(len=:), allocatable :: combined_text, str_val
     integer :: i, local_stat
 
@@ -1702,8 +1624,7 @@ module hsd_api
     do i = 1, tbl%num_children
       call tbl%get_child(i, child)
       if (associated(child)) then
-        select type (child)
-        type is (hsd_value)
+        if (child%node_type == NODE_TYPE_VALUE) then
           ! Include unnamed, empty-named, or #text-named value nodes
           block
             logical :: is_text_child
@@ -1721,7 +1642,7 @@ module hsd_api
               end if
             end if
           end block
-        end select
+        end if
       end if
     end do
 
@@ -1735,7 +1656,7 @@ module hsd_api
 
     ! Parse the combined text as a matrix
     block
-      type(hsd_value) :: temp_val
+      type(hsd_node) :: temp_val
       call new_value(temp_val)
       call temp_val%set_raw(combined_text)
       call temp_val%get_real_matrix(mat, nrows, ncols, stat)
@@ -1751,14 +1672,14 @@ module hsd_api
   !> transposed so that text rows map to Fortran columns (column-major layout).
   !> Default is text-layout (row-major).
   subroutine hsd_get_complex_dp_matrix(table, path, val, nrows, ncols, stat, order)
-    type(hsd_table), intent(in), target :: table
+    type(hsd_node), intent(in), target :: table
     character(len=*), intent(in) :: path
     complex(dp), allocatable, intent(out) :: val(:,:)
     integer, intent(out) :: nrows, ncols
     integer, intent(out), optional :: stat
     character(len=*), intent(in), optional :: order
 
-    class(hsd_node), pointer :: child
+    type(hsd_node), pointer :: child
     integer :: local_stat
 
     call hsd_get_child(table, path, child, local_stat)
@@ -1773,20 +1694,19 @@ module hsd_api
 
     child%processed = .true.
 
-    select type (child)
-    type is (hsd_value)
+    if (child%node_type == NODE_TYPE_VALUE) then
       call child%get_complex_matrix(val, nrows, ncols, local_stat)
       if (present(stat)) stat = local_stat
-    type is (hsd_table)
+    else if (child%node_type == NODE_TYPE_TABLE) then
       ! Table nodes store matrix data as unnamed child values
       call get_complex_matrix_from_table(child, val, nrows, ncols, local_stat)
       if (present(stat)) stat = local_stat
-    class default
+    else
       if (present(stat)) stat = HSD_STAT_TYPE_ERROR
       allocate(val(0,0))
       nrows = 0
       ncols = 0
-    end select
+    end if
 
     ! Transpose if column-major order requested
     if (present(order)) then
@@ -1808,11 +1728,11 @@ module hsd_api
 
   !> Extract complex matrix from table with unnamed value children
   subroutine get_complex_matrix_from_table(tbl, mat, nrows, ncols, stat)
-    type(hsd_table), intent(in) :: tbl
+    type(hsd_node), intent(in) :: tbl
     complex(dp), allocatable, intent(out) :: mat(:,:)
     integer, intent(out) :: nrows, ncols, stat
 
-    class(hsd_node), pointer :: child
+    type(hsd_node), pointer :: child
     character(len=:), allocatable :: combined_text, str_val
     integer :: i, local_stat
 
@@ -1821,8 +1741,7 @@ module hsd_api
     do i = 1, tbl%num_children
       call tbl%get_child(i, child)
       if (associated(child)) then
-        select type (child)
-        type is (hsd_value)
+        if (child%node_type == NODE_TYPE_VALUE) then
           ! Include unnamed, empty-named, or #text-named value nodes
           block
             logical :: is_text_child
@@ -1840,7 +1759,7 @@ module hsd_api
               end if
             end if
           end block
-        end select
+        end if
       end if
     end do
 
@@ -1854,7 +1773,7 @@ module hsd_api
 
     ! Parse the combined text as a matrix
     block
-      type(hsd_value) :: temp_val
+      type(hsd_node) :: temp_val
       call new_value(temp_val)
       call temp_val%set_raw(combined_text)
       call temp_val%get_complex_matrix(mat, nrows, ncols, stat)
@@ -1875,11 +1794,11 @@ module hsd_api
 
   !> Common helper for hsd_get_or_set status and optional child return.
   subroutine finalize_get_or_set_(table, path, local_stat, stat, child)
-    type(hsd_table), intent(inout), target :: table
+    type(hsd_node), intent(inout), target :: table
     character(len=*), intent(in) :: path
     integer, intent(in) :: local_stat
     integer, intent(out), optional :: stat
-    type(hsd_table), pointer, intent(out), optional :: child
+    type(hsd_node), pointer, intent(out), optional :: child
 
     if (local_stat /= HSD_STAT_OK) then
       call set_stat_from_local_(local_stat, stat)
@@ -1896,12 +1815,12 @@ module hsd_api
 
   !> Get or create a value child; fails with TYPE_ERROR if final node is not a value.
   subroutine get_or_create_value_child_(table, path, vchild, stat)
-    type(hsd_table), intent(inout), target :: table
+    type(hsd_node), intent(inout), target :: table
     character(len=*), intent(in) :: path
-    type(hsd_value), pointer, intent(out) :: vchild
+    type(hsd_node), pointer, intent(out) :: vchild
     integer, intent(out) :: stat
 
-    class(hsd_node), pointer :: child
+    type(hsd_node), pointer :: child
     integer :: local_stat
 
     nullify(vchild)
@@ -1911,26 +1830,25 @@ module hsd_api
       return
     end if
 
-    select type (child)
-    type is (hsd_value)
+    if (child%node_type == NODE_TYPE_VALUE) then
       vchild => child
       stat = HSD_STAT_OK
-    class default
+    else
       stat = HSD_STAT_TYPE_ERROR
-    end select
+    end if
   end subroutine get_or_create_value_child_
 
   !> Collect child references matching the final path segment.
   subroutine collect_named_children_(table, path, children, stat, tables_only)
-    type(hsd_table), intent(in), target :: table
+    type(hsd_node), intent(in), target :: table
     character(len=*), intent(in) :: path
     type(hsd_child_ptr), allocatable, intent(out) :: children(:)
     integer, intent(out), optional :: stat
     logical, intent(in) :: tables_only
 
     character(len=:), allocatable :: child_name
-    class(hsd_node), pointer :: child
-    type(hsd_table), pointer :: parent_table
+    type(hsd_node), pointer :: child
+    type(hsd_node), pointer :: parent_table
     integer :: local_stat, i, count
     character(len=:), allocatable :: lower_name
 
@@ -1950,10 +1868,9 @@ module hsd_api
       if (.not. allocated(child%name)) cycle
       if (to_lower(child%name) /= lower_name) cycle
       if (tables_only) then
-        select type (child)
-        type is (hsd_table)
+        if (child%node_type == NODE_TYPE_TABLE) then
           count = count + 1
-        end select
+        end if
       else
         count = count + 1
       end if
@@ -1967,12 +1884,11 @@ module hsd_api
       if (.not. allocated(child%name)) cycle
       if (to_lower(child%name) /= lower_name) cycle
       if (tables_only) then
-        select type (child)
-        type is (hsd_table)
+        if (child%node_type == NODE_TYPE_TABLE) then
           count = count + 1
           children(count)%ptr => child
           child%processed = .true.
-        end select
+        end if
       else
         count = count + 1
         children(count)%ptr => child
@@ -1985,10 +1901,10 @@ module hsd_api
 
   !> Mark a named child node as processed
   subroutine mark_child_processed_(table, path)
-    type(hsd_table), intent(inout), target :: table
+    type(hsd_node), intent(inout), target :: table
     character(len=*), intent(in) :: path
 
-    class(hsd_node), pointer :: child
+    type(hsd_node), pointer :: child
     integer :: local_stat
 
     call hsd_get_child(table, path, child, local_stat)
@@ -2002,12 +1918,12 @@ module hsd_api
 
   !> Get string value with default, writing default back to tree if absent
   subroutine hsd_get_or_set_string(table, path, val, default, stat, child)
-    type(hsd_table), intent(inout), target :: table
+    type(hsd_node), intent(inout), target :: table
     character(len=*), intent(in) :: path
     character(len=:), allocatable, intent(out) :: val
     character(len=*), intent(in) :: default
     integer, intent(out), optional :: stat
-    type(hsd_table), pointer, intent(out), optional :: child
+    type(hsd_node), pointer, intent(out), optional :: child
 
     integer :: local_stat
 
@@ -2025,12 +1941,12 @@ module hsd_api
 
   !> Get integer value with default, writing default back to tree if absent
   subroutine hsd_get_or_set_integer(table, path, val, default, stat, child)
-    type(hsd_table), intent(inout), target :: table
+    type(hsd_node), intent(inout), target :: table
     character(len=*), intent(in) :: path
     integer, intent(out) :: val
     integer, intent(in) :: default
     integer, intent(out), optional :: stat
-    type(hsd_table), pointer, intent(out), optional :: child
+    type(hsd_node), pointer, intent(out), optional :: child
 
     integer :: local_stat
 
@@ -2048,12 +1964,12 @@ module hsd_api
 
   !> Get double precision real value with default, writing default back to tree if absent
   subroutine hsd_get_or_set_real_dp(table, path, val, default, stat, child)
-    type(hsd_table), intent(inout), target :: table
+    type(hsd_node), intent(inout), target :: table
     character(len=*), intent(in) :: path
     real(dp), intent(out) :: val
     real(dp), intent(in) :: default
     integer, intent(out), optional :: stat
-    type(hsd_table), pointer, intent(out), optional :: child
+    type(hsd_node), pointer, intent(out), optional :: child
 
     integer :: local_stat
 
@@ -2069,37 +1985,14 @@ module hsd_api
 
   end subroutine hsd_get_or_set_real_dp
 
-  !> Get single precision real value with default, writing default back to tree if absent
-  subroutine hsd_get_or_set_real_sp(table, path, val, default, stat, child)
-    type(hsd_table), intent(inout), target :: table
-    character(len=*), intent(in) :: path
-    real(sp), intent(out) :: val
-    real(sp), intent(in) :: default
-    integer, intent(out), optional :: stat
-    type(hsd_table), pointer, intent(out), optional :: child
-
-    integer :: local_stat
-
-    call hsd_get_real_sp(table, path, val, local_stat)
-
-    if (local_stat /= 0) then
-      val = default
-      call hsd_set(table, path, real(default, dp))
-      call mark_child_processed_(table, path)
-    end if
-
-    call finalize_get_or_set_(table, path, local_stat, stat, child)
-
-  end subroutine hsd_get_or_set_real_sp
-
   !> Get logical value with default, writing default back to tree if absent
   subroutine hsd_get_or_set_logical(table, path, val, default, stat, child)
-    type(hsd_table), intent(inout), target :: table
+    type(hsd_node), intent(inout), target :: table
     character(len=*), intent(in) :: path
     logical, intent(out) :: val
     logical, intent(in) :: default
     integer, intent(out), optional :: stat
-    type(hsd_table), pointer, intent(out), optional :: child
+    type(hsd_node), pointer, intent(out), optional :: child
 
     integer :: local_stat
 
@@ -2117,12 +2010,12 @@ module hsd_api
 
   !> Get complex value with default, writing default back to tree if absent
   subroutine hsd_get_or_set_complex_dp(table, path, val, default, stat, child)
-    type(hsd_table), intent(inout), target :: table
+    type(hsd_node), intent(inout), target :: table
     character(len=*), intent(in) :: path
     complex(dp), intent(out) :: val
     complex(dp), intent(in) :: default
     integer, intent(out), optional :: stat
-    type(hsd_table), pointer, intent(out), optional :: child
+    type(hsd_node), pointer, intent(out), optional :: child
 
     integer :: local_stat
 
@@ -2140,12 +2033,12 @@ module hsd_api
 
   !> Get integer array with default, writing default back to tree if absent
   subroutine hsd_get_or_set_integer_array(table, path, val, default, stat, child)
-    type(hsd_table), intent(inout), target :: table
+    type(hsd_node), intent(inout), target :: table
     character(len=*), intent(in) :: path
     integer, allocatable, intent(out) :: val(:)
     integer, intent(in) :: default(:)
     integer, intent(out), optional :: stat
-    type(hsd_table), pointer, intent(out), optional :: child
+    type(hsd_node), pointer, intent(out), optional :: child
 
     integer :: local_stat
 
@@ -2163,12 +2056,12 @@ module hsd_api
 
   !> Get double precision real array with default, writing default back to tree if absent
   subroutine hsd_get_or_set_real_dp_array(table, path, val, default, stat, child)
-    type(hsd_table), intent(inout), target :: table
+    type(hsd_node), intent(inout), target :: table
     character(len=*), intent(in) :: path
     real(dp), allocatable, intent(out) :: val(:)
     real(dp), intent(in) :: default(:)
     integer, intent(out), optional :: stat
-    type(hsd_table), pointer, intent(out), optional :: child
+    type(hsd_node), pointer, intent(out), optional :: child
 
     integer :: local_stat
 
@@ -2184,37 +2077,14 @@ module hsd_api
 
   end subroutine hsd_get_or_set_real_dp_array
 
-  !> Get single precision real array with default, writing default back to tree if absent
-  subroutine hsd_get_or_set_real_sp_array(table, path, val, default, stat, child)
-    type(hsd_table), intent(inout), target :: table
-    character(len=*), intent(in) :: path
-    real(sp), allocatable, intent(out) :: val(:)
-    real(sp), intent(in) :: default(:)
-    integer, intent(out), optional :: stat
-    type(hsd_table), pointer, intent(out), optional :: child
-
-    integer :: local_stat
-
-    call hsd_get_real_sp_array(table, path, val, local_stat)
-
-    if (local_stat /= 0) then
-      val = default
-      call hsd_set(table, path, real(default, dp))
-      call mark_child_processed_(table, path)
-    end if
-
-    call finalize_get_or_set_(table, path, local_stat, stat, child)
-
-  end subroutine hsd_get_or_set_real_sp_array
-
   !> Get logical array with default, writing default back to tree if absent
   subroutine hsd_get_or_set_logical_array(table, path, val, default, stat, child)
-    type(hsd_table), intent(inout), target :: table
+    type(hsd_node), intent(inout), target :: table
     character(len=*), intent(in) :: path
     logical, allocatable, intent(out) :: val(:)
     logical, intent(in) :: default(:)
     integer, intent(out), optional :: stat
-    type(hsd_table), pointer, intent(out), optional :: child
+    type(hsd_node), pointer, intent(out), optional :: child
 
     integer :: local_stat
 
@@ -2236,30 +2106,29 @@ module hsd_api
   !> Iterates children of `table`, collecting text from unnamed or "#text"
   !> `hsd_value` nodes. Multiple values are separated by spaces.
   subroutine hsd_get_inline_text(table, text, stat)
-    type(hsd_table), intent(in), target :: table
+    type(hsd_node), intent(in), target :: table
     character(len=:), allocatable, intent(out) :: text
     integer, intent(out), optional :: stat
 
     integer :: ii, local_stat
-    class(hsd_node), pointer :: child
+    type(hsd_node), pointer :: child
     character(len=:), allocatable :: piece
 
     text = ""
     do ii = 1, table%num_children
       call table%get_child(ii, child)
       if (.not. associated(child)) cycle
-      select type (v => child)
-      type is (hsd_value)
+      if (child%node_type == NODE_TYPE_VALUE) then
         block
           logical :: is_anon_val
           is_anon_val = .true.
-          if (allocated(v%name)) then
-            if (len_trim(v%name) > 0 .and. v%name /= "#text") then
+          if (allocated(child%name)) then
+            if (len_trim(child%name) > 0 .and. child%name /= "#text") then
               is_anon_val = .false.
             end if
           end if
         if (is_anon_val) then
-          call v%get_string(piece, local_stat)
+          call child%get_string(piece, local_stat)
           if (local_stat == HSD_STAT_OK .and. allocated(piece)) then
             if (len(text) > 0) then
               text = text // " " // piece
@@ -2269,7 +2138,7 @@ module hsd_api
           end if
         end if
         end block
-      end select
+      end if
     end do
 
     if (present(stat)) then
@@ -2285,12 +2154,12 @@ module hsd_api
 
   !> Set string value by path
   subroutine hsd_set_string(table, path, val, stat)
-    type(hsd_table), intent(inout) :: table
+    type(hsd_node), intent(inout) :: table
     character(len=*), intent(in) :: path
     character(len=*), intent(in) :: val
     integer, intent(out), optional :: stat
 
-    type(hsd_value), pointer :: vchild
+    type(hsd_node), pointer :: vchild
     integer :: local_stat
 
     call get_or_create_value_child_(table, path, vchild, local_stat)
@@ -2307,12 +2176,12 @@ module hsd_api
 
   !> Set integer value by path
   subroutine hsd_set_integer(table, path, val, stat)
-    type(hsd_table), intent(inout) :: table
+    type(hsd_node), intent(inout) :: table
     character(len=*), intent(in) :: path
     integer, intent(in) :: val
     integer, intent(out), optional :: stat
 
-    type(hsd_value), pointer :: vchild
+    type(hsd_node), pointer :: vchild
     integer :: local_stat
 
     call get_or_create_value_child_(table, path, vchild, local_stat)
@@ -2329,12 +2198,12 @@ module hsd_api
 
   !> Set double precision real value by path
   subroutine hsd_set_real_dp(table, path, val, stat)
-    type(hsd_table), intent(inout) :: table
+    type(hsd_node), intent(inout) :: table
     character(len=*), intent(in) :: path
     real(dp), intent(in) :: val
     integer, intent(out), optional :: stat
 
-    type(hsd_value), pointer :: vchild
+    type(hsd_node), pointer :: vchild
     integer :: local_stat
 
     call get_or_create_value_child_(table, path, vchild, local_stat)
@@ -2349,25 +2218,14 @@ module hsd_api
 
   end subroutine hsd_set_real_dp
 
-  !> Set single precision real value by path
-  subroutine hsd_set_real_sp(table, path, val, stat)
-    type(hsd_table), intent(inout) :: table
-    character(len=*), intent(in) :: path
-    real(sp), intent(in) :: val
-    integer, intent(out), optional :: stat
-
-    call hsd_set_real_dp(table, path, real(val, dp), stat)
-
-  end subroutine hsd_set_real_sp
-
   !> Set logical value by path
   subroutine hsd_set_logical(table, path, val, stat)
-    type(hsd_table), intent(inout) :: table
+    type(hsd_node), intent(inout) :: table
     character(len=*), intent(in) :: path
     logical, intent(in) :: val
     integer, intent(out), optional :: stat
 
-    type(hsd_value), pointer :: vchild
+    type(hsd_node), pointer :: vchild
     integer :: local_stat
 
     call get_or_create_value_child_(table, path, vchild, local_stat)
@@ -2384,12 +2242,12 @@ module hsd_api
 
   !> Set complex value by path
   subroutine hsd_set_complex_dp(table, path, val, stat)
-    type(hsd_table), intent(inout) :: table
+    type(hsd_node), intent(inout) :: table
     character(len=*), intent(in) :: path
     complex(dp), intent(in) :: val
     integer, intent(out), optional :: stat
 
-    type(hsd_value), pointer :: vchild
+    type(hsd_node), pointer :: vchild
     integer :: local_stat
 
     call get_or_create_value_child_(table, path, vchild, local_stat)
@@ -2406,12 +2264,12 @@ module hsd_api
 
   !> Set integer array by path
   subroutine hsd_set_integer_array(table, path, val, stat)
-    type(hsd_table), intent(inout) :: table
+    type(hsd_node), intent(inout) :: table
     character(len=*), intent(in) :: path
     integer, intent(in) :: val(:)
     integer, intent(out), optional :: stat
 
-    class(hsd_node), pointer :: child
+    type(hsd_node), pointer :: child
     integer :: local_stat, i
     character(len=32) :: buffer
     type(string_buffer_t) :: buf
@@ -2423,8 +2281,7 @@ module hsd_api
       return
     end if
 
-    select type (child)
-    type is (hsd_value)
+    if (child%node_type == NODE_TYPE_VALUE) then
       call buf%init(size(val) * 12)
       do i = 1, size(val)
         write(buffer, '(I0)') val(i)
@@ -2432,10 +2289,10 @@ module hsd_api
         call buf%append_str(trim(adjustl(buffer)))
       end do
       call child%set_raw(buf%get_string())
-    class default
+    else
       if (present(stat)) stat = HSD_STAT_TYPE_ERROR
       return
-    end select
+    end if
 
     if (present(stat)) stat = HSD_STAT_OK
 
@@ -2443,12 +2300,12 @@ module hsd_api
 
   !> Set double precision real array by path
   subroutine hsd_set_real_dp_array(table, path, val, stat)
-    type(hsd_table), intent(inout) :: table
+    type(hsd_node), intent(inout) :: table
     character(len=*), intent(in) :: path
     real(dp), intent(in) :: val(:)
     integer, intent(out), optional :: stat
 
-    class(hsd_node), pointer :: child
+    type(hsd_node), pointer :: child
     integer :: local_stat, i
     character(len=32) :: buffer
     type(string_buffer_t) :: buf
@@ -2460,8 +2317,7 @@ module hsd_api
       return
     end if
 
-    select type (child)
-    type is (hsd_value)
+    if (child%node_type == NODE_TYPE_VALUE) then
       call buf%init(size(val) * 16)
       do i = 1, size(val)
         write(buffer, '(G0)') val(i)
@@ -2469,38 +2325,23 @@ module hsd_api
         call buf%append_str(trim(adjustl(buffer)))
       end do
       call child%set_raw(buf%get_string())
-    class default
+    else
       if (present(stat)) stat = HSD_STAT_TYPE_ERROR
       return
-    end select
+    end if
 
     if (present(stat)) stat = HSD_STAT_OK
 
   end subroutine hsd_set_real_dp_array
 
-  !> Set single precision real array by path
-  subroutine hsd_set_real_sp_array(table, path, val, stat)
-    type(hsd_table), intent(inout) :: table
-    character(len=*), intent(in) :: path
-    real(sp), intent(in) :: val(:)
-    integer, intent(out), optional :: stat
-
-    real(dp), allocatable :: val_dp(:)
-
-    allocate(val_dp(size(val)))
-    val_dp = real(val, dp)
-    call hsd_set_real_dp_array(table, path, val_dp, stat)
-
-  end subroutine hsd_set_real_sp_array
-
   !> Set logical array by path
   subroutine hsd_set_logical_array(table, path, val, stat)
-    type(hsd_table), intent(inout) :: table
+    type(hsd_node), intent(inout) :: table
     character(len=*), intent(in) :: path
     logical, intent(in) :: val(:)
     integer, intent(out), optional :: stat
 
-    class(hsd_node), pointer :: child
+    type(hsd_node), pointer :: child
     integer :: local_stat, i
     type(string_buffer_t) :: buf
 
@@ -2511,8 +2352,7 @@ module hsd_api
       return
     end if
 
-    select type (child)
-    type is (hsd_value)
+    if (child%node_type == NODE_TYPE_VALUE) then
       call buf%init(size(val) * 4)
       do i = 1, size(val)
         if (i > 1) call buf%append_char(' ')
@@ -2523,10 +2363,10 @@ module hsd_api
         end if
       end do
       call child%set_raw(buf%get_string())
-    class default
+    else
       if (present(stat)) stat = HSD_STAT_TYPE_ERROR
       return
-    end select
+    end if
 
     if (present(stat)) stat = HSD_STAT_OK
 
@@ -2534,12 +2374,12 @@ module hsd_api
 
   !> Set complex array by path
   subroutine hsd_set_complex_dp_array(table, path, val, stat)
-    type(hsd_table), intent(inout) :: table
+    type(hsd_node), intent(inout) :: table
     character(len=*), intent(in) :: path
     complex(dp), intent(in) :: val(:)
     integer, intent(out), optional :: stat
 
-    class(hsd_node), pointer :: child
+    type(hsd_node), pointer :: child
     integer :: local_stat, i
     character(len=64) :: buffer
     type(string_buffer_t) :: buf
@@ -2551,8 +2391,7 @@ module hsd_api
       return
     end if
 
-    select type (child)
-    type is (hsd_value)
+    if (child%node_type == NODE_TYPE_VALUE) then
       call buf%init(size(val) * 32)
       do i = 1, size(val)
         if (i > 1) call buf%append_char(' ')
@@ -2564,10 +2403,10 @@ module hsd_api
         call buf%append_str(trim(adjustl(buffer)))
       end do
       call child%set_raw(buf%get_string())
-    class default
+    else
       if (present(stat)) stat = HSD_STAT_TYPE_ERROR
       return
-    end select
+    end if
 
     if (present(stat)) stat = HSD_STAT_OK
 
@@ -2575,12 +2414,12 @@ module hsd_api
 
   !> Set string array by path
   subroutine hsd_set_string_array(table, path, val, stat)
-    type(hsd_table), intent(inout) :: table
+    type(hsd_node), intent(inout) :: table
     character(len=*), intent(in) :: path
     character(len=*), intent(in) :: val(:)
     integer, intent(out), optional :: stat
 
-    class(hsd_node), pointer :: child
+    type(hsd_node), pointer :: child
     integer :: local_stat, i
     type(string_buffer_t) :: buf
 
@@ -2591,8 +2430,7 @@ module hsd_api
       return
     end if
 
-    select type (child)
-    type is (hsd_value)
+    if (child%node_type == NODE_TYPE_VALUE) then
       call buf%init(size(val) * 32)
       do i = 1, size(val)
         if (i > 1) call buf%append_char(' ')
@@ -2606,10 +2444,10 @@ module hsd_api
         end if
       end do
       call child%set_raw(buf%get_string())
-    class default
+    else
       if (present(stat)) stat = HSD_STAT_TYPE_ERROR
       return
-    end select
+    end if
 
     if (present(stat)) stat = HSD_STAT_OK
 
@@ -2617,12 +2455,12 @@ module hsd_api
 
   !> Set integer matrix by path
   subroutine hsd_set_integer_matrix(table, path, val, stat)
-    type(hsd_table), intent(inout) :: table
+    type(hsd_node), intent(inout) :: table
     character(len=*), intent(in) :: path
     integer, intent(in) :: val(:,:)
     integer, intent(out), optional :: stat
 
-    class(hsd_node), pointer :: child
+    type(hsd_node), pointer :: child
     integer :: local_stat, ir, ic
     character(len=32) :: buffer
     type(string_buffer_t) :: buf
@@ -2634,8 +2472,7 @@ module hsd_api
       return
     end if
 
-    select type (child)
-    type is (hsd_value)
+    if (child%node_type == NODE_TYPE_VALUE) then
       call buf%init(size(val) * 12)
       do ir = 1, size(val, 1)
         if (ir > 1) call buf%append_str(new_line('a'))
@@ -2646,10 +2483,10 @@ module hsd_api
         end do
       end do
       call child%set_raw(buf%get_string())
-    class default
+    else
       if (present(stat)) stat = HSD_STAT_TYPE_ERROR
       return
-    end select
+    end if
 
     if (present(stat)) stat = HSD_STAT_OK
 
@@ -2657,12 +2494,12 @@ module hsd_api
 
   !> Set double precision real matrix by path
   subroutine hsd_set_real_dp_matrix(table, path, val, stat)
-    type(hsd_table), intent(inout) :: table
+    type(hsd_node), intent(inout) :: table
     character(len=*), intent(in) :: path
     real(dp), intent(in) :: val(:,:)
     integer, intent(out), optional :: stat
 
-    class(hsd_node), pointer :: child
+    type(hsd_node), pointer :: child
     integer :: local_stat, ir, ic
     character(len=32) :: buffer
     type(string_buffer_t) :: buf
@@ -2674,8 +2511,7 @@ module hsd_api
       return
     end if
 
-    select type (child)
-    type is (hsd_value)
+    if (child%node_type == NODE_TYPE_VALUE) then
       call buf%init(size(val) * 16)
       do ir = 1, size(val, 1)
         if (ir > 1) call buf%append_str(new_line('a'))
@@ -2686,10 +2522,10 @@ module hsd_api
         end do
       end do
       call child%set_raw(buf%get_string())
-    class default
+    else
       if (present(stat)) stat = HSD_STAT_TYPE_ERROR
       return
-    end select
+    end if
 
     if (present(stat)) stat = HSD_STAT_OK
 
@@ -2697,12 +2533,12 @@ module hsd_api
 
   !> Set complex double precision matrix by path
   subroutine hsd_set_complex_dp_matrix(table, path, val, stat)
-    type(hsd_table), intent(inout) :: table
+    type(hsd_node), intent(inout) :: table
     character(len=*), intent(in) :: path
     complex(dp), intent(in) :: val(:,:)
     integer, intent(out), optional :: stat
 
-    class(hsd_node), pointer :: child
+    type(hsd_node), pointer :: child
     integer :: local_stat, ir, ic
     character(len=64) :: buffer
     type(string_buffer_t) :: buf
@@ -2714,8 +2550,7 @@ module hsd_api
       return
     end if
 
-    select type (child)
-    type is (hsd_value)
+    if (child%node_type == NODE_TYPE_VALUE) then
       call buf%init(size(val) * 32)
       do ir = 1, size(val, 1)
         if (ir > 1) call buf%append_str(new_line('a'))
@@ -2730,10 +2565,10 @@ module hsd_api
         end do
       end do
       call child%set_raw(buf%get_string())
-    class default
+    else
       if (present(stat)) stat = HSD_STAT_TYPE_ERROR
       return
-    end select
+    end if
 
     if (present(stat)) stat = HSD_STAT_OK
 
@@ -2741,16 +2576,16 @@ module hsd_api
 
   !> Get or create a child node by path, creating intermediate tables as needed
   subroutine get_or_create_child(table, path, child, stat)
-    type(hsd_table), intent(inout), target :: table
+    type(hsd_node), intent(inout), target :: table
     character(len=*), intent(in) :: path
-    class(hsd_node), pointer, intent(out) :: child
+    type(hsd_node), pointer, intent(out) :: child
     integer, intent(out), optional :: stat
 
     character(len=:), allocatable :: remaining, segment
-    class(hsd_node), pointer :: current
-    type(hsd_table), pointer :: current_table
-    type(hsd_table) :: new_tbl
-    type(hsd_value) :: new_val
+    type(hsd_node), pointer :: current
+    type(hsd_node), pointer :: current_table
+    type(hsd_node) :: new_tbl
+    type(hsd_node) :: new_val
     integer :: sep_pos, i
 
     child => null()
@@ -2807,14 +2642,13 @@ module hsd_api
 
       ! Navigate deeper if more path remains
       if (len_trim(remaining) > 0) then
-        select type (current)
-        type is (hsd_table)
+        if (current%node_type == NODE_TYPE_TABLE) then
           current_table => current
-        class default
+        else
           ! Path segment is not a table, cannot navigate
           if (present(stat)) stat = HSD_STAT_NOT_FOUND
           return
-        end select
+        end if
       else
         child => current
         if (present(stat)) stat = HSD_STAT_OK
@@ -2833,10 +2667,10 @@ module hsd_api
   !> index are fully deallocated so subsequent add_child calls re-initialize
   !> correctly.
   subroutine hsd_clear_children(table)
-    type(hsd_table), intent(inout) :: table
+    type(hsd_node), intent(inout) :: table
 
     integer :: ii
-    class(hsd_node), pointer :: child
+    type(hsd_node), pointer :: child
 
     ! Destroy each child node
     do ii = 1, table%num_children

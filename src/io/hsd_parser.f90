@@ -1,7 +1,7 @@
 !> HSD Parser
 !>
 !> This module provides the main parsing functionality for HSD files.
-!> It converts a token stream into a tree of hsd_table and hsd_value nodes.
+!> It converts a token stream into a tree of hsd_node nodes.
 !> Includes cycle detection for <<+ includes.
 module hsd_parser
   use hsd_constants, only: dp, hsd_max_include_depth, CHAR_NEWLINE
@@ -10,8 +10,9 @@ module hsd_parser
     TOKEN_INCLUDE_TXT, TOKEN_INCLUDE_HSD, TOKEN_SEMICOLON, TOKEN_COMMENT, &
     TOKEN_TEXT, TOKEN_NEWLINE, TOKEN_WHITESPACE
   use hsd_lexer, only: hsd_lexer_t, new_lexer_from_file, new_lexer_from_string
-  use hsd_types, only: hsd_node, hsd_table, hsd_value, hsd_node_ptr, &
-    new_table, new_value, VALUE_TYPE_NONE, VALUE_TYPE_ARRAY, VALUE_TYPE_STRING
+  use hsd_types, only: hsd_node, hsd_node_ptr, &
+    new_table, new_value, VALUE_TYPE_NONE, VALUE_TYPE_ARRAY, &
+    VALUE_TYPE_STRING, NODE_TYPE_TABLE, NODE_TYPE_VALUE
   use hsd_error, only: hsd_error_t, make_error, &
     HSD_STAT_OK, HSD_STAT_SYNTAX_ERROR, HSD_STAT_FILE_NOT_FOUND, &
     HSD_STAT_IO_ERROR, HSD_STAT_INCLUDE_CYCLE, HSD_STAT_INCLUDE_DEPTH, &
@@ -54,7 +55,7 @@ contains
   !> Parse an HSD file into a tree structure
   subroutine hsd_parse(filename, root, error)
     character(len=*), intent(in) :: filename
-    type(hsd_table), intent(out) :: root
+    type(hsd_node), intent(out) :: root
     type(hsd_error_t), allocatable, intent(out), optional :: error
 
     type(parser_state) :: state
@@ -104,7 +105,7 @@ contains
   !> Parse HSD from a string
   subroutine hsd_parse_string(source, root, error, filename)
     character(len=*), intent(in) :: source
-    type(hsd_table), intent(out) :: root
+    type(hsd_node), intent(out) :: root
     type(hsd_error_t), allocatable, intent(out), optional :: error
     character(len=*), intent(in), optional :: filename
 
@@ -264,7 +265,7 @@ contains
   !> Parse content (multiple tags/values)
   recursive subroutine parse_content(state, parent, error)
     type(parser_state), intent(inout) :: state
-    type(hsd_table), intent(inout) :: parent
+    type(hsd_node), intent(inout) :: parent
     type(hsd_error_t), allocatable, intent(out), optional :: error
 
     type(hsd_error_t), allocatable :: local_error
@@ -375,7 +376,7 @@ contains
   !> Parse a tag (possibly with value) or just data
   recursive subroutine parse_tag_or_value(state, parent, text_buffer, text_start_line, error)
     type(parser_state), intent(inout) :: state
-    type(hsd_table), intent(inout) :: parent
+    type(hsd_node), intent(inout) :: parent
     character(len=:), allocatable, intent(inout) :: text_buffer
     integer, intent(inout) :: text_start_line
     type(hsd_error_t), allocatable, intent(out), optional :: error
@@ -384,13 +385,13 @@ contains
     character(len=:), allocatable :: original_text
     integer :: tag_line
     type(hsd_token_t) :: saved_token
-    type(hsd_table) :: child_table
-    type(hsd_value) :: child_value
+    type(hsd_node) :: child_table
+    type(hsd_node) :: child_value
     type(hsd_error_t), allocatable :: local_error
     character(len=:), allocatable :: value_text
     logical :: is_amendment
-    class(hsd_node), pointer :: existing_child
-    type(hsd_table), pointer :: existing_table
+    type(hsd_node), pointer :: existing_child
+    type(hsd_node), pointer :: existing_table
 
     ! Save current state — preserve original text for data fallback, lowercase for tag use
     original_text = trim(state%current_token%value)
@@ -450,18 +451,17 @@ contains
           end if
           return
         end if
-        select type (existing_child)
-        type is (hsd_table)
-          existing_table => existing_child
-          call parse_content(state, existing_table, local_error)
-        class default
+        if (existing_child%node_type == NODE_TYPE_TABLE) then
+          call parse_content(state, existing_child, local_error)
+        else
           if (present(error)) then
             call make_error(error, HSD_STAT_SYNTAX_ERROR, &
-              "Amendment target '" // tag_name // "' is not a block", &
+              "Amendment target '" // tag_name &
+              & // "' is not a block", &
               state%lexer%filename, tag_line)
           end if
           return
-        end select
+        end if
       else
         call new_table(child_table, tag_name, attrib, tag_line)
         call parse_content(state, child_table, local_error)
@@ -548,17 +548,16 @@ contains
                 end if
                 return
               end if
-              select type (existing_child)
-              type is (hsd_table)
-                existing_table => existing_child
-              class default
+              if (existing_child%node_type /= NODE_TYPE_TABLE) then
                 if (present(error)) then
                   call make_error(error, HSD_STAT_SYNTAX_ERROR, &
-                    "Amendment target '" // tag_name // "' is not a block", &
+                    "Amendment target '" // tag_name &
+                    & // "' is not a block", &
                     state%lexer%filename, tag_line)
                 end if
                 return
-              end select
+              end if
+              existing_table => existing_child
 
               if (child_is_amendment) then
                 ! Find ChildTag inside the existing Tag and merge into it
@@ -572,22 +571,25 @@ contains
                   end if
                   return
                 end if
-                select type (existing_child)
-                type is (hsd_table)
+                if (existing_child%node_type == NODE_TYPE_TABLE) then
                   call parse_content(state, existing_child, local_error)
-                class default
+                else
                   if (present(error)) then
                     call make_error(error, HSD_STAT_SYNTAX_ERROR, &
-                      "Amendment target '" // child_tag_name // "' is not a block", &
-                      state%lexer%filename, saved_token%line)
+                      "Amendment target '" &
+                      & // child_tag_name &
+                      & // "' is not a block", &
+                      state%lexer%filename, &
+                      saved_token%line)
                   end if
                   return
-                end select
+                end if
               else
                 ! Regular child inside amended parent
                 block
-                  type(hsd_table) :: nested_table
-                  call new_table(nested_table, child_tag_name, "", saved_token%line)
+                  type(hsd_node) :: nested_table
+                  call new_table(nested_table, child_tag_name, &
+                    & "", saved_token%line)
                   call parse_content(state, nested_table, local_error)
                   if (allocated(local_error)) then
                     if (present(error)) call move_alloc(local_error, error)
@@ -601,7 +603,7 @@ contains
               call new_table(child_table, tag_name, attrib, tag_line)
 
               block
-                type(hsd_table) :: nested_table
+                type(hsd_node) :: nested_table
                 call new_table(nested_table, child_tag_name, "", saved_token%line)
                 call parse_content(state, nested_table, local_error)
                 if (allocated(local_error)) then
@@ -761,7 +763,7 @@ contains
   !> Handle <<+ HSD include
   recursive subroutine handle_hsd_include(state, parent, error)
     type(parser_state), intent(inout) :: state
-    type(hsd_table), intent(inout) :: parent
+    type(hsd_node), intent(inout) :: parent
     type(hsd_error_t), allocatable, intent(out), optional :: error
 
     character(len=:), allocatable :: include_path, abs_path
@@ -984,11 +986,11 @@ contains
   !> text content. This allows hsd_get(table, "#text", val) to access inline
   !> text uniformly.
   subroutine add_text_to_parent(parent, text, line)
-    type(hsd_table), intent(inout) :: parent
+    type(hsd_node), intent(inout) :: parent
     character(len=*), intent(in) :: text
     integer, intent(in) :: line
 
-    type(hsd_value) :: val
+    type(hsd_node) :: val
 
     call new_value(val, "#text", "", line)
     call val%set_raw(text)

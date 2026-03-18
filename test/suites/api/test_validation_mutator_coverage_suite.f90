@@ -29,7 +29,7 @@ contains
 
   !> Test hsd_require with missing field
   subroutine test_require_missing_field()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
 
     call hsd_load_string("x = 1", root, error)
@@ -44,7 +44,7 @@ contains
 
   !> Test hsd_require with wrong type
   subroutine test_require_wrong_type()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
 
     call hsd_load_string("x = hello", root, error)
@@ -59,7 +59,7 @@ contains
 
   !> Test hsd_require expecting value but got table
   subroutine test_require_table_vs_value()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
 
     call hsd_load_string("block { x = 1 }", root, error)
@@ -74,7 +74,7 @@ contains
 
   !> Test hsd_validate_range with violation
   subroutine test_validate_range_violation()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
 
     call hsd_load_string("val = 150.0", root, error)
@@ -89,7 +89,7 @@ contains
 
   !> Test hsd_validate_one_of with violation
   subroutine test_validate_one_of_violation()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
 
     call hsd_load_string('mode = "invalid"', root, error)
@@ -104,7 +104,7 @@ contains
 
   !> Test hsd_set operations (mutators)
   subroutine test_mutator_set_operations()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     integer :: val_int
     real(dp) :: val_real
@@ -137,7 +137,7 @@ contains
 
   !> Test hsd_require with context string
   subroutine test_require_with_context()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
 
     call new_table(root)
@@ -151,7 +151,7 @@ contains
 
   !> Test hsd_get_with_unit for unit conversion
   subroutine test_get_with_unit_conversion()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     real(dp) :: val
     integer :: stat
@@ -204,7 +204,7 @@ contains
 
   !> Test mutator error paths (trying to set through a value node)
   subroutine test_mutator_error_paths()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     integer :: stat
 

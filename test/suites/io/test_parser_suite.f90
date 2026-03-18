@@ -34,7 +34,7 @@ contains
 
   !> Test simple key-value parsing
   subroutine test_simple_parse()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     integer :: int_val
     integer :: stat
@@ -54,9 +54,9 @@ contains
 
   !> Test attribute parsing
   subroutine test_attributes()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
-    class(hsd_node), pointer :: child
+    type(hsd_node), pointer :: child
     real(dp) :: real_val
     integer :: stat
 
@@ -83,7 +83,7 @@ contains
 
   !> Test nested structure parsing
   subroutine test_nested_structure()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     logical :: bool_val
     integer :: stat
@@ -110,7 +110,7 @@ contains
 
   !> Test integer value parsing
   subroutine test_integer_values()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     integer :: val, stat
     character(len=:), allocatable :: hsd_input
@@ -138,7 +138,7 @@ contains
 
   !> Test real value parsing
   subroutine test_real_values()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     real(dp) :: val
     integer :: stat
@@ -167,7 +167,7 @@ contains
 
   !> Test boolean yes/no parsing
   subroutine test_boolean_yes_no()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     logical :: val
     integer :: stat
@@ -208,7 +208,7 @@ contains
 
   !> Test string value parsing
   subroutine test_string_values()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     character(len=:), allocatable :: val
     integer :: stat
@@ -237,7 +237,7 @@ contains
 
   !> Test path-based access
   subroutine test_path_access()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     integer :: val
     integer :: stat
@@ -265,9 +265,9 @@ contains
 
   !> Test empty block parsing
   subroutine test_empty_block()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
-    class(hsd_node), pointer :: child
+    type(hsd_node), pointer :: child
     integer :: stat
 
     call hsd_load_string("empty_block {}", root, error)
@@ -284,7 +284,7 @@ contains
 
   !> Test equal-sign syntax for child assignment
   subroutine test_equal_syntax()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     integer :: val
     integer :: stat
@@ -305,7 +305,7 @@ contains
 
   !> Test multiple children with same level
   subroutine test_multiple_children()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     integer :: val1, val2, val3, stat
     character(len=:), allocatable :: hsd_input

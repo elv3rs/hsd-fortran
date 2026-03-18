@@ -3,8 +3,9 @@
 !> This module provides functionality to write HSD data structures back to
 !> text format.
 module hsd_formatter
-  use hsd_constants, only: dp, sp, CHAR_NEWLINE, CHAR_DQUOTE, CHAR_SQUOTE, CHAR_BACKSLASH
-  use hsd_types, only: hsd_node, hsd_table, hsd_value, hsd_iterator, &
+  use hsd_constants, only: dp, CHAR_NEWLINE, CHAR_DQUOTE, CHAR_SQUOTE, CHAR_BACKSLASH
+  use hsd_types, only: hsd_node, hsd_iterator, &
+    NODE_TYPE_TABLE, NODE_TYPE_VALUE, &
     VALUE_TYPE_NONE, VALUE_TYPE_ARRAY, VALUE_TYPE_STRING, &
     VALUE_TYPE_INTEGER, VALUE_TYPE_REAL, VALUE_TYPE_LOGICAL, VALUE_TYPE_COMPLEX
   use hsd_error, only: hsd_error_t, HSD_STAT_OK, HSD_STAT_IO_ERROR, make_error
@@ -68,7 +69,7 @@ contains
 
   !> Write HSD table to a file
   subroutine hsd_dump(root, filename, error)
-    type(hsd_table), intent(in) :: root
+    type(hsd_node), intent(in) :: root
     character(len=*), intent(in) :: filename
     type(hsd_error_t), allocatable, intent(out), optional :: error
 
@@ -95,7 +96,7 @@ contains
   !>
   !> Uses string_buffer_t internally to avoid O(n²) concatenation.
   subroutine hsd_dump_to_string(root, output)
-    type(hsd_table), intent(in) :: root
+    type(hsd_node), intent(in) :: root
     character(len=:), allocatable, intent(out) :: output
 
     type(string_buffer_t) :: buf
@@ -109,11 +110,11 @@ contains
   !> Write table contents to unit
   recursive subroutine write_table_content(unit_num, table, indent_level)
     integer, intent(in) :: unit_num
-    type(hsd_table), intent(in) :: table
+    type(hsd_node), intent(in) :: table
     integer, intent(in) :: indent_level
 
     integer :: i
-    class(hsd_node), pointer :: child
+    type(hsd_node), pointer :: child
     character(len=:), allocatable :: indent
 
     indent = repeat(INDENT_STR, indent_level)
@@ -122,12 +123,11 @@ contains
       call table%get_child(i, child)
       if (.not. associated(child)) cycle
 
-      select type (child)
-      type is (hsd_table)
+      if (child%node_type == NODE_TYPE_TABLE) then
         call write_table_node(unit_num, child, indent_level)
-      type is (hsd_value)
+      else if (child%node_type == NODE_TYPE_VALUE) then
         call write_value_node(unit_num, child, indent_level)
-      end select
+      end if
     end do
 
   end subroutine write_table_content
@@ -135,7 +135,7 @@ contains
   !> Write a table node
   recursive subroutine write_table_node(unit_num, table, indent_level)
     integer, intent(in) :: unit_num
-    type(hsd_table), intent(in) :: table
+    type(hsd_node), intent(in) :: table
     integer, intent(in) :: indent_level
 
     character(len=:), allocatable :: indent, attrib_str
@@ -152,11 +152,10 @@ contains
     ! Check if table has single child (for = syntax)
     if (table%num_children == 1) then
       block
-        class(hsd_node), pointer :: single_child
+        type(hsd_node), pointer :: single_child
         call table%get_child(1, single_child)
 
-        select type (single_child)
-        type is (hsd_table)
+        if (single_child%node_type == NODE_TYPE_TABLE) then
           ! Tag = ChildTag { ... }
           if (has_name_(table%name)) then
             write(unit_num, '(A)') indent // trim(table%name) // attrib_str // &
@@ -169,7 +168,7 @@ contains
           end if
           return
 
-        type is (hsd_value)
+        else if (single_child%node_type == NODE_TYPE_VALUE) then
           ! Tag = value (for unnamed/anonymous or #text-named children)
           if (is_anon_name_(single_child%name)) then
             if (has_name_(table%name)) then
@@ -181,7 +180,7 @@ contains
             return
           end if
           ! Named child — fall through to regular block
-        end select
+        end if
       end block
     end if
 
@@ -200,7 +199,7 @@ contains
   !> Write a value node
   subroutine write_value_node(unit_num, val, indent_level)
     integer, intent(in) :: unit_num
-    type(hsd_value), intent(in) :: val
+    type(hsd_node), intent(in) :: val
     integer, intent(in) :: indent_level
 
     character(len=:), allocatable :: indent, attrib_str, value_str, raw_text
@@ -258,7 +257,7 @@ contains
     integer, intent(in) :: unit_num
     character(len=*), intent(in) :: name
     character(len=*), intent(in) :: attrib_str
-    type(hsd_value), intent(in) :: val
+    type(hsd_node), intent(in) :: val
     integer, intent(in) :: indent_level
 
     character(len=:), allocatable :: indent, value_str, val_attrib, raw_text
@@ -327,7 +326,7 @@ contains
 
   !> Get raw text content from a value node (unquoted, with real newlines)
   function get_raw_text_(val) result(text)
-    type(hsd_value), intent(in) :: val
+    type(hsd_node), intent(in) :: val
     character(len=:), allocatable :: text
 
     if (allocated(val%string_value)) then
@@ -340,7 +339,7 @@ contains
 
   !> Format a value for output
   function format_value(val) result(str)
-    type(hsd_value), intent(in) :: val
+    type(hsd_node), intent(in) :: val
     character(len=:), allocatable :: str
 
     if (allocated(val%string_value)) then
@@ -420,12 +419,12 @@ contains
   !> Mirrors the file-output path including the single-child `= ChildTag { }`
   !> and `Tag = value` shorthand syntax.
   recursive subroutine write_table_to_string_buf(table, indent_level, buf)
-    type(hsd_table), intent(in) :: table
+    type(hsd_node), intent(in) :: table
     integer, intent(in) :: indent_level
     type(string_buffer_t), intent(inout) :: buf
 
     integer :: i
-    class(hsd_node), pointer :: child
+    type(hsd_node), pointer :: child
     character(len=:), allocatable :: indent, attrib_str, line, value_str
 
     indent = repeat(INDENT_STR, indent_level)
@@ -434,11 +433,10 @@ contains
       call table%get_child(i, child)
       if (.not. associated(child)) cycle
 
-      select type (child)
-      type is (hsd_table)
+      if (child%node_type == NODE_TYPE_TABLE) then
         call write_table_node_to_buf(child, indent_level, buf)
 
-      type is (hsd_value)
+      else if (child%node_type == NODE_TYPE_VALUE) then
         block
           logical :: is_anon
           character(len=:), allocatable :: raw_text
@@ -482,14 +480,14 @@ contains
             end if
           end if
         end block
-      end select
+      end if
     end do
 
   end subroutine write_table_to_string_buf
 
   !> Write a table node to string buffer with single-child shorthand
   recursive subroutine write_table_node_to_buf(table, indent_level, buf)
-    type(hsd_table), intent(in) :: table
+    type(hsd_node), intent(in) :: table
     integer, intent(in) :: indent_level
     type(string_buffer_t), intent(inout) :: buf
 
@@ -507,11 +505,10 @@ contains
     ! Check for single-child shorthand (= syntax)
     if (table%num_children == 1) then
       block
-        class(hsd_node), pointer :: single_child
+        type(hsd_node), pointer :: single_child
         call table%get_child(1, single_child)
 
-        select type (single_child)
-        type is (hsd_table)
+        if (single_child%node_type == NODE_TYPE_TABLE) then
           ! Tag = ChildTag { ... }
           if (has_name_(table%name)) then
             call buf%append_str(indent // trim(table%name) // attrib_str // &
@@ -525,7 +522,7 @@ contains
           end if
           return
 
-        type is (hsd_value)
+        else if (single_child%node_type == NODE_TYPE_VALUE) then
           ! Tag = value (for unnamed/anonymous or #text-named children)
           if (is_anon_name_(single_child%name)) then
             if (has_name_(table%name)) then
@@ -560,7 +557,7 @@ contains
             return
           end if
           ! Named child — fall through to regular block
-        end select
+        end if
       end block
     end if
 

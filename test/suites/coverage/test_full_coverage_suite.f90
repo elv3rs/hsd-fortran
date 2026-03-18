@@ -88,7 +88,6 @@ contains
             test("matrix_int_from_table", test_matrix_int_from_table), &
             test("matrix_real_from_table", test_matrix_real_from_table), &
             ! === Additional accessor coverage ===
-            test("get_real_sp_with_default", test_get_real_sp_default), &
             test("path_into_value", test_path_into_value), &
             test("matrix_int_multi_values", test_matrix_int_multi_values), &
             test("matrix_real_multi_values", test_matrix_real_multi_values), &
@@ -96,7 +95,6 @@ contains
             test("dump_text_before_block", test_dump_text_before_block), &
             ! === Mutator error/edge paths ===
             test("set_through_value", test_set_through_value), &
-            test("set_sp_real_array", test_set_sp_real_array), &
             test("set_complex_array", test_set_complex_array), &
             test("set_empty_path", test_set_empty_path), &
             ! === Types - value getter not-found ===
@@ -146,7 +144,6 @@ contains
             test("to_lower_empty", test_to_lower_empty), &
             test("lexer_no_filename", test_lexer_no_filename), &
             ! === Additional accessor coverage ===
-            test("get_sp_array_error", test_get_sp_array_error), &
             test("get_logical_array_table", test_get_logical_array_table), &
             ! === Additional validation coverage ===
             test("validate_range_string_val", test_validate_range_string), &
@@ -214,7 +211,7 @@ contains
   ! ===========================================================================
 
   subroutine test_type_name_branches()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: err, parse_err
 
     call hsd_load_string("Key = hello", root, parse_err)
@@ -242,7 +239,7 @@ contains
   end subroutine test_type_name_branches
 
   subroutine test_validate_one_of_match()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: err, parse_err
 
     call hsd_load_string("Method = broyden", root, parse_err)
@@ -253,7 +250,7 @@ contains
   end subroutine test_validate_one_of_match
 
   subroutine test_validate_one_of_table()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: err, parse_err
 
     call hsd_load_string("Sect { x = 1 }", root, parse_err)
@@ -264,7 +261,7 @@ contains
   end subroutine test_validate_one_of_table
 
   subroutine test_validate_range_oob()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: err, parse_err
 
     call hsd_load_string("Value = 999.0", root, parse_err)
@@ -274,7 +271,7 @@ contains
   end subroutine test_validate_range_oob
 
   subroutine test_validate_range_non_val()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: err, parse_err
 
     call hsd_load_string("Sect { x = 1 }", root, parse_err)
@@ -284,7 +281,7 @@ contains
   end subroutine test_validate_range_non_val
 
   subroutine test_require_type_mismatch()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: err, parse_err
 
     call hsd_load_string("Key = hello", root, parse_err)
@@ -298,8 +295,8 @@ contains
   ! ===========================================================================
 
   subroutine test_dump_unnamed_tbl_val()
-    type(hsd_table) :: root, unnamed
-    type(hsd_value) :: val
+    type(hsd_node) :: root, unnamed
+    type(hsd_node) :: val
     type(hsd_error_t), allocatable :: err
     character(len=512) :: filepath
 
@@ -317,8 +314,8 @@ contains
   end subroutine test_dump_unnamed_tbl_val
 
   subroutine test_dump_unnamed_tbl_multi()
-    type(hsd_table) :: root, unnamed
-    type(hsd_value) :: v1, v2
+    type(hsd_node) :: root, unnamed
+    type(hsd_node) :: v1, v2
     type(hsd_error_t), allocatable :: err
     character(len=512) :: filepath
 
@@ -339,8 +336,8 @@ contains
   end subroutine test_dump_unnamed_tbl_multi
 
   subroutine test_dump_anon_val_single()
-    type(hsd_table) :: root, parent
-    type(hsd_value) :: val
+    type(hsd_node) :: root, parent
+    type(hsd_node) :: val
     type(hsd_error_t), allocatable :: err
     character(len=512) :: filepath
 
@@ -358,8 +355,8 @@ contains
   end subroutine test_dump_anon_val_single
 
   subroutine test_dump_anon_val_multi()
-    type(hsd_table) :: root, parent
-    type(hsd_value) :: val, dummy
+    type(hsd_node) :: root, parent
+    type(hsd_node) :: val, dummy
     type(hsd_error_t), allocatable :: err
     character(len=512) :: filepath
 
@@ -383,8 +380,8 @@ contains
   end subroutine test_dump_anon_val_multi
 
   subroutine test_dump_val_with_attrib()
-    type(hsd_table) :: root, parent
-    type(hsd_value) :: val
+    type(hsd_node) :: root, parent
+    type(hsd_node) :: val
     type(hsd_error_t), allocatable :: err
     character(len=512) :: filepath
 
@@ -403,8 +400,8 @@ contains
   end subroutine test_dump_val_with_attrib
 
   subroutine test_dump_empty_string_val()
-    type(hsd_table) :: root
-    type(hsd_value) :: val
+    type(hsd_node) :: root
+    type(hsd_node) :: val
     type(hsd_error_t), allocatable :: err
     character(len=512) :: filepath
 
@@ -420,8 +417,8 @@ contains
   end subroutine test_dump_empty_string_val
 
   subroutine test_dump_default_type_val()
-    type(hsd_table) :: root
-    type(hsd_value) :: val
+    type(hsd_node) :: root
+    type(hsd_node) :: val
     type(hsd_error_t), allocatable :: err
     character(len=512) :: filepath
 
@@ -442,7 +439,7 @@ contains
   ! ===========================================================================
 
   subroutine test_remove_nonexist_parent()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: err
     integer :: stat
 
@@ -453,7 +450,7 @@ contains
   end subroutine test_remove_nonexist_parent
 
   subroutine test_merge_new_table_child()
-    type(hsd_table) :: base, overlay
+    type(hsd_node) :: base, overlay
     type(hsd_error_t), allocatable :: err
     integer :: stat
 
@@ -467,7 +464,7 @@ contains
   end subroutine test_merge_new_table_child
 
   subroutine test_merge_new_value_child()
-    type(hsd_table) :: base, overlay
+    type(hsd_node) :: base, overlay
     type(hsd_error_t), allocatable :: err
     integer :: stat
 
@@ -481,7 +478,7 @@ contains
   end subroutine test_merge_new_value_child
 
   subroutine test_merge_replace_value()
-    type(hsd_table) :: base, overlay
+    type(hsd_node) :: base, overlay
     type(hsd_error_t), allocatable :: err
     integer :: val, stat
 
@@ -496,8 +493,8 @@ contains
   end subroutine test_merge_replace_value
 
   subroutine test_merge_raw_text()
-    type(hsd_table) :: base, overlay
-    type(hsd_value) :: v1, v2
+    type(hsd_node) :: base, overlay
+    type(hsd_node) :: v1, v2
     integer :: stat
 
     call new_table(base, "root")
@@ -520,9 +517,9 @@ contains
 
 
   subroutine test_clone_table_values()
-    type(hsd_table) :: source, dest
-    type(hsd_value) :: v1
-    type(hsd_table) :: sub
+    type(hsd_node) :: source, dest
+    type(hsd_node) :: v1
+    type(hsd_node) :: sub
     integer :: stat
 
     call new_table(source, "root")
@@ -541,8 +538,8 @@ contains
   end subroutine test_clone_table_values
 
   subroutine test_get_table_on_value()
-    type(hsd_table) :: root
-    type(hsd_table), pointer :: tbl
+    type(hsd_node) :: root
+    type(hsd_node), pointer :: tbl
     type(hsd_error_t), allocatable :: err
     integer :: stat
 
@@ -557,7 +554,7 @@ contains
   ! ===========================================================================
 
   subroutine test_parser_blank_lines()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: err
     integer :: val, stat
 
@@ -572,7 +569,7 @@ contains
   end subroutine test_parser_blank_lines
 
   subroutine test_parser_ws_after_eq()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: err
     integer :: val, stat
 
@@ -584,7 +581,7 @@ contains
   end subroutine test_parser_ws_after_eq
 
   subroutine test_parser_text_before_block()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: err
 
     call hsd_load_string("some text" // char(10) // "Block { x = 1 }", root, err)
@@ -593,7 +590,7 @@ contains
   end subroutine test_parser_text_before_block
 
   subroutine test_parser_tag_eq_block()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: err
     integer :: val, stat
 
@@ -605,7 +602,7 @@ contains
   end subroutine test_parser_tag_eq_block
 
   subroutine test_parser_tag_eq_child_block()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: err
 
     call hsd_load_string("Ham = DFTB { SCC = Yes }", root, err)
@@ -615,7 +612,7 @@ contains
   end subroutine test_parser_tag_eq_child_block
 
   subroutine test_parser_semicolons()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: err
     integer :: val, stat
 
@@ -633,7 +630,7 @@ contains
   ! ===========================================================================
 
   subroutine test_text_include()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: err
     character(len=512) :: filepath, hsd_path
 
@@ -644,13 +641,13 @@ contains
     call write_test_file(hsd_path, 'Data {' // char(10) // &
         '  <<< "' // trim(filepath) // '"' // char(10) // '}')
 
-    call hsd_load(trim(hsd_path), root, err)
+    call hsd_load_file(trim(hsd_path), root, err)
     call check(.not. allocated(err), msg="Text include ok")
     call root%destroy()
   end subroutine test_text_include
 
   subroutine test_text_include_append()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: err
     character(len=512) :: f1, f2, hsd_path
 
@@ -664,13 +661,13 @@ contains
         '  <<< "' // trim(f1) // '"' // char(10) // &
         '  <<< "' // trim(f2) // '"' // char(10) // '}')
 
-    call hsd_load(trim(hsd_path), root, err)
+    call hsd_load_file(trim(hsd_path), root, err)
     call check(.not. allocated(err), msg="Double text include ok")
     call root%destroy()
   end subroutine test_text_include_append
 
   subroutine test_hsd_include()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: err
     character(len=512) :: inc_path, hsd_path
 
@@ -681,13 +678,13 @@ contains
     call write_test_file(hsd_path, 'Outer {' // char(10) // &
         '  <<+ "' // trim(inc_path) // '"' // char(10) // '}')
 
-    call hsd_load(trim(hsd_path), root, err)
+    call hsd_load_file(trim(hsd_path), root, err)
     call check(.not. allocated(err), msg="HSD include ok")
     call root%destroy()
   end subroutine test_hsd_include
 
   subroutine test_include_cycle()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: err
     character(len=512) :: fa, fb
 
@@ -696,26 +693,26 @@ contains
     call write_test_file(fa, '<<+ "' // trim(fb) // '"')
     call write_test_file(fb, '<<+ "' // trim(fa) // '"')
 
-    call hsd_load(trim(fa), root, err)
+    call hsd_load_file(trim(fa), root, err)
     call check(allocated(err), msg="Cycle detected")
     call root%destroy()
   end subroutine test_include_cycle
 
   subroutine test_include_depth_limit()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: err
     character(len=512) :: filepath
 
     filepath = trim(build_dir) // "/test_self_inc_cov.hsd"
     call write_test_file(filepath, '<<+ "' // trim(filepath) // '"')
 
-    call hsd_load(trim(filepath), root, err)
+    call hsd_load_file(trim(filepath), root, err)
     call check(allocated(err), msg="Depth limit detected")
     call root%destroy()
   end subroutine test_include_depth_limit
 
   subroutine test_include_push_error()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: err
     character(len=512) :: fa, fb, fc
 
@@ -726,13 +723,13 @@ contains
     call write_test_file(fb, '<<+ "' // trim(fc) // '"')
     call write_test_file(fc, '<<+ "' // trim(fa) // '"')
 
-    call hsd_load(trim(fa), root, err)
+    call hsd_load_file(trim(fa), root, err)
     call check(allocated(err), msg="Push error detected")
     call root%destroy()
   end subroutine test_include_push_error
 
   subroutine test_text_include_io_error()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: err
     character(len=512) :: hsd_path
 
@@ -740,21 +737,21 @@ contains
     call write_test_file(hsd_path, 'Data {' // char(10) // &
         '  <<< "/nonexistent/file.txt"' // char(10) // '}')
 
-    call hsd_load(trim(hsd_path), root, err)
+    call hsd_load_file(trim(hsd_path), root, err)
     call check(allocated(err), msg="Text include IO error")
     call root%destroy()
   end subroutine test_text_include_io_error
 
   subroutine test_parse_nonexistent()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: err
 
-    call hsd_load("/nonexistent/file.hsd", root, err)
+    call hsd_load_file("/nonexistent/file.hsd", root, err)
     call check(allocated(err), msg="Nonexistent file error")
   end subroutine test_parse_nonexistent
 
   subroutine test_parse_error_in_block()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: err
     character(len=512) :: hsd_path
 
@@ -762,13 +759,13 @@ contains
     call write_test_file(hsd_path, 'Outer = {' // char(10) // &
         '  <<< "/nonexistent/file.txt"' // char(10) // '}')
 
-    call hsd_load(trim(hsd_path), root, err)
+    call hsd_load_file(trim(hsd_path), root, err)
     call check(allocated(err), msg="Error in block propagated")
     call root%destroy()
   end subroutine test_parse_error_in_block
 
   subroutine test_parse_error_in_nested()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: err
     character(len=512) :: hsd_path
 
@@ -776,7 +773,7 @@ contains
     call write_test_file(hsd_path, 'Ham = DFTB {' // char(10) // &
         '  <<< "/nonexistent/file.txt"' // char(10) // '}')
 
-    call hsd_load(trim(hsd_path), root, err)
+    call hsd_load_file(trim(hsd_path), root, err)
     call check(allocated(err), msg="Error in nested propagated")
     call root%destroy()
   end subroutine test_parse_error_in_nested
@@ -786,7 +783,7 @@ contains
   ! ===========================================================================
 
   subroutine test_lexer_squote_escape()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: err
     character(len=:), allocatable :: val
     integer :: stat
@@ -800,7 +797,7 @@ contains
   end subroutine test_lexer_squote_escape
 
   subroutine test_lexer_attrib_ctx()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: err
     character(len=:), allocatable :: attrib
     integer :: stat
@@ -817,7 +814,7 @@ contains
   ! ===========================================================================
 
   subroutine test_tokenize_string()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: err
     integer, allocatable :: vals(:)
     integer :: stat
@@ -831,7 +828,7 @@ contains
   end subroutine test_tokenize_string
 
   subroutine test_tokenize_quoted_string()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: err
 
     call hsd_load_string('Options = "opt1" "opt2" "opt3"', root, err)
@@ -840,7 +837,7 @@ contains
   end subroutine test_tokenize_quoted_string
 
   subroutine test_split_by_newlines()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: err
     integer, allocatable :: mat(:,:)
     integer :: nrows, ncols, stat
@@ -856,7 +853,7 @@ contains
   end subroutine test_split_by_newlines
 
   subroutine test_complex_bad_imag()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: err
     complex(dp) :: val
     integer :: stat
@@ -884,7 +881,7 @@ contains
   ! ===========================================================================
 
   subroutine test_matrix_int_from_table()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: err
     integer, allocatable :: mat(:,:)
     integer :: nrows, ncols, stat
@@ -900,7 +897,7 @@ contains
   end subroutine test_matrix_int_from_table
 
   subroutine test_matrix_real_from_table()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: err
     real(dp), allocatable :: mat(:,:)
     integer :: nrows, ncols, stat
@@ -919,22 +916,9 @@ contains
   ! Additional accessor coverage
   ! ===========================================================================
 
-  subroutine test_get_real_sp_default()
-    type(hsd_table) :: root
-    type(hsd_error_t), allocatable :: err
-    real(sp) :: val
-    integer :: stat
-
-    call hsd_load_string("Temp = 3.14", root, err)
-    call hsd_get(root, "Temp", val, stat)
-    if (stat == HSD_STAT_NOT_FOUND) val = 0.0_sp
-    call check(stat == HSD_STAT_OK, msg="Got real(sp) ok")
-    call check(abs(val - 3.14_sp) < 0.01_sp, msg="Value correct")
-    call root%destroy()
-  end subroutine test_get_real_sp_default
 
   subroutine test_path_into_value()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: err
     integer :: val, stat
 
@@ -946,8 +930,8 @@ contains
   end subroutine test_path_into_value
 
   subroutine test_matrix_int_multi_values()
-    type(hsd_table) :: root, mtx_table
-    type(hsd_value) :: v1, v2
+    type(hsd_node) :: root, mtx_table
+    type(hsd_node) :: v1, v2
     type(hsd_error_t), allocatable :: err
     integer, allocatable :: mat(:,:)
     integer :: nrows, ncols, stat
@@ -969,8 +953,8 @@ contains
   end subroutine test_matrix_int_multi_values
 
   subroutine test_matrix_real_multi_values()
-    type(hsd_table) :: root, mtx_table
-    type(hsd_value) :: v1, v2
+    type(hsd_node) :: root, mtx_table
+    type(hsd_node) :: v1, v2
     type(hsd_error_t), allocatable :: err
     real(dp), allocatable :: mat(:,:)
     integer :: nrows, ncols, stat
@@ -993,8 +977,8 @@ contains
 
 
   subroutine test_dump_text_before_block()
-    type(hsd_table) :: root, child
-    type(hsd_value) :: val
+    type(hsd_node) :: root, child
+    type(hsd_node) :: val
     type(hsd_error_t), allocatable :: err
     character(len=512) :: filepath
 
@@ -1018,7 +1002,7 @@ contains
 
   !> Test setting values through a value node (error path for all setters)
   subroutine test_set_through_value()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     integer :: stat
 
     call new_table(root, "root")
@@ -1048,28 +1032,11 @@ contains
       call hsd_set(root, "leaf/deep", carr, stat)
       call check(stat /= HSD_STAT_OK, msg="Complex arr through value")
     end block
-    ! SP real array through value
-    call hsd_set(root, "leaf/deep", [1.0_sp, 2.0_sp], stat)
-    call check(stat /= HSD_STAT_OK, msg="SP array through value")
   end subroutine test_set_through_value
-
-  !> Test setting single-precision real array
-  subroutine test_set_sp_real_array()
-    type(hsd_table) :: root
-    integer :: stat
-    real(dp), allocatable :: result(:)
-
-    call new_table(root, "root")
-    call hsd_set(root, "vals", [1.0_sp, 2.0_sp, 3.0_sp], stat)
-    call check(stat == HSD_STAT_OK, msg="SP array set ok")
-    call hsd_get(root, "vals", result, stat)
-    call check(stat == HSD_STAT_OK, msg="SP array get ok")
-    call check(size(result) == 3, msg="SP array size")
-  end subroutine test_set_sp_real_array
 
   !> Test setting complex array
   subroutine test_set_complex_array()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     integer :: stat
     character(len=:), allocatable :: text
 
@@ -1083,7 +1050,7 @@ contains
 
   !> Test setting with empty path
   subroutine test_set_empty_path()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     integer :: stat
 
     call new_table(root, "root")
@@ -1097,7 +1064,7 @@ contains
 
   !> Test getting arrays from value without raw_text
   subroutine test_value_arrays_missing()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     integer :: stat
     integer, allocatable :: iarr(:)
     real(dp), allocatable :: rarr(:)
@@ -1108,7 +1075,7 @@ contains
     call new_table(root, "root")
     ! Create value with string_value but no raw_text
     block
-      type(hsd_value), pointer :: val
+      type(hsd_node), pointer :: val
       allocate(val)
       call new_value(val, "test")
       val%string_value = "hello"
@@ -1129,7 +1096,7 @@ contains
 
     ! Also test on completely empty value
     block
-      type(hsd_value), pointer :: val2
+      type(hsd_node), pointer :: val2
       allocate(val2)
       call new_value(val2, "empty")
       call root%add_child(val2)
@@ -1148,14 +1115,14 @@ contains
 
   !> Test getting matrices from value without raw_text
   subroutine test_value_matrix_missing()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     integer :: stat, nrows, ncols
     integer, allocatable :: imat(:,:)
     real(dp), allocatable :: rmat(:,:)
 
     call new_table(root, "root")
     block
-      type(hsd_value), pointer :: val
+      type(hsd_node), pointer :: val
       allocate(val)
       call new_value(val, "test")
       call root%add_child(val)
@@ -1172,7 +1139,7 @@ contains
 
   !> Test parse_int_array with bad input
   subroutine test_parse_int_array_error()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     integer :: stat
     integer, allocatable :: arr(:)
@@ -1185,7 +1152,7 @@ contains
 
   !> Test parse_real_array with bad input
   subroutine test_parse_real_array_error()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     integer :: stat
     real(dp), allocatable :: arr(:)
@@ -1198,7 +1165,7 @@ contains
 
   !> Test tokenize_string with empty/whitespace input
   subroutine test_tokenize_empty_input()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     integer :: stat
     character(len=:), allocatable :: sarr(:)
@@ -1214,7 +1181,7 @@ contains
 
   !> Test tokenize_quoted_string
   subroutine test_tokenize_quoted_tokens()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     integer :: stat
     character(len=:), allocatable :: sarr(:)
@@ -1228,7 +1195,7 @@ contains
 
   !> Test all complex number parsing formats
   subroutine test_parse_complex_all()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     integer :: stat
     complex(dp) :: cval
@@ -1257,7 +1224,7 @@ contains
 
   !> Test complex parsing error paths
   subroutine test_parse_complex_errors()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     integer :: stat
     complex(dp) :: cval
@@ -1293,7 +1260,7 @@ contains
 
   !> Test complex array parse error
   subroutine test_parse_complex_arr_err()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     integer :: stat
     complex(dp), allocatable :: carr(:)
@@ -1307,7 +1274,7 @@ contains
 
   !> Test matrix parsing edge cases
   subroutine test_matrix_parse_errors()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     integer :: stat, nrows, ncols
     integer, allocatable :: imat(:,:)
@@ -1319,7 +1286,7 @@ contains
     call write_test_file(trim(path), &
         'Data {' // char(10) // '  1 2 3' // char(10) // &
         '  4 5' // char(10) // '}')
-    call hsd_load(trim(path), root, error)
+    call hsd_load_file(trim(path), root, error)
     if (.not. allocated(error)) then
       call hsd_get_matrix(root, "Data", imat, nrows, ncols, stat)
       call check(stat == HSD_STAT_OK .or. nrows > 0, msg="Ragged int")
@@ -1327,7 +1294,7 @@ contains
 
     ! Empty integer matrix
     call write_test_file(trim(path), 'Data = ')
-    call hsd_load(trim(path), root, error)
+    call hsd_load_file(trim(path), root, error)
     if (.not. allocated(error)) then
       call hsd_get_matrix(root, "Data", imat, nrows, ncols, stat)
     end if
@@ -1335,7 +1302,7 @@ contains
     ! Non-numeric integer matrix
     call write_test_file(trim(path), &
         'Data {' // char(10) // '  1 abc' // char(10) // '}')
-    call hsd_load(trim(path), root, error)
+    call hsd_load_file(trim(path), root, error)
     if (.not. allocated(error)) then
       call hsd_get_matrix(root, "Data", imat, nrows, ncols, stat)
       call check(stat /= HSD_STAT_OK, msg="Bad int matrix")
@@ -1344,7 +1311,7 @@ contains
     ! Non-numeric real matrix
     call write_test_file(trim(path), &
         'Data {' // char(10) // '  1.0 abc' // char(10) // '}')
-    call hsd_load(trim(path), root, error)
+    call hsd_load_file(trim(path), root, error)
     if (.not. allocated(error)) then
       call hsd_get_matrix(root, "Data", rmat, nrows, ncols, stat)
       call check(stat /= HSD_STAT_OK, msg="Bad real matrix")
@@ -1354,7 +1321,7 @@ contains
     call write_test_file(trim(path), &
         'Data {' // char(10) // '  1.0 2.0 3.0' // char(10) // &
         '  4.0' // char(10) // '}')
-    call hsd_load(trim(path), root, error)
+    call hsd_load_file(trim(path), root, error)
     if (.not. allocated(error)) then
       call hsd_get_matrix(root, "Data", rmat, nrows, ncols, stat)
       call check(stat == HSD_STAT_OK .or. nrows > 0, msg="Ragged real")
@@ -1363,7 +1330,7 @@ contains
 
   !> Test split_by_newlines edge cases via matrix parsing
   subroutine test_split_newlines_edge()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     character(len=:), allocatable :: text
     integer :: stat, nrows, ncols
@@ -1375,7 +1342,7 @@ contains
     call write_test_file(trim(path), &
         'Data {' // char(10) // '  1 2 3' // char(10) // &
         char(10) // '  4 5 6' // char(10) // '}')
-    call hsd_load(trim(path), root, error)
+    call hsd_load_file(trim(path), root, error)
     call check(.not. allocated(error), msg="Load ok")
     call hsd_get_matrix(root, "Data", imat, nrows, ncols, stat)
     call check(stat == HSD_STAT_OK, msg="Double newline matrix")
@@ -1392,12 +1359,12 @@ contains
 
   !> Test table_num_children direct call
   subroutine test_table_num_children_fn()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
 
     call new_table(root, "root")
     call check(root%num_children == 0, msg="Empty table 0 children")
     block
-      type(hsd_value), pointer :: val
+      type(hsd_node), pointer :: val
       allocate(val)
       call new_value(val, "child1")
       call root%add_child(val)
@@ -1407,14 +1374,14 @@ contains
 
   !> Test table_get_keys with unnamed (anonymous) children
   subroutine test_table_get_keys_anon()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     integer :: stat
     character(len=:), allocatable :: keys(:)
 
     call new_table(root, "root")
     ! Add anonymous child (no name)
     block
-      type(hsd_value), pointer :: val
+      type(hsd_node), pointer :: val
       allocate(val)
       call new_value(val)
       call root%add_child(val)
@@ -1425,13 +1392,13 @@ contains
 
   !> Test getting complex value from cache
   subroutine test_value_complex_direct()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     integer :: stat
     complex(dp) :: cval
 
     call new_table(root, "root")
     block
-      type(hsd_value), pointer :: val
+      type(hsd_node), pointer :: val
       allocate(val)
       call new_value(val, "cval")
       call val%set_complex((3.0_dp, 4.0_dp))
@@ -1444,7 +1411,7 @@ contains
 
   !> Test node_get_attrib when not allocated
   subroutine test_value_attrib_empty()
-    type(hsd_value), pointer :: val
+    type(hsd_node), pointer :: val
     character(len=:), allocatable :: attrib
 
     allocate(val)
@@ -1456,7 +1423,7 @@ contains
 
   !> Test table remove with case-insensitive lookup
   subroutine test_table_remove_ci()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
 
     call hsd_load_string( &
@@ -1472,10 +1439,10 @@ contains
 
   !> Test iterator past end
   subroutine test_iterator_past_end()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     type(hsd_iterator) :: iter
-    class(hsd_node), pointer :: child
+    type(hsd_node), pointer :: child
     logical :: has_more
     integer :: count
 
@@ -1500,7 +1467,7 @@ contains
 
   !> Test dump to non-writable file
   subroutine test_dump_file_open_error()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
 
     call new_table(root, "root")
@@ -1510,7 +1477,7 @@ contains
 
   !> Test dump value with newlines (multiline)
   subroutine test_dump_multiline_value()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     character(len=512) :: path
     character(len=2048) :: content
     integer :: unit_num, io_stat
@@ -1518,7 +1485,7 @@ contains
 
     call new_table(root, "root")
     block
-      type(hsd_value), pointer :: val
+      type(hsd_node), pointer :: val
       allocate(val)
       call new_value(val, "text")
       val%value_type = VALUE_TYPE_STRING
@@ -1540,13 +1507,13 @@ contains
 
   !> Test formatting strings with both quote types
   subroutine test_dump_escape_quotes()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     character(len=:), allocatable :: output
 
     call new_table(root, "root")
     ! String with both single and double quotes needs escaping
     block
-      type(hsd_value), pointer :: val
+      type(hsd_node), pointer :: val
       allocate(val)
       call new_value(val, "msg")
       val%value_type = VALUE_TYPE_STRING
@@ -1559,17 +1526,17 @@ contains
 
   !> Test dump unnamed table to string
   subroutine test_dump_unnamed_str()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     character(len=:), allocatable :: output
 
     ! Create unnamed root with unnamed child table
     call new_table(root)
     block
-      type(hsd_table), pointer :: child
+      type(hsd_node), pointer :: child
       allocate(child)
       call new_table(child)
       block
-        type(hsd_value), pointer :: val
+        type(hsd_node), pointer :: val
         allocate(val)
         call new_value(val, "key")
         val%value_type = VALUE_TYPE_STRING
@@ -1580,7 +1547,7 @@ contains
     end block
     ! Add second child so it's not single-child optimized
     block
-      type(hsd_value), pointer :: val2
+      type(hsd_node), pointer :: val2
       allocate(val2)
       call new_value(val2, "other")
       val2%value_type = VALUE_TYPE_STRING
@@ -1593,15 +1560,15 @@ contains
 
   !> Test dump file with single-child table shorthand
   subroutine test_dump_single_child_tbl()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     character(len=512) :: path
     type(hsd_error_t), allocatable :: error
 
     call new_table(root, "root")
     ! Named table with single child that is a table
     block
-      type(hsd_table), pointer :: outer, inner
-      type(hsd_value), pointer :: val
+      type(hsd_node), pointer :: outer, inner
+      type(hsd_node), pointer :: val
       allocate(outer)
       call new_table(outer, "Outer")
       allocate(inner)
@@ -1738,7 +1705,7 @@ contains
 
   !> Test type_name for VALUE_TYPE_NONE
   subroutine test_type_name_none()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
 
     call hsd_load_string("A = 1", root, error)
@@ -1749,7 +1716,7 @@ contains
 
   !> Test hsd_get_with_unit
   subroutine test_get_with_unit()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     integer :: stat
     real(dp) :: val
@@ -1778,7 +1745,7 @@ contains
 
   !> Test validate_range on table node
   subroutine test_validate_range_table()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error, val_error
 
     call hsd_load_string("Block { x = 1 }", root, error)
@@ -1800,7 +1767,7 @@ contains
 
   !> Test hsd_get_keys on non-existent path
   subroutine test_get_keys_not_found()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     integer :: stat
     character(len=:), allocatable :: keys(:)
@@ -1813,7 +1780,7 @@ contains
 
   !> Test removing child through value node
   subroutine test_remove_through_value()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     integer :: stat
 
@@ -1824,9 +1791,9 @@ contains
 
   !> Test navigating child through value node
   subroutine test_child_through_value()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
-    class(hsd_node), pointer :: child
+    type(hsd_node), pointer :: child
     integer :: stat
 
     call hsd_load_string("Leaf = hello", root, error)
@@ -1850,7 +1817,7 @@ contains
 
   !> Test parse_string with filename parameter
   subroutine test_parse_with_filename()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     integer :: stat
     integer :: ival
@@ -1867,7 +1834,7 @@ contains
 
   !> Test to_lower with empty string
   subroutine test_to_lower_empty()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
 
     ! to_lower is called internally during case-insensitive lookups
@@ -1880,7 +1847,7 @@ contains
 
   !> Test lexer from string without explicit filename
   subroutine test_lexer_no_filename()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
 
     ! hsd_load_string without filename uses default "<string>"
@@ -1892,23 +1859,10 @@ contains
   ! Additional coverage - accessor error paths
   ! ===========================================================================
 
-  !> Test SP real array error path (non-numeric value)
-  subroutine test_get_sp_array_error()
-    type(hsd_table) :: root
-    type(hsd_error_t), allocatable :: error
-    integer :: stat
-    real(sp), allocatable :: arr(:)
-
-    call hsd_load_string("Name = hello", root, error)
-    call check(.not. allocated(error), msg="Parse ok")
-    call hsd_get(root, "Name", arr, stat)
-    call check(stat /= HSD_STAT_OK, msg="SP array from string fails")
-    call check(size(arr) == 0, msg="Empty array on error")
-  end subroutine test_get_sp_array_error
 
   !> Test logical array on table child (class default branch)
   subroutine test_get_logical_array_table()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     integer :: stat
     logical, allocatable :: arr(:)
@@ -1926,7 +1880,7 @@ contains
 
   !> Test validate_range on string (non-numeric) value
   subroutine test_validate_range_string()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error, val_error
 
     call hsd_load_string("Name = hello", root, error)
@@ -1937,7 +1891,7 @@ contains
 
   !> Test validate_range on missing field
   subroutine test_validate_range_missing()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error, val_error
 
     call hsd_load_string("X = 1", root, error)
@@ -1948,7 +1902,7 @@ contains
 
   !> Test hsd_require with VALUE_TYPE_NONE expected (triggers type_name "none")
   subroutine test_require_type_none()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error, req_error
 
     call hsd_load_string("X = 42", root, error)
@@ -1965,7 +1919,7 @@ contains
 
   !> Test parsing multi-token values (Key = val1 val2 val3)
   subroutine test_parser_multi_token()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     integer :: stat
     character(len=:), allocatable :: text
@@ -1986,7 +1940,7 @@ contains
 
   !> Test unnamed table with single table child (line 120)
   subroutine test_dump_unnamed_tbl_tbl()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: err
     character(len=512) :: filepath
     character(len=4096) :: content
@@ -1994,8 +1948,8 @@ contains
 
     call new_table(root, "root")
     block
-      type(hsd_table), pointer :: unnamed_tbl, inner_tbl
-      type(hsd_value), pointer :: val
+      type(hsd_node), pointer :: unnamed_tbl, inner_tbl
+      type(hsd_node), pointer :: val
       allocate(unnamed_tbl)
       call new_table(unnamed_tbl)  ! no name
       allocate(inner_tbl)
@@ -2023,7 +1977,7 @@ contains
 
   !> Test tag = multiline value (write_tag_value multiline path)
   subroutine test_dump_tag_multiline_val()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: err
     character(len=512) :: filepath
     character(len=4096) :: content
@@ -2031,8 +1985,8 @@ contains
 
     call new_table(root, "root")
     block
-      type(hsd_table), pointer :: tbl
-      type(hsd_value), pointer :: val
+      type(hsd_node), pointer :: tbl
+      type(hsd_node), pointer :: val
       allocate(tbl)
       call new_table(tbl, "Tag")
       allocate(val)
@@ -2061,7 +2015,7 @@ contains
 
   !> Test get_keys from empty table (max_len=0 path)
   subroutine test_get_keys_empty_table()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     integer :: stat
     character(len=:), allocatable :: keys(:)
 
@@ -2073,14 +2027,14 @@ contains
 
   !> Test get_keys with mixed named/unnamed children (covers keys(i)="" branch)
   subroutine test_get_keys_mixed()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     integer :: stat
     character(len=:), allocatable :: keys(:)
 
     call new_table(root, "root")
     ! Named child
     block
-      type(hsd_value), pointer :: val
+      type(hsd_node), pointer :: val
       allocate(val)
       call new_value(val, "named")
       val%string_value = "test"
@@ -2089,7 +2043,7 @@ contains
     end block
     ! Unnamed child
     block
-      type(hsd_value), pointer :: val
+      type(hsd_node), pointer :: val
       allocate(val)
       call new_value(val)
       val%string_value = "anon"
@@ -2106,7 +2060,7 @@ contains
   !> Test iterator on uninitialized (null table) state
   subroutine test_iterator_uninit()
     type(hsd_iterator) :: iter
-    class(hsd_node), pointer :: child
+    type(hsd_node), pointer :: child
     logical :: has_more
 
     ! Fresh iterator has table => null()
@@ -2117,13 +2071,13 @@ contains
 
   !> Test complex array from raw_text (covers raw_text path in get_complex_array)
   subroutine test_complex_array_raw_text()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     integer :: stat
     complex(dp), allocatable :: arr(:)
 
     call new_table(root, "root")
     block
-      type(hsd_value), pointer :: val
+      type(hsd_node), pointer :: val
       allocate(val)
       call new_value(val, "data")
       val%string_value = "1+2i 3-4i"
@@ -2137,13 +2091,13 @@ contains
   !> Test string array from raw_text with quotes (covers raw_text +
   !> tokenize_quoted_string quoted paths)
   subroutine test_string_array_raw_text()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     integer :: stat
     character(len=:), allocatable :: arr(:)
 
     call new_table(root, "root")
     block
-      type(hsd_value), pointer :: val
+      type(hsd_node), pointer :: val
       allocate(val)
       call new_value(val, "data")
       val%string_value = '"hello" world "test"'
@@ -2159,13 +2113,13 @@ contains
 
   !> Test tokenize_quoted_string with empty quoted string
   subroutine test_tokenize_quoted_empty()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     integer :: stat
     character(len=:), allocatable :: arr(:)
 
     call new_table(root, "root")
     block
-      type(hsd_value), pointer :: val
+      type(hsd_node), pointer :: val
       allocate(val)
       call new_value(val, "data")
       val%string_value = 'before "" after'
@@ -2178,7 +2132,7 @@ contains
 
   !> Test complex parse error: bad real part in a+bi format
   subroutine test_complex_bad_real_abi()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     integer :: stat
     complex(dp) :: cval
@@ -2192,13 +2146,13 @@ contains
 
   !> Test ragged integer matrix via value raw_text
   subroutine test_int_matrix_ragged_direct()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     integer :: stat, nrows, ncols
     integer, allocatable :: imat(:,:)
 
     call new_table(root, "root")
     block
-      type(hsd_value), pointer :: val
+      type(hsd_node), pointer :: val
       allocate(val)
       call new_value(val, "data")
       val%string_value = "1 2 3" // char(10) // "4 5"
@@ -2210,13 +2164,13 @@ contains
 
   !> Test ragged real matrix via value raw_text
   subroutine test_real_matrix_ragged_direct()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     integer :: stat, nrows, ncols
     real(dp), allocatable :: rmat(:,:)
 
     call new_table(root, "root")
     block
-      type(hsd_value), pointer :: val
+      type(hsd_node), pointer :: val
       allocate(val)
       call new_value(val, "data")
       val%string_value = "1.0 2.0 3.0" // char(10) // "4.0"
@@ -2228,13 +2182,13 @@ contains
 
   !> Test empty real matrix via value raw_text (whitespace only)
   subroutine test_real_matrix_empty_direct()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     integer :: stat, nrows, ncols
     real(dp), allocatable :: rmat(:,:)
 
     call new_table(root, "root")
     block
-      type(hsd_value), pointer :: val
+      type(hsd_node), pointer :: val
       allocate(val)
       call new_value(val, "data")
       val%string_value = "   "
@@ -2247,13 +2201,13 @@ contains
 
   !> Test empty int matrix via value raw_text
   subroutine test_int_matrix_empty_direct()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     integer :: stat, nrows, ncols
     integer, allocatable :: imat(:,:)
 
     call new_table(root, "root")
     block
-      type(hsd_value), pointer :: val
+      type(hsd_node), pointer :: val
       allocate(val)
       call new_value(val, "data")
       val%string_value = "   "
@@ -2266,13 +2220,13 @@ contains
 
   !> Test split_by_newlines with adjacent newlines (empty line)
   subroutine test_split_adjacent_newlines()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     integer :: stat, nrows, ncols
     integer, allocatable :: imat(:,:)
 
     call new_table(root, "root")
     block
-      type(hsd_value), pointer :: val
+      type(hsd_node), pointer :: val
       allocate(val)
       call new_value(val, "data")
       val%string_value = "1 2" // char(10) // char(10) // "3 4"

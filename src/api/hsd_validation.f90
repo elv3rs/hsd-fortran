@@ -7,7 +7,7 @@ module hsd_validation
   use hsd_utils, only: to_lower
   use hsd_error, only: hsd_error_t, make_error, HSD_STAT_OK, HSD_STAT_NOT_FOUND, &
     HSD_STAT_TYPE_ERROR
-  use hsd_types, only: hsd_node, hsd_table, hsd_value, &
+  use hsd_types, only: hsd_node, NODE_TYPE_TABLE, NODE_TYPE_VALUE, &
     VALUE_TYPE_NONE, VALUE_TYPE_STRING, VALUE_TYPE_INTEGER, &
     VALUE_TYPE_REAL, VALUE_TYPE_LOGICAL, VALUE_TYPE_ARRAY, VALUE_TYPE_COMPLEX
   use hsd_api, only: hsd_get_child
@@ -41,13 +41,13 @@ contains
   !>   call hsd_require(root, "Driver/MaxSteps", error, &
   !>     expected_type=FIELD_TYPE_INTEGER, context="load_config")
   subroutine hsd_require(table, path, error, expected_type, context)
-    type(hsd_table), intent(in), target :: table
+    type(hsd_node), intent(in), target :: table
     character(len=*), intent(in) :: path
     type(hsd_error_t), allocatable, intent(out) :: error
     integer, intent(in), optional :: expected_type
     character(len=*), intent(in), optional :: context
 
-    class(hsd_node), pointer :: child
+    type(hsd_node), pointer :: child
     integer :: local_stat, actual_type
     character(len=:), allocatable :: ctx_prefix
 
@@ -66,21 +66,23 @@ contains
     end if
 
     if (present(expected_type)) then
-      select type (child)
-      type is (hsd_value)
+      if (child%node_type == NODE_TYPE_VALUE) then
         actual_type = child%value_type
         if (expected_type /= actual_type) then
           call make_error(error, HSD_STAT_TYPE_ERROR, &
-            ctx_prefix // "Field '" // path // "' has wrong type: expected " // &
-            type_name(expected_type) // ", got " // type_name(actual_type))
+            ctx_prefix // "Field '" // path // &
+            & "' has wrong type: expected " // &
+            type_name(expected_type) // ", got " // &
+            & type_name(actual_type))
         end if
-      type is (hsd_table)
+      else if (child%node_type == NODE_TYPE_TABLE) then
         if (expected_type /= VALUE_TYPE_NONE) then
           call make_error(error, HSD_STAT_TYPE_ERROR, &
-            ctx_prefix // "Field '" // path // "' is a table, expected value of type " // &
+            ctx_prefix // "Field '" // path // &
+            & "' is a table, expected value of type " // &
             type_name(expected_type))
         end if
-      end select
+      end if
     end if
 
   end subroutine hsd_require
@@ -113,13 +115,13 @@ contains
 
   !> Validate that a real value is within a specified range
   subroutine hsd_validate_range(table, path, min_val, max_val, error, context)
-    type(hsd_table), intent(in), target :: table
+    type(hsd_node), intent(in), target :: table
     character(len=*), intent(in) :: path
     real(dp), intent(in) :: min_val, max_val
     type(hsd_error_t), allocatable, intent(out) :: error
     character(len=*), intent(in), optional :: context
 
-    class(hsd_node), pointer :: child
+    type(hsd_node), pointer :: child
     real(dp) :: val
     integer :: local_stat
     character(len=32) :: min_str, max_str, val_str
@@ -139,12 +141,12 @@ contains
       return
     end if
 
-    select type (child)
-    type is (hsd_value)
+    if (child%node_type == NODE_TYPE_VALUE) then
       call child%get_real(val, local_stat)
       if (local_stat /= HSD_STAT_OK) then
         call make_error(error, HSD_STAT_TYPE_ERROR, &
-          ctx_prefix // "Field '" // path // "' is not a real number")
+          ctx_prefix // "Field '" // path // &
+          & "' is not a real number")
         return
       end if
 
@@ -153,25 +155,28 @@ contains
         write(max_str, '(G0)') max_val
         write(val_str, '(G0)') val
         call make_error(error, HSD_STAT_TYPE_ERROR, &
-          ctx_prefix // "Field '" // path // "' value " // trim(val_str) // &
-          " is outside valid range [" // trim(min_str) // ", " // trim(max_str) // "]")
+          ctx_prefix // "Field '" // path // &
+          & "' value " // trim(val_str) // &
+          " is outside valid range [" // trim(min_str) // &
+          & ", " // trim(max_str) // "]")
       end if
-    class default
+    else
       call make_error(error, HSD_STAT_TYPE_ERROR, &
-        ctx_prefix // "Field '" // path // "' is not a value node")
-    end select
+        ctx_prefix // "Field '" // path // &
+        & "' is not a value node")
+    end if
 
   end subroutine hsd_validate_range
 
   !> Validate that a string value is one of the allowed choices
   subroutine hsd_validate_one_of(table, path, choices, error, context)
-    type(hsd_table), intent(in), target :: table
+    type(hsd_node), intent(in), target :: table
     character(len=*), intent(in) :: path
     character(len=*), intent(in) :: choices(:)
     type(hsd_error_t), allocatable, intent(out) :: error
     character(len=*), intent(in), optional :: context
 
-    class(hsd_node), pointer :: child
+    type(hsd_node), pointer :: child
     character(len=:), allocatable :: val, choices_str, ctx_prefix
     integer :: i, local_stat
     logical :: found
@@ -190,12 +195,12 @@ contains
       return
     end if
 
-    select type (child)
-    type is (hsd_value)
+    if (child%node_type == NODE_TYPE_VALUE) then
       call child%get_string(val, local_stat)
       if (local_stat /= HSD_STAT_OK) then
         call make_error(error, HSD_STAT_TYPE_ERROR, &
-          ctx_prefix // "Field '" // path // "' is not a string")
+          ctx_prefix // "Field '" // path // &
+          & "' is not a string")
         return
       end if
 
@@ -211,16 +216,19 @@ contains
         choices_str = ""
         do i = 1, size(choices)
           if (i > 1) choices_str = choices_str // ", "
-          choices_str = choices_str // "'" // trim(choices(i)) // "'"
+          choices_str = choices_str // "'" // &
+              & trim(choices(i)) // "'"
         end do
         call make_error(error, HSD_STAT_TYPE_ERROR, &
-          ctx_prefix // "Field '" // path // "' value '" // val // &
+          ctx_prefix // "Field '" // path // &
+          & "' value '" // val // &
           "' is not one of: " // choices_str)
       end if
-    class default
+    else
       call make_error(error, HSD_STAT_TYPE_ERROR, &
-        ctx_prefix // "Field '" // path // "' is not a value node")
-    end select
+        ctx_prefix // "Field '" // path // &
+        & "' is not a value node")
+    end if
 
   end subroutine hsd_validate_one_of
 
@@ -234,7 +242,7 @@ contains
   !>   `hsd_get_with_unit(root, "Temperature", val, "Celsius", converter)`
   !>   would call `converter(300.0, "Kelvin", "Celsius")` to get the result.
   subroutine hsd_get_with_unit(table, path, val, target_unit, converter, stat)
-    type(hsd_table), intent(in), target :: table
+    type(hsd_node), intent(in), target :: table
     character(len=*), intent(in) :: path
     real(dp), intent(out) :: val
     character(len=*), intent(in) :: target_unit
@@ -249,7 +257,7 @@ contains
     end interface
     integer, intent(out), optional :: stat
 
-    class(hsd_node), pointer :: child
+    type(hsd_node), pointer :: child
     character(len=:), allocatable :: source_unit
     real(dp) :: raw_val
     integer :: local_stat
@@ -262,8 +270,7 @@ contains
       return
     end if
 
-    select type (child)
-    type is (hsd_value)
+    if (child%node_type == NODE_TYPE_VALUE) then
       call child%get_real(raw_val, local_stat)
       if (local_stat /= HSD_STAT_OK) then
         if (present(stat)) stat = local_stat
@@ -279,9 +286,9 @@ contains
       val = converter(raw_val, source_unit, target_unit)
       if (present(stat)) stat = HSD_STAT_OK
 
-    class default
+    else
       if (present(stat)) stat = HSD_STAT_TYPE_ERROR
-    end select
+    end if
 
   end subroutine hsd_get_with_unit
 
@@ -291,7 +298,7 @@ contains
   !> the node's `attrib` field, and applies the `converter` function to each
   !> element. If no unit attribute is present, assumes `target_unit`.
   subroutine hsd_get_array_with_unit(table, path, val, target_unit, converter, stat)
-    type(hsd_table), intent(in), target :: table
+    type(hsd_node), intent(in), target :: table
     character(len=*), intent(in) :: path
     real(dp), allocatable, intent(out) :: val(:)
     character(len=*), intent(in) :: target_unit
@@ -306,7 +313,7 @@ contains
     end interface
     integer, intent(out), optional :: stat
 
-    class(hsd_node), pointer :: child
+    type(hsd_node), pointer :: child
     character(len=:), allocatable :: source_unit
     integer :: local_stat, i
 
@@ -317,8 +324,7 @@ contains
       return
     end if
 
-    select type (child)
-    type is (hsd_value)
+    if (child%node_type == NODE_TYPE_VALUE) then
       call child%get_real_array(val, local_stat)
       if (local_stat /= HSD_STAT_OK) then
         if (present(stat)) stat = local_stat
@@ -337,10 +343,10 @@ contains
 
       if (present(stat)) stat = HSD_STAT_OK
 
-    class default
+    else
       if (present(stat)) stat = HSD_STAT_TYPE_ERROR
       allocate(val(0))
-    end select
+    end if
 
   end subroutine hsd_get_array_with_unit
 
@@ -351,7 +357,7 @@ contains
   !> element. If no unit attribute is present, assumes `target_unit`.
   subroutine hsd_get_matrix_with_unit(table, path, val, nrows, ncols, &
       target_unit, converter, stat)
-    type(hsd_table), intent(in), target :: table
+    type(hsd_node), intent(in), target :: table
     character(len=*), intent(in) :: path
     real(dp), allocatable, intent(out) :: val(:,:)
     integer, intent(out) :: nrows, ncols
@@ -367,7 +373,7 @@ contains
     end interface
     integer, intent(out), optional :: stat
 
-    class(hsd_node), pointer :: child
+    type(hsd_node), pointer :: child
     character(len=:), allocatable :: source_unit
     integer :: local_stat, i, j
 
@@ -381,8 +387,7 @@ contains
       return
     end if
 
-    select type (child)
-    type is (hsd_value)
+    if (child%node_type == NODE_TYPE_VALUE) then
       call child%get_real_matrix(val, nrows, ncols, local_stat)
       if (local_stat /= HSD_STAT_OK) then
         if (present(stat)) stat = local_stat
@@ -397,16 +402,17 @@ contains
 
       do j = 1, ncols
         do i = 1, nrows
-          val(i, j) = converter(val(i, j), source_unit, target_unit)
+          val(i, j) = converter(val(i, j), source_unit, &
+              & target_unit)
         end do
       end do
 
       if (present(stat)) stat = HSD_STAT_OK
 
-    class default
+    else
       if (present(stat)) stat = HSD_STAT_TYPE_ERROR
       allocate(val(0, 0))
-    end select
+    end if
 
   end subroutine hsd_get_matrix_with_unit
 
@@ -416,7 +422,7 @@ contains
   !> Returns "NodeName (line N)" if line info is available, or just "NodeName".
   !> Returns "" if the node has no name.
   function hsd_node_context(node) result(ctx)
-    class(hsd_node), intent(in) :: node
+    type(hsd_node), intent(in) :: node
     character(len=:), allocatable :: ctx
 
     character(len=20) :: linebuf
@@ -439,7 +445,7 @@ contains
   !> This is a general-purpose utility for producing user-friendly error messages
   !> that include the location in the input file where the error occurred.
   subroutine hsd_format_error(node, msg, formatted)
-    class(hsd_node), intent(in) :: node
+    type(hsd_node), intent(in) :: node
     character(len=*), intent(in) :: msg
     character(len=:), allocatable, intent(out) :: formatted
 
@@ -459,7 +465,7 @@ contains
   !>
   !> Returns "Warning in 'NodeName' (line N): <msg>" or just <msg> if no context.
   subroutine hsd_format_warning(node, msg, formatted)
-    class(hsd_node), intent(in) :: node
+    type(hsd_node), intent(in) :: node
     character(len=*), intent(in) :: msg
     character(len=:), allocatable, intent(out) :: formatted
 
@@ -491,7 +497,7 @@ contains
   !> end do
   !> ```
   subroutine hsd_warn_unprocessed(root, warnings)
-    type(hsd_table), intent(in) :: root
+    type(hsd_node), intent(in) :: root
     character(len=MAX_WARNING_LEN), allocatable, intent(out) :: warnings(:)
 
     character(len=MAX_WARNING_LEN), allocatable :: tmp(:)
@@ -508,12 +514,12 @@ contains
 
   !> Recursive helper: collect unprocessed node warnings into a growable array.
   recursive subroutine collect_unprocessed_(node, buf, nwarn)
-    type(hsd_table), intent(in) :: node
+    type(hsd_node), intent(in) :: node
     character(len=MAX_WARNING_LEN), allocatable, intent(inout) :: buf(:)
     integer, intent(inout) :: nwarn
 
     integer :: ii
-    class(hsd_node), pointer :: child
+    type(hsd_node), pointer :: child
     character(len=MAX_WARNING_LEN), allocatable :: tmp(:)
     character(len=20) :: linebuf
 
@@ -543,10 +549,10 @@ contains
       end if
 
       ! Recurse into processed table children
-      select type (t => child)
-      type is (hsd_table)
-        if (t%processed) call collect_unprocessed_(t, buf, nwarn)
-      end select
+      if (child%node_type == NODE_TYPE_TABLE) then
+        if (child%processed) &
+            & call collect_unprocessed_(child, buf, nwarn)
+      end if
     end do
 
   end subroutine collect_unprocessed_

@@ -34,16 +34,16 @@ Safe Operations (No Synchronization Needed)
 .. code-block:: fortran
 
     ! Thread 1
-    call hsd_load("config1.hsd", root1, error1)
+    call hsd_load_file("config1.hsd", root1, error1)
     
     ! Thread 2 (can run concurrently)
-    call hsd_load("config2.hsd", root2, error2)
+    call hsd_load_file("config2.hsd", root2, error2)
 
 **2. Reading from a shared tree**
 
 .. note::
 
-    Since version 1.0.0, ``hsd_value`` nodes no longer use internal caching.
+    Since version 1.0.0, value nodes no longer use internal caching.
     Array values are parsed on demand from raw text. However, getter
     methods (``hsd_get``, etc.) modify the ``processed`` flag of nodes for
     validation purposes. While often benign, this constitutes a data race
@@ -100,9 +100,9 @@ Module-Specific Notes
 hsd_types
 ~~~~~~~~~
 
-- ``hsd_table`` and ``hsd_value`` types are NOT thread-safe for modification
-- ``hsd_value`` getters are **thread-safe** (no internal state mutation)
-- ``hsd_table`` read operations (``get_child``, ``child_count``, etc.) are
+- ``hsd_node`` is NOT thread-safe for modification
+- Value node getters are **thread-safe** (no internal state mutation)
+- Table node read operations (``get_child``, ``child_count``, etc.) are
   thread-safe if no concurrent writes
 
 hsd_parser
@@ -125,7 +125,7 @@ When using OpenMP:
 .. code-block:: fortran
 
     !$omp parallel private(local_root, local_error)
-      call hsd_load(filenames(omp_get_thread_num() + 1), local_root, local_error)
+      call hsd_load_file(filenames(omp_get_thread_num() + 1), local_root, local_error)
       ! Process local_root...
       call local_root%destroy()
     !$omp end parallel
@@ -135,7 +135,7 @@ For shared reading with OpenMP:
 .. code-block:: fortran
 
     ! Parse once in serial region
-    call hsd_load("shared.hsd", shared_root, error)
+    call hsd_load_file("shared.hsd", shared_root, error)
 
     !$omp parallel
       ! Safe: read-only access
@@ -151,10 +151,10 @@ Each image should maintain its own HSD trees:
 
 .. code-block:: fortran
 
-    type(hsd_table) :: local_root  ! Each image has its own copy
+    type(hsd_node) :: local_root  ! Each image has its own copy
 
-    call hsd_load("config.hsd", local_root, error)  ! Each image loads independently
-    ! No cross-image sharing of hsd_table objects
+    call hsd_load_file("config.hsd", local_root, error)  ! Each image loads independently
+    ! No cross-image sharing of hsd_node objects
 
 Recommendations
 ---------------

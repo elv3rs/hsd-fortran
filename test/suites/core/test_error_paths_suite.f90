@@ -68,7 +68,7 @@ contains
 
   !> Test get string NOT_FOUND path
   subroutine test_get_string_not_found()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     character(len=:), allocatable :: val
     integer :: stat
@@ -84,7 +84,7 @@ contains
 
   !> Test get integer NOT_FOUND path
   subroutine test_get_integer_not_found()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     integer :: val, stat
 
@@ -99,7 +99,7 @@ contains
 
   !> Test get real NOT_FOUND path
   subroutine test_get_real_not_found()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     real(dp) :: val
     integer :: stat
@@ -115,7 +115,7 @@ contains
 
   !> Test get logical NOT_FOUND path
   subroutine test_get_logical_not_found()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     logical :: val
     integer :: stat
@@ -131,7 +131,7 @@ contains
 
   !> Test get complex NOT_FOUND path
   subroutine test_get_complex_not_found()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     complex(dp) :: val
     integer :: stat
@@ -147,7 +147,7 @@ contains
 
   !> Test get integer array NOT_FOUND path
   subroutine test_get_int_array_not_found()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     integer, allocatable :: val(:)
     integer :: stat
@@ -165,7 +165,7 @@ contains
 
   !> Test get real array NOT_FOUND path
   subroutine test_get_real_array_not_found()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     real(dp), allocatable :: val(:)
     integer :: stat
@@ -183,7 +183,7 @@ contains
 
   !> Test get logical array NOT_FOUND path
   subroutine test_get_logical_array_not_found()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     logical, allocatable :: val(:)
     integer :: stat
@@ -201,7 +201,7 @@ contains
 
   !> Test get complex array NOT_FOUND path
   subroutine test_get_complex_array_not_found()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     complex(dp), allocatable :: val(:)
     integer :: stat
@@ -219,7 +219,7 @@ contains
 
   !> Test get string array NOT_FOUND path
   subroutine test_get_string_array_not_found()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     character(len=:), allocatable :: val(:)
     integer :: stat
@@ -237,7 +237,7 @@ contains
 
   !> Test get integer matrix NOT_FOUND path
   subroutine test_get_int_matrix_not_found()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     integer, allocatable :: val(:,:)
     integer :: nrows, ncols, stat
@@ -255,7 +255,7 @@ contains
 
   !> Test get real matrix NOT_FOUND path
   subroutine test_get_real_matrix_not_found()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     real(dp), allocatable :: val(:,:)
     integer :: nrows, ncols, stat
@@ -273,7 +273,7 @@ contains
 
   !> Test get string TYPE_ERROR path
   subroutine test_get_string_type_error()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     character(len=:), allocatable :: val
     integer :: stat
@@ -289,7 +289,7 @@ contains
 
   !> Test get integer TYPE_ERROR path
   subroutine test_get_integer_type_error()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     integer :: val, stat
 
@@ -304,7 +304,7 @@ contains
 
   !> Test get real TYPE_ERROR path
   subroutine test_get_real_type_error()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     real(dp) :: val
     integer :: stat
@@ -320,7 +320,7 @@ contains
 
   !> Test get logical TYPE_ERROR path
   subroutine test_get_logical_type_error()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     logical :: val
     integer :: stat
@@ -336,7 +336,7 @@ contains
 
   !> Test get complex TYPE_ERROR path
   subroutine test_get_complex_type_error()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     complex(dp) :: val
     integer :: stat
@@ -352,7 +352,7 @@ contains
 
   !> Test get int array TYPE_ERROR path
   subroutine test_get_int_array_type_error()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     integer, allocatable :: val(:)
     integer :: stat
@@ -368,7 +368,7 @@ contains
 
   !> Test get real array TYPE_ERROR path
   subroutine test_get_real_array_type_error()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     real(dp), allocatable :: val(:)
     integer :: stat
@@ -384,7 +384,7 @@ contains
 
   !> Test get string array TYPE_ERROR path
   subroutine test_get_string_array_type_error()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     character(len=:), allocatable :: val(:)
     integer :: stat
@@ -400,7 +400,7 @@ contains
 
   !> Test get complex array TYPE_ERROR path
   subroutine test_get_complex_array_type_error()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     complex(dp), allocatable :: val(:)
     integer :: stat
@@ -416,7 +416,7 @@ contains
 
   !> Test get int matrix TYPE_ERROR path
   subroutine test_get_int_matrix_type_error()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     integer, allocatable :: val(:,:)
     integer :: nrows, ncols, stat
@@ -433,7 +433,7 @@ contains
 
   !> Test get real matrix TYPE_ERROR path
   subroutine test_get_real_matrix_type_error()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     real(dp), allocatable :: val(:,:)
     integer :: nrows, ncols, stat
@@ -450,7 +450,7 @@ contains
 
   !> Test get_keys on empty table
   subroutine test_get_keys_empty_table()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     character(len=:), allocatable :: keys(:)
     integer :: stat
@@ -466,9 +466,9 @@ contains
 
   !> Test get_child NOT_FOUND
   subroutine test_get_child_not_found()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
-    class(hsd_node), pointer :: child
+    type(hsd_node), pointer :: child
     integer :: stat
 
     call hsd_load_string("x = 1", root, error)
@@ -482,9 +482,9 @@ contains
 
   !> Test get_table NOT_FOUND
   subroutine test_get_table_not_found()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
-    type(hsd_table), pointer :: table
+    type(hsd_node), pointer :: table
     integer :: stat
 
     call hsd_load_string("x = 1", root, error)
@@ -498,7 +498,7 @@ contains
 
   !> Test hsd_value get_string with raw_text fallback
   subroutine test_value_get_string_raw()
-    type(hsd_value), allocatable :: val
+    type(hsd_node), allocatable :: val
     character(len=:), allocatable :: str
     integer :: stat
 
@@ -516,7 +516,7 @@ contains
 
   !> Test hsd_value get_string when empty
   subroutine test_value_get_string_empty()
-    type(hsd_value), allocatable :: val
+    type(hsd_node), allocatable :: val
     character(len=:), allocatable :: str
     integer :: stat
 
@@ -532,7 +532,7 @@ contains
 
   !> Test hsd_value get_real from integer value
   subroutine test_value_get_real_from_int()
-    type(hsd_value), allocatable :: val
+    type(hsd_node), allocatable :: val
     real(dp) :: r
     integer :: stat
 
@@ -550,7 +550,7 @@ contains
 
   !> Test hsd_value get_int NOT_FOUND
   subroutine test_value_get_int_not_found()
-    type(hsd_value), allocatable :: val
+    type(hsd_node), allocatable :: val
     integer :: i, stat
 
     allocate(val)
@@ -565,7 +565,7 @@ contains
 
   !> Test hsd_value get_real NOT_FOUND
   subroutine test_value_get_real_not_found()
-    type(hsd_value), allocatable :: val
+    type(hsd_node), allocatable :: val
     real(dp) :: r
     integer :: stat
 
@@ -581,7 +581,7 @@ contains
 
   !> Test hsd_value get_logical NOT_FOUND
   subroutine test_value_get_logical_not_found()
-    type(hsd_value), allocatable :: val
+    type(hsd_node), allocatable :: val
     logical :: l
     integer :: stat
 
@@ -597,7 +597,7 @@ contains
 
   !> Test hsd_value get_complex NOT_FOUND
   subroutine test_value_get_complex_not_found()
-    type(hsd_value), allocatable :: val
+    type(hsd_node), allocatable :: val
     complex(dp) :: c
     integer :: stat
 
@@ -613,7 +613,7 @@ contains
 
   !> Test direct access to int_array from hsd_value
   subroutine test_value_get_int_array_direct()
-    type(hsd_value), allocatable :: val
+    type(hsd_node), allocatable :: val
     integer, allocatable :: arr(:)
     integer :: stat
 
@@ -632,7 +632,7 @@ contains
 
   !> Test direct access to real_array from hsd_value
   subroutine test_value_get_real_array_direct()
-    type(hsd_value), allocatable :: val
+    type(hsd_node), allocatable :: val
     real(dp), allocatable :: arr(:)
     integer :: stat
 
@@ -651,7 +651,7 @@ contains
 
   !> Test direct access to logical_array from hsd_value
   subroutine test_value_get_logical_array_direct()
-    type(hsd_value), allocatable :: val
+    type(hsd_node), allocatable :: val
     logical, allocatable :: arr(:)
     integer :: stat
 
@@ -670,7 +670,7 @@ contains
 
   !> Test direct access to complex_array from hsd_value
   subroutine test_value_get_complex_array_direct()
-    type(hsd_value), allocatable :: val
+    type(hsd_node), allocatable :: val
     complex(dp), allocatable :: arr(:)
     integer :: stat
 
@@ -689,7 +689,7 @@ contains
 
   !> Test direct access to string_array from hsd_value
   subroutine test_value_get_string_array_direct()
-    type(hsd_value), allocatable :: val
+    type(hsd_node), allocatable :: val
     character(len=:), allocatable :: arr(:)
     integer :: stat
 
@@ -708,7 +708,7 @@ contains
 
   !> Test direct access to int_matrix from hsd_value
   subroutine test_value_get_int_matrix_direct()
-    type(hsd_value), allocatable :: val
+    type(hsd_node), allocatable :: val
     integer, allocatable :: mat(:,:)
     integer :: nrows, ncols, stat
 
@@ -728,7 +728,7 @@ contains
 
   !> Test direct access to real_matrix from hsd_value
   subroutine test_value_get_real_matrix_direct()
-    type(hsd_value), allocatable :: val
+    type(hsd_node), allocatable :: val
     real(dp), allocatable :: mat(:,:)
     integer :: nrows, ncols, stat
 
@@ -748,7 +748,7 @@ contains
 
   !> Test parsing and accessing an empty matrix value
   subroutine test_empty_matrix_parse()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     integer, allocatable :: mat(:,:)
     integer :: nrows, ncols, stat
@@ -765,9 +765,9 @@ contains
 
   !> Test table%num_children function
   subroutine test_table_num_children_fn()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
-    type(hsd_table), pointer :: container
+    type(hsd_node), pointer :: container
     integer :: n, stat
 
     call hsd_load_string("container { a = 1; b = 2; c = 3 }", root, error)
@@ -784,7 +784,7 @@ contains
 
   !> Test get_attrib when empty
   subroutine test_get_attrib_empty()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     character(len=:), allocatable :: attrib
     integer :: stat
@@ -804,7 +804,7 @@ contains
 
   !> Test formatting value with attribute
   subroutine test_format_value_attrib()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     character(len=:), allocatable :: output
 
@@ -820,7 +820,7 @@ contains
 
   !> Test nested table with single child formatting
   subroutine test_nested_single_child()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     character(len=:), allocatable :: output
 
@@ -836,7 +836,7 @@ contains
 
   !> Test logical array with mixed values
   subroutine test_logical_array_mixed()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     logical, allocatable :: arr(:)
     integer :: stat
@@ -852,7 +852,7 @@ contains
 
   !> Test format integer
   subroutine test_format_integer()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     character(len=:), allocatable :: output
 
@@ -867,7 +867,7 @@ contains
 
   !> Test dump_to_string produces valid output
   subroutine test_dump_to_string_test()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     character(len=:), allocatable :: output
 

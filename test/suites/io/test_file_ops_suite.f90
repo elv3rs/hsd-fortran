@@ -53,7 +53,7 @@ contains
 
   !> Test dump to file and read back
   subroutine test_dump_to_file_read_back()
-    type(hsd_table) :: root1, root2
+    type(hsd_node) :: root1, root2
     type(hsd_error_t), allocatable :: error
     character(len=512) :: filepath
     integer :: val1, val2, stat
@@ -75,7 +75,7 @@ contains
     call check(.not. allocated(error), msg="Dump to file OK")
 
     ! Read back
-    call hsd_load(trim(filepath), root2, error)
+    call hsd_load_file(trim(filepath), root2, error)
     call check(.not. allocated(error), msg="Load file OK")
 
     ! Verify values preserved
@@ -95,8 +95,8 @@ contains
 
   !> Test dumping multiline values
   subroutine test_dump_multiline_value()
-    type(hsd_table) :: root
-    type(hsd_value) :: val
+    type(hsd_node) :: root
+    type(hsd_node) :: val
     type(hsd_error_t), allocatable :: error
     character(len=512) :: filepath
     character(len=:), allocatable :: output
@@ -122,7 +122,7 @@ contains
 
   !> Test dumping nested structures with attributes
   subroutine test_dump_nested_with_attribs()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     character(len=512) :: filepath
 
@@ -145,7 +145,7 @@ contains
 
   !> Test HSD include (<<+)
   subroutine test_include_hsd_file()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     character(len=512) :: main_path, include_path
     integer :: val, stat
@@ -159,7 +159,7 @@ contains
     call write_text_file(trim(main_path), "header = test" // char(10) // &
       "<<+ " // trim(include_path))
 
-    call hsd_load(trim(main_path), root, error)
+    call hsd_load_file(trim(main_path), root, error)
     ! Check if loading works (may fail if include not supported correctly)
     if (.not. allocated(error)) then
       call hsd_get(root, "included_value", val, stat)
@@ -180,7 +180,7 @@ contains
 
   !> Test text include (<<<)
   subroutine test_include_txt_file()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     character(len=512) :: main_path, txt_path
     character(len=:), allocatable :: str_val
@@ -196,7 +196,7 @@ contains
       "<<< " // trim(txt_path) // char(10) // &
       "}")
 
-    call hsd_load(trim(main_path), root, error)
+    call hsd_load_file(trim(main_path), root, error)
     if (.not. allocated(error)) then
       call check(.true., msg="Text include loaded")
     else
@@ -213,7 +213,7 @@ contains
 
   !> Test include cycle detection
   subroutine test_include_cycle_detection()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     character(len=512) :: file_a, file_b
 
@@ -226,7 +226,7 @@ contains
     call write_text_file(trim(file_a), "a = 1" // char(10) // '<<+ "cycle_b.hsd"')
     call write_text_file(trim(file_b), "b = 2" // char(10) // '<<+ "cycle_a.hsd"')
 
-    call hsd_load(trim(file_a), root, error)
+    call hsd_load_file(trim(file_a), root, error)
     ! Should either succeed (cycle broken) or return error
     if (allocated(error)) then
       ! Cycle detected - good!
@@ -246,7 +246,7 @@ contains
 
   !> Test include with missing file
   subroutine test_include_missing_file()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     character(len=512) :: main_path
 
@@ -255,7 +255,7 @@ contains
     call write_text_file(trim(main_path), "header = test" // char(10) // &
       "<<+ /nonexistent/path/file.hsd")
 
-    call hsd_load(trim(main_path), root, error)
+    call hsd_load_file(trim(main_path), root, error)
     call check(allocated(error), msg="Error for missing include")
     if (allocated(error)) then
       call check(error%code == HSD_STAT_FILE_NOT_FOUND, msg="File not found error")
@@ -269,8 +269,8 @@ contains
 
   !> Test strings that need both quote types
   subroutine test_quote_with_both_quotes()
-    type(hsd_table) :: root
-    type(hsd_value) :: val
+    type(hsd_node) :: root
+    type(hsd_node) :: val
     type(hsd_error_t), allocatable :: error
     character(len=512) :: filepath
     character(len=:), allocatable :: output
@@ -306,7 +306,7 @@ contains
 
   !> Test empty strings and values
   subroutine test_empty_strings_and_values()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     character(len=:), allocatable :: str_val
     integer :: stat
@@ -328,7 +328,7 @@ contains
 
   !> Test attribute parsing
   subroutine test_attribute_parsing()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     character(len=:), allocatable :: attrib
     integer :: stat
@@ -349,8 +349,8 @@ contains
 
   !> Test anonymous (unnamed) values
   subroutine test_anonymous_values()
-    type(hsd_table) :: root
-    type(hsd_value) :: val
+    type(hsd_node) :: root
+    type(hsd_node) :: val
     character(len=:), allocatable :: output
 
     call new_table(root)
@@ -369,7 +369,7 @@ contains
 
   !> Test getting real matrix
   subroutine test_get_real_matrix()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     real(dp), allocatable :: mat(:,:)
     integer :: nrows, ncols, stat
@@ -387,7 +387,7 @@ contains
 
   !> Test getting complex array
   subroutine test_get_complex_array()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     complex(dp), allocatable :: arr(:)
     integer :: stat
@@ -405,10 +405,10 @@ contains
 
   !> Test iterator with mixed types
   subroutine test_iterator_mixed_types()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     type(hsd_iterator) :: iter
-    class(hsd_node), pointer :: node
+    type(hsd_node), pointer :: node
     integer :: table_count, value_count
     logical :: has
 
@@ -423,12 +423,11 @@ contains
     do while (iter%has_next())
       has = iter%next(node)
       if (has) then
-        select type (node)
-        type is (hsd_table)
+        if (node%node_type == NODE_TYPE_TABLE) then
           table_count = table_count + 1
-        type is (hsd_value)
+        else if (node%node_type == NODE_TYPE_VALUE) then
           value_count = value_count + 1
-        end select
+        end if
       end if
     end do
 
@@ -443,7 +442,7 @@ contains
 
   !> Test various block parsing patterns
   subroutine test_parse_block_variations()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     integer :: val, stat
 
@@ -470,7 +469,7 @@ contains
 
   !> Test various assignment patterns
   subroutine test_parse_assignment_variations()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     integer :: val, stat
     character(len=:), allocatable :: str_val
@@ -493,7 +492,7 @@ contains
 
   !> Test remove operations
   subroutine test_remove_operations()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     integer :: stat
 
@@ -515,7 +514,7 @@ contains
 
   !> Test get with unit extraction
   subroutine test_get_with_unit()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     real(dp) :: val
     character(len=:), allocatable :: unit
@@ -537,7 +536,7 @@ contains
 
   !> Test type checking functions
   subroutine test_type_checking()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     integer :: vtype
 
@@ -570,7 +569,7 @@ contains
 
   !> Test validation with context
   subroutine test_validate_with_context()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error, val_error
 
     call hsd_load_string("temperature = -50.0" // char(10) // &
@@ -595,7 +594,7 @@ contains
 
   !> Test cloning complex tree
   subroutine test_clone_complex_tree()
-    type(hsd_table) :: root, clone
+    type(hsd_node) :: root, clone
     type(hsd_error_t), allocatable :: error
     integer :: val1, val2, stat
 
@@ -619,7 +618,7 @@ contains
 
   !> Test merging deeply nested structures
   subroutine test_merge_deeply_nested()
-    type(hsd_table) :: base, overlay
+    type(hsd_node) :: base, overlay
     type(hsd_error_t), allocatable :: error
     integer :: val, stat
 
@@ -647,7 +646,7 @@ contains
 
   !> Test getting logical array
   subroutine test_get_logical_array()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     logical, allocatable :: arr(:)
     integer :: stat
@@ -665,7 +664,7 @@ contains
 
   !> Test getting string array
   subroutine test_get_string_array()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     character(len=:), allocatable :: arr(:)
     integer :: stat
@@ -708,7 +707,7 @@ contains
 
   !> Test parsing with a relative path (triggers get_cwd_portable)
   subroutine test_parse_with_relative_path()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     character(len=:), allocatable :: filename
     integer :: unit_num, iostat
@@ -725,7 +724,7 @@ contains
     close(unit_num)
 
     ! Load using relative path
-    call hsd_load(filename, root, error)
+    call hsd_load_file(filename, root, error)
 
     if (allocated(error)) then
       ! This will help diagnose why it fails

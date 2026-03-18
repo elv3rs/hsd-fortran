@@ -1,6 +1,6 @@
 !> Utility functions and types for the HSD parser
 module hsd_utils
-  use hsd_constants, only: dp, sp
+  use hsd_constants, only: dp
   implicit none (type, external)
   private
 

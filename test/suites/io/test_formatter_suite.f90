@@ -35,8 +35,8 @@ contains
 
   !> Test dumping integer values
   subroutine test_dump_integer()
-    type(hsd_table) :: root
-    type(hsd_value) :: val
+    type(hsd_node) :: root
+    type(hsd_node) :: val
     character(len=:), allocatable :: output
 
     call new_table(root)
@@ -57,8 +57,8 @@ contains
 
   !> Test dumping real values
   subroutine test_dump_real()
-    type(hsd_table) :: root
-    type(hsd_value) :: val
+    type(hsd_node) :: root
+    type(hsd_node) :: val
     character(len=:), allocatable :: output
 
     call new_table(root)
@@ -79,8 +79,8 @@ contains
 
   !> Test dumping boolean values (should be Yes/No)
   subroutine test_dump_boolean()
-    type(hsd_table) :: root
-    type(hsd_value) :: val
+    type(hsd_node) :: root
+    type(hsd_node) :: val
     character(len=:), allocatable :: output
 
     call new_table(root)
@@ -104,8 +104,8 @@ contains
 
   !> Test dumping string values with proper quoting
   subroutine test_dump_string()
-    type(hsd_table) :: root
-    type(hsd_value) :: val
+    type(hsd_node) :: root
+    type(hsd_node) :: val
     character(len=:), allocatable :: output
 
     call new_table(root)
@@ -127,8 +127,8 @@ contains
 
   !> Test dumping nested structures
   subroutine test_dump_nested()
-    type(hsd_table) :: root, child_table
-    type(hsd_value) :: val
+    type(hsd_node) :: root, child_table
+    type(hsd_node) :: val
     character(len=:), allocatable :: output
 
     call new_table(root)
@@ -154,8 +154,8 @@ contains
 
   !> Test dumping with attributes
   subroutine test_dump_attribute()
-    type(hsd_table) :: root
-    type(hsd_value) :: val
+    type(hsd_node) :: root
+    type(hsd_node) :: val
     character(len=:), allocatable :: output
 
     call new_table(root)
@@ -178,7 +178,7 @@ contains
 
   !> Test round-trip: parse -> dump -> parse
   subroutine test_roundtrip_simple()
-    type(hsd_table) :: root1, root2
+    type(hsd_node) :: root1, root2
     type(hsd_error_t), allocatable :: error
     character(len=:), allocatable :: output
     integer :: val1, val2, stat
@@ -205,7 +205,7 @@ contains
 
   !> Test round-trip with nested structure
   subroutine test_roundtrip_nested()
-    type(hsd_table) :: root1, root2
+    type(hsd_node) :: root1, root2
     type(hsd_error_t), allocatable :: error
     character(len=:), allocatable :: input, output
     logical :: val1, val2
@@ -240,9 +240,9 @@ contains
   !> Test dumping to file (covers hsd_dump file I/O path)
   subroutine test_dump_to_file()
     use build_env, only : build_dir
-    type(hsd_table) :: root, root2
+    type(hsd_node) :: root, root2
     type(hsd_error_t), allocatable :: error
-    type(hsd_value) :: val
+    type(hsd_node) :: val
     character(len=512) :: filepath
     integer :: int_val, stat
 
@@ -257,7 +257,7 @@ contains
     call check(.not. allocated(error), msg="File dump succeeds")
 
     ! Read back and verify
-    call hsd_load(trim(filepath), root2, error)
+    call hsd_load_file(trim(filepath), root2, error)
     call check(.not. allocated(error), msg="Can read dumped file")
 
     call hsd_get(root2, "test_key", int_val, stat)
@@ -270,7 +270,7 @@ contains
 
   !> Test multiline value formatting
   subroutine test_multiline_value()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     character(len=:), allocatable :: output, hsd_input
 
@@ -295,7 +295,7 @@ contains
 
   !> Test equal-syntax output (Tag = ChildTag { ... })
   subroutine test_equal_syntax_output()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
     character(len=:), allocatable :: output, hsd_input
 

@@ -37,8 +37,8 @@ contains
   ! ---- Path normalization tests ----
 
   subroutine test_path_trailing_slash()
-    type(hsd_table) :: root
-    class(hsd_node), pointer :: child
+    type(hsd_node) :: root
+    type(hsd_node), pointer :: child
     integer :: stat
 
     call new_table(root)
@@ -53,8 +53,8 @@ contains
   end subroutine test_path_trailing_slash
 
   subroutine test_path_leading_slash()
-    type(hsd_table) :: root
-    class(hsd_node), pointer :: child
+    type(hsd_node) :: root
+    type(hsd_node), pointer :: child
     integer :: stat
 
     call new_table(root)
@@ -69,8 +69,8 @@ contains
   end subroutine test_path_leading_slash
 
   subroutine test_path_double_slash()
-    type(hsd_table) :: root, sub
-    class(hsd_node), pointer :: child
+    type(hsd_node) :: root, sub
+    type(hsd_node), pointer :: child
     integer :: stat
 
     call new_table(root)
@@ -87,8 +87,8 @@ contains
   end subroutine test_path_double_slash
 
   subroutine test_path_empty()
-    type(hsd_table) :: root
-    class(hsd_node), pointer :: child
+    type(hsd_node) :: root
+    type(hsd_node), pointer :: child
     integer :: stat
 
     call new_table(root)
@@ -102,8 +102,8 @@ contains
   end subroutine test_path_empty
 
   subroutine test_path_slash_only()
-    type(hsd_table) :: root
-    class(hsd_node), pointer :: child
+    type(hsd_node) :: root
+    type(hsd_node), pointer :: child
     integer :: stat
 
     call new_table(root)
@@ -119,7 +119,7 @@ contains
   ! ---- hsd_get_children tests ----
 
   subroutine test_get_children_basic()
-    type(hsd_table) :: root, child1, child2, child3
+    type(hsd_node) :: root, child1, child2, child3
     type(hsd_child_ptr), allocatable :: children(:)
     integer :: stat
 
@@ -143,7 +143,7 @@ contains
   end subroutine test_get_children_basic
 
   subroutine test_get_children_none()
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_child_ptr), allocatable :: children(:)
     integer :: stat
 
@@ -158,7 +158,7 @@ contains
   end subroutine test_get_children_none
 
   subroutine test_get_children_nested()
-    type(hsd_table) :: root, parent, c1, c2
+    type(hsd_node) :: root, parent, c1, c2
     type(hsd_child_ptr), allocatable :: children(:)
     integer :: stat
 
@@ -198,8 +198,8 @@ contains
   end function kelvin_to_celsius
 
   subroutine test_array_with_unit()
-    type(hsd_table) :: root
-    type(hsd_value) :: val
+    type(hsd_node) :: root
+    type(hsd_node) :: val
     real(dp), allocatable :: arr(:)
     integer :: stat
 
@@ -224,8 +224,8 @@ contains
   end subroutine test_array_with_unit
 
   subroutine test_array_with_unit_no_attrib()
-    type(hsd_table) :: root
-    type(hsd_value) :: val
+    type(hsd_node) :: root
+    type(hsd_node) :: val
     real(dp), allocatable :: arr(:)
     integer :: stat
 
@@ -248,8 +248,8 @@ contains
   end subroutine test_array_with_unit_no_attrib
 
   subroutine test_matrix_with_unit()
-    type(hsd_table) :: root
-    type(hsd_value) :: val
+    type(hsd_node) :: root
+    type(hsd_node) :: val
     real(dp), allocatable :: mat(:,:)
     integer :: nrows, ncols, stat
 

@@ -377,21 +377,6 @@ contains
   end procedure value_get_complex_matrix
 
   ! ===================================================================
-  ! Destructor
-  ! ===================================================================
-
-  !> Destroy value
-  module procedure value_destroy
-
-    if (allocated(self%name)) deallocate(self%name)
-    if (allocated(self%attrib)) deallocate(self%attrib)
-    if (allocated(self%string_value)) deallocate(self%string_value)
-
-    self%value_type = VALUE_TYPE_NONE
-
-  end procedure value_destroy
-
-  ! ===================================================================
   ! Private helper routines
   ! ===================================================================
 

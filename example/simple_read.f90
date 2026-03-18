@@ -12,16 +12,17 @@
 ! - Writing modified data
 program simple_read
   use hsd, only : &
-  & hsd_table, hsd_error_t, dp, HSD_STAT_OK, HSD_STAT_NOT_FOUND, &
-  & hsd_load, hsd_load_string, hsd_dump, &
+  & hsd_node, hsd_error_t, dp, HSD_STAT_OK, HSD_STAT_NOT_FOUND, &
+  & hsd_load_file, hsd_load_string, hsd_dump, &
   & hsd_get, hsd_get_matrix, hsd_get_attrib, hsd_get_keys, &
   & hsd_set, &
-  & hsd_has_child, hsd_has_attrib, hsd_is_table, hsd_is_value, hsd_child_count, &
+  & hsd_has_child, hsd_has_attrib, hsd_is_table, hsd_is_value, &
+  & hsd_child_count, &
   & hsd_require, hsd_validate_range, hsd_validate_one_of, &
   & hsd_merge, hsd_clone
   implicit none (type, external)
 
-  type(hsd_table) :: root, modified_root, merged_root
+  type(hsd_node) :: root, modified_root, merged_root
   type(hsd_error_t), allocatable :: error
   integer :: stat, max_steps, random_seed, nrows, ncols
   real(dp) :: temperature, tolerance, max_force
@@ -40,7 +41,7 @@ program simple_read
   ! 1. Load HSD from file
   ! ===========================================================================
   print '(A)', "1. Loading from file 'sample_input.hsd'..."
-  call hsd_load("sample_input.hsd", root, error)
+  call hsd_load_file("sample_input.hsd", root, error)
 
   if (allocated(error)) then
     print '(A)', "   ERROR: Failed to parse file"
@@ -216,7 +217,7 @@ program simple_read
 
   ! Create an overlay config
   block
-    type(hsd_table) :: overlay
+    type(hsd_node) :: overlay
     character(len=:), allocatable :: overlay_text
 
     overlay_text = "Driver { MaxSteps = 1000 }" // char(10) // &

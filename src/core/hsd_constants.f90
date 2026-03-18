@@ -3,10 +3,11 @@
 !> This module defines special characters, limits, and kind parameters
 !> used throughout the HSD library.
 module hsd_constants
+  use, intrinsic :: iso_fortran_env, only: real64
   implicit none (type, external)
   private
 
-  public :: dp, sp, hsd_max_line_length, hsd_max_include_depth
+  public :: dp, hsd_max_line_length, hsd_max_include_depth
   public :: CHAR_LBRACE, CHAR_RBRACE, CHAR_LBRACKET, CHAR_RBRACKET
   public :: CHAR_EQUAL, CHAR_HASH, CHAR_SEMICOLON, CHAR_LESS
   public :: CHAR_DQUOTE, CHAR_SQUOTE, CHAR_BACKSLASH, CHAR_NEWLINE
@@ -14,10 +15,7 @@ module hsd_constants
   public :: SPECIAL_CHARS, ATTRIB_SPECIAL_CHARS, WHITESPACE_CHARS
 
   !> Double precision kind parameter
-  integer, parameter :: dp = selected_real_kind(15, 307)
-
-  !> Single precision kind parameter
-  integer, parameter :: sp = selected_real_kind(6, 37)
+  integer, parameter :: dp = real64
 
   !> Maximum line length for reading HSD files
   integer, parameter :: hsd_max_line_length = 4096

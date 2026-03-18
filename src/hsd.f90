@@ -25,11 +25,11 @@
 !>
 !> ```fortran
 !> use hsd
-!> type(hsd_table) :: root
+!> type(hsd_node) :: root
 !> type(hsd_error_t), allocatable :: error
 !> integer :: value
 !>
-!> call hsd_load("input.hsd", root, error)
+!> call hsd_load_file("input.hsd", root, error)
 !> if (allocated(error)) then
 !>   call error%print()
 !>   stop 1
@@ -39,20 +39,20 @@
 !> ```
 module hsd
   ! Core infrastructure
-  use hsd_constants, only: dp, sp
+  use hsd_constants, only: dp
   use hsd_utils, only: string_buffer_t
   use hsd_error, only: hsd_error_t, &
     HSD_STAT_OK, HSD_STAT_SYNTAX_ERROR, HSD_STAT_UNCLOSED_TAG, &
     HSD_STAT_UNCLOSED_ATTRIB, HSD_STAT_UNCLOSED_QUOTE, HSD_STAT_ORPHAN_TEXT, &
     HSD_STAT_INCLUDE_CYCLE, HSD_STAT_INCLUDE_DEPTH, HSD_STAT_FILE_NOT_FOUND, &
     HSD_STAT_IO_ERROR, HSD_STAT_TYPE_ERROR, HSD_STAT_NOT_FOUND
-  use hsd_types, only: hsd_node, hsd_table, hsd_value, hsd_node_ptr, hsd_iterator, &
+  use hsd_types, only: hsd_node, hsd_node_ptr, hsd_iterator, &
     new_table, new_value, &
+    NODE_TYPE_TABLE, NODE_TYPE_VALUE, &
     VALUE_TYPE_NONE, VALUE_TYPE_STRING, VALUE_TYPE_INTEGER, &
     VALUE_TYPE_REAL, VALUE_TYPE_LOGICAL, VALUE_TYPE_ARRAY, VALUE_TYPE_COMPLEX
   use hsd_parser, only: hsd_parse, hsd_parse_string
   use hsd_formatter, only: hsd_dump, hsd_dump_to_string
-  use hsd_walk_api, only: hsd_walk
 
   ! Unified API module
   use hsd_api, only: &
@@ -78,21 +78,22 @@ module hsd
   private
 
   ! Re-export public types and constants
-  public :: dp, sp
+  public :: dp
   public :: string_buffer_t
   public :: hsd_error_t
   public :: HSD_STAT_OK, HSD_STAT_SYNTAX_ERROR, HSD_STAT_UNCLOSED_TAG
   public :: HSD_STAT_UNCLOSED_ATTRIB, HSD_STAT_UNCLOSED_QUOTE, HSD_STAT_ORPHAN_TEXT
   public :: HSD_STAT_INCLUDE_CYCLE, HSD_STAT_INCLUDE_DEPTH, HSD_STAT_FILE_NOT_FOUND
   public :: HSD_STAT_IO_ERROR, HSD_STAT_TYPE_ERROR, HSD_STAT_NOT_FOUND
-  public :: hsd_node, hsd_table, hsd_value, hsd_node_ptr, hsd_iterator
+  public :: hsd_node, hsd_node_ptr, hsd_iterator
+  public :: NODE_TYPE_TABLE, NODE_TYPE_VALUE
   public :: new_table, new_value
   public :: VALUE_TYPE_NONE, VALUE_TYPE_STRING, VALUE_TYPE_INTEGER
   public :: VALUE_TYPE_REAL, VALUE_TYPE_LOGICAL, VALUE_TYPE_ARRAY
   public :: VALUE_TYPE_COMPLEX
 
   ! Re-export I/O procedures
-  public :: hsd_load, hsd_load_string
+  public :: hsd_load_file, hsd_load_string
   public :: hsd_dump, hsd_dump_to_string
 
   ! Re-export Unified API
@@ -119,25 +120,22 @@ module hsd
   public :: hsd_node_context, hsd_format_error, hsd_format_warning
   public :: hsd_warn_unprocessed, MAX_WARNING_LEN
 
-  ! Re-export walk (non-visitor tree walker)
-  public :: hsd_walk
-
 contains
 
-  !> Load HSD from a file (convenience wrapper)
-  subroutine hsd_load(filename, root, error)
+  !> Load HSD from a file
+  subroutine hsd_load_file(filename, root, error)
     character(len=*), intent(in) :: filename
-    type(hsd_table), intent(out) :: root
+    type(hsd_node), intent(out) :: root
     type(hsd_error_t), allocatable, intent(out), optional :: error
 
     call hsd_parse(filename, root, error)
 
-  end subroutine hsd_load
+  end subroutine hsd_load_file
 
-  !> Load HSD from a string (convenience wrapper)
+  !> Load HSD from a string
   subroutine hsd_load_string(source, root, error, filename)
     character(len=*), intent(in) :: source
-    type(hsd_table), intent(out) :: root
+    type(hsd_node), intent(out) :: root
     type(hsd_error_t), allocatable, intent(out), optional :: error
     character(len=*), intent(in), optional :: filename
 

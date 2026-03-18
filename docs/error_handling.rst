@@ -127,10 +127,10 @@ Handling Errors
 
 .. code-block:: fortran
 
-    type(hsd_table) :: root
+    type(hsd_node) :: root
     type(hsd_error_t), allocatable :: error
 
-    call hsd_load("config.hsd", root, error)
+    call hsd_load_file("config.hsd", root, error)
 
     if (allocated(error)) then
       ! Print to stdout
@@ -239,7 +239,7 @@ Initialize ``stat`` to ``HSD_STAT_OK`` at the start, then override only on error
 .. code-block:: fortran
 
     subroutine my_operation(table, path, result, stat)
-      type(hsd_table), intent(in) :: table
+      type(hsd_node), intent(in) :: table
       character(len=*), intent(in) :: path
       integer, intent(out) :: result
       integer, intent(out), optional :: stat
@@ -267,12 +267,12 @@ Explicitly set ``stat`` before every ``return`` and at the end:
 .. code-block:: fortran
 
     subroutine my_operation(table, path, result, stat)
-      type(hsd_table), intent(in) :: table
+      type(hsd_node), intent(in) :: table
       character(len=*), intent(in) :: path
       integer, intent(out) :: result
       integer, intent(out), optional :: stat
 
-      class(hsd_node), pointer :: child
+      type(hsd_node), pointer :: child
       integer :: local_stat
 
       call get_child(table, path, child, local_stat)
@@ -283,14 +283,13 @@ Explicitly set ``stat`` before every ``return`` and at the end:
         return  ! stat is set before return
       end if
 
-      select type (child)
-      type is (hsd_value)
+      if (child%node_type == NODE_TYPE_VALUE) then
         call child%get_integer(result, local_stat)
         if (present(stat)) stat = local_stat  ! Always set
-      class default
+      else
         if (present(stat)) stat = HSD_STAT_TYPE_ERROR  ! Always set
         result = 0
-      end select
+      end if
 
     end subroutine my_operation
 
@@ -305,15 +304,14 @@ Common Mistakes to Avoid
       return  ! BUG: stat not set!
     end if
 
-❌ **Missing branch in select type:**
+❌ **Missing branch in node_type check:**
 
 .. code-block:: fortran
 
-    select type (node)
-    type is (hsd_value)
+    if (node%node_type == NODE_TYPE_VALUE) then
       if (present(stat)) stat = HSD_STAT_OK
-    ! BUG: class default branch doesn't set stat!
-    end select
+    end if
+    ! BUG: else branch doesn't set stat!
 
 ❌ **Forgetting the implicit return at end:**
 

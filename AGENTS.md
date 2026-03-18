@@ -75,15 +75,14 @@ Fortitude is configured via `fpm.toml`.
 hsd-fortran/
 ├── src/                        # Library source
 │   ├── hsd.f90                 # Public API (re-exports all modules)
-│   ├── hsd_types.f90           # Data structures (node, table, value, iterator)
+│   ├── hsd_types.f90           # Data structures (unified hsd_node, iterator)
 │   ├── hsd_table_ops.f90      # Submodule: table & iterator operations
 │   ├── hsd_value_ops.f90      # Submodule: value ops & parse helpers
 │   ├── api/                    # High-level API modules
 │   │   ├── hsd_api.f90         # Unified API (accessors, mutators, query)
 │   │   ├── hsd_validation.f90  # hsd_require, hsd_validate_range
-│   │   └── hsd_walk.f90        # Recursive tree walker (non-visitor)
 │   ├── core/                   # Core infrastructure
-│   │   ├── hsd_constants.f90   # dp, sp precision constants
+│   │   ├── hsd_constants.f90   # dp precision constant (iso_fortran_env)
 │   │   ├── hsd_error.f90       # Error types, status codes
 │   │   ├── hsd_utils.f90       # String utilities (to_lower, string_buffer_t)
 │   │   └── hsd_build_env.f90   # CMake build environment (generated)
@@ -166,7 +165,7 @@ use build_env, only : source_dir, build_dir
 
 character(len=512) :: filepath
 filepath = source_dir // "/test/inputs/mydata.hsd"
-call hsd_load(trim(filepath), root, error)
+call hsd_load_file(trim(filepath), root, error)
 ```
 
 This ensures tests work regardless of where CTest runs from.
@@ -197,7 +196,6 @@ This ensures tests work regardless of where CTest runs from.
 |--------|---------|
 | `hsd_api` | Unified API (accessors, mutators, query) |
 | `hsd_validation` | Value validation helpers |
-| `hsd_walk` | Recursive tree walker (non-visitor) |
 
 ### Generic Tree Utilities (in `hsd_api`)
 
@@ -206,7 +204,7 @@ These functions were upstreamed from DFTB+ and are part of the public API:
 | Function | Purpose |
 |----------|---------|
 | `hsd_get_name` | Returns the tag name of a node (table or value) |
-| `hsd_has_value_children` | Checks whether a table contains any `hsd_value` children (replaces DFTB+'s `hasInlineData`) |
+| `hsd_has_value_children` | Checks whether a table contains any value children (`node_type == NODE_TYPE_VALUE`) (replaces DFTB+'s `hasInlineData`) |
 | `hsd_get_inline_text` | Retrieves the concatenated text content from value children of a table (replaces DFTB+'s `getFirstTextChild`) |
 
 ### I/O Layer (`src/io/`)
@@ -221,10 +219,11 @@ These functions were upstreamed from DFTB+ and are part of the public API:
 
 | Type | Purpose |
 |--------|---------|
-| `hsd_node` | Abstract base for all nodes |
-| `hsd_table` | Container node with children |
-| `hsd_value` | Leaf node with string data (parsed on demand) |
-| `hsd_iterator` | Stateful tree iteration |
+| `hsd_node` | Unified concrete node type with a `node_type` discriminator (`NODE_TYPE_TABLE` or `NODE_TYPE_VALUE`). Tables hold children; values hold string data (parsed on demand). |
+| `hsd_iterator` | Stateful tree iteration (references a `type(hsd_node)` table) |
+| `hsd_node_ptr` | Wrapper holding `type(hsd_node), pointer` for child storage |
+| `hsd_table_ptr` | Wrapper holding `type(hsd_node), pointer` (for `hsd_get_child_tables`) |
+| `hsd_child_ptr` | Wrapper holding `type(hsd_node), pointer` (for `hsd_get_children`) |
 
 ## Design Notes
 
@@ -232,7 +231,7 @@ These functions were upstreamed from DFTB+ and are part of the public API:
 - **Includes**: `<<< "file"` (text), `<<+ "file.hsd"` (parsed); cycle detection enabled
 - **Formatting**: Dumps use consistent 2-space indent and `{}` block syntax
 - **Child Lookup**: Linear search over children array (simple and sufficient for config files)
-- **Thread Safety**: **Thread-safe for read-only access**. `hsd_value` no longer uses internal caching, so getters do not mutate the tree. Modification requires external synchronization.
+- **Thread Safety**: **Thread-safe for read-only access**. Value nodes no longer use internal caching, so getters do not mutate the tree. Modification requires external synchronization.
 - **Duplicate Keys**: Are preserved in the tree; `hsd_get` returns the **last** occurrence (override behavior); iteration sees all
 - **Status Parameters**: Optional `stat` parameters use `intent(out)` and must be set on ALL code paths (see `docs/error_handling.md`)
 

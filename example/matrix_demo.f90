@@ -4,11 +4,11 @@
 ! using HSD-Fortran.
 !
 program matrix_demo
-  use hsd, only: hsd_table, hsd_error_t, dp, HSD_STAT_OK, &
-    & hsd_load, hsd_get, hsd_get_matrix
+  use hsd, only: hsd_node, hsd_error_t, dp, HSD_STAT_OK, &
+    & hsd_load_file, hsd_get, hsd_get_matrix
   implicit none (type, external)
 
-  type(hsd_table) :: root
+  type(hsd_node) :: root
   type(hsd_error_t), allocatable :: error
 
   integer, allocatable :: ints(:)
@@ -21,7 +21,7 @@ program matrix_demo
   print *
 
   ! Load Data
-  call hsd_load("matrix_input.hsd", root, error)
+  call hsd_load_file("matrix_input.hsd", root, error)
   if (allocated(error)) then
      call error%print()
      stop 1

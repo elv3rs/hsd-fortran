@@ -7,7 +7,7 @@ This directory contains example programs demonstrating the HSD library features.
 A comprehensive feature showcase that demonstrates:
 
 ### 1. File I/O
-- Loading HSD from file with `hsd_load()`
+- Loading HSD from file with `hsd_load_file()`
 - Writing modified data with `hsd_dump()`
 - Error handling
 
