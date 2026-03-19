@@ -48,7 +48,7 @@ module hsd_compat
   public :: hsd_load_file, hsd_load_string
 
   !> Re-export xmlf90's string type and operations
-  public :: string, char, assignment(=)
+  public :: string, char, assignment(=), len
 
   ! --- DFTB+ compatible interfaces ---
 
