@@ -75,6 +75,7 @@ Contents
    build_systems
    user_guide
    hsd_format
+   tree_mapping
    error_handling
    tree_storage
 
