@@ -40,6 +40,8 @@ module hsd_parser
     integer :: include_depth = 0
     !> Base directory for relative includes
     character(len=:), allocatable :: base_dir
+    !> Error if any occurred
+    type(hsd_error_t), allocatable :: error
   contains
     procedure :: next_token => parser_next_token
     procedure :: push_include => parser_push_include
@@ -48,8 +50,6 @@ module hsd_parser
   end type parser_state_t
 
 contains
-
-  ! ---- PUBLIC API ----
 
   !> Load HSD from a file
   subroutine hsd_load_file(filename, root, error)
@@ -66,7 +66,7 @@ contains
     ! Initialize lexer
     call new_lexer_from_file(state%lexer, filename, local_error)
     if (allocated(local_error)) then
-      call handle_public_error(local_error, error)
+      if (present(error)) call move_alloc(local_error, error)
       return
     end if
 
@@ -78,16 +78,22 @@ contains
     ! Push current file onto include stack
     call state%push_include(filename, local_error)
     if (allocated(local_error)) then
-      call handle_public_error(local_error, error)
+      if (present(error)) call move_alloc(local_error, error)
       return
     end if
 
-    ! Get first token and parse
+    ! Get first token
     call state%next_token()
+
+    ! Parse content
     call parse_content(state, root, local_error)
+
+    ! Pop include stack
     call state%pop_include()
 
-    call handle_public_error(local_error, error)
+    if (allocated(local_error)) then
+      if (present(error)) call move_alloc(local_error, error)
+    end if
 
   end subroutine hsd_load_file
 
@@ -117,26 +123,17 @@ contains
     ! Initialize root table
     call new_table(root)
 
-    ! Get first token and parse
+    ! Get first token
     call state%next_token()
+
+    ! Parse content
     call parse_content(state, root, local_error)
 
-    call handle_public_error(local_error, error)
-
-  end subroutine hsd_load_string
-
-  !> Map internal mandatory errors to public optional ones
-  subroutine handle_public_error(internal_err, public_err)
-    type(hsd_error_t), allocatable, intent(inout) :: internal_err
-    type(hsd_error_t), allocatable, intent(out), optional :: public_err
-
-    if (allocated(internal_err) .and. present(public_err)) then
-      call move_alloc(internal_err, public_err)
+    if (allocated(local_error)) then
+      if (present(error)) call move_alloc(local_error, error)
     end if
 
-  end subroutine handle_public_error
-
-  ! ---- PARSER STATE ----
+  end subroutine hsd_load_string
 
   !> Advance to the next token
   subroutine parser_next_token(self)
@@ -148,31 +145,37 @@ contains
   subroutine parser_push_include(self, path, error)
     class(parser_state_t), intent(inout) :: self
     character(len=*), intent(in) :: path
-    type(hsd_error_t), allocatable, intent(out) :: error
+    type(hsd_error_t), allocatable, intent(out), optional :: error
 
     ! Check for cycle
     if (self%is_include_cycle(path)) then
-      call make_error(error, HSD_STAT_INCLUDE_CYCLE, &
-        "Cyclic include detected", &
-        self%lexer%filename, &
-        self%current_token%line, &
-        column=self%current_token%column, &
-        actual=path, &
-        hint="This file is already being processed in the include chain")
+      if (present(error)) then
+        call make_error(error, HSD_STAT_INCLUDE_CYCLE, &
+          "Cyclic include detected", &
+          self%lexer%filename, &
+          self%current_token%line, &
+          column=self%current_token%column, &
+          actual=path, &
+          hint="This file is already being processed in the include chain")
+      end if
       return
     end if
 
+
     ! Check depth limit
     if (self%include_depth >= hsd_max_include_depth) then
-      call make_error(error, HSD_STAT_INCLUDE_DEPTH, &
-        "Maximum include depth exceeded", &
-        self%lexer%filename, &
-        self%current_token%line, &
-        column=self%current_token%column, &
-        actual=path, &
-        hint="Reduce nesting of include directives")
+      if (present(error)) then
+        call make_error(error, HSD_STAT_INCLUDE_DEPTH, &
+          "Maximum include depth exceeded", &
+          self%lexer%filename, &
+          self%current_token%line, &
+          column=self%current_token%column, &
+          actual=path, &
+          hint="Reduce nesting of include directives")
+      end if
       return
     end if
+
 
     ! Push onto stack
     self%include_depth = self%include_depth + 1
@@ -213,67 +216,38 @@ contains
 
   end function parser_is_cycle
 
-  ! ---- BUFFER HELPERS ----
+  !> Strip trailing newlines (and spaces) from a string.
+  pure function strip_trailing_nl(str) result(trimmed)
+    character(len=*), intent(in) :: str
+    character(len=:), allocatable :: trimmed
 
-  !> Flush buffered text into a value node on the parent.
-  subroutine flush_text_buffer(parent, buffer, start_line)
-    type(hsd_node_t), intent(inout) :: parent
-    character(len=:), allocatable, intent(inout) :: buffer
-    integer, intent(in) :: start_line
+    integer :: last
 
-    if (len_trim(buffer) > 0) then
-      call add_text_to_parent(parent, strip_trailing_nl(buffer), start_line)
-      buffer = ""
-    end if
-
-  end subroutine flush_text_buffer
-
-  !> Append text to the buffer, joining with space or newline as appropriate.
-  subroutine append_text_buffer(buffer, text, start_line, current_line)
-    character(len=:), allocatable, intent(inout) :: buffer
-    character(len=*), intent(in) :: text
-    integer, intent(inout) :: start_line
-    integer, intent(in) :: current_line
-
-    if (len(buffer) == 0) then
-      buffer = text
-      start_line = current_line
-    else if (buffer(len(buffer):len(buffer)) == char(10)) then
-      buffer = buffer // text
-    else
-      buffer = buffer // " " // text
-    end if
-
-  end subroutine append_text_buffer
-
-  !> Collect remaining value tokens until end-of-line / EOF / semicolon / }.
-  subroutine collect_value_line(state, value_text)
-    type(parser_state_t), intent(inout) :: state
-    character(len=:), allocatable, intent(inout) :: value_text
-
-    do while (state%current_token%kind /= TOKEN_NEWLINE .and. &
-              state%current_token%kind /= TOKEN_EOF .and. &
-              state%current_token%kind /= TOKEN_SEMICOLON .and. &
-              state%current_token%kind /= TOKEN_RBRACE)
-      if (state%current_token%kind == TOKEN_TEXT .or. &
-          state%current_token%kind == TOKEN_STRING) then
-        value_text = value_text // " " // state%current_token%value
+    last = len(str)
+    do while (last > 0)
+      if (str(last:last) == char(10) .or. str(last:last) == char(13) &
+          & .or. str(last:last) == ' ') then
+        last = last - 1
+      else
+        exit
       end if
-      call state%next_token()
     end do
 
-    if (state%current_token%kind == TOKEN_SEMICOLON) call state%next_token()
+    if (last > 0) then
+      trimmed = str(1:last)
+    else
+      trimmed = ""
+    end if
 
-  end subroutine collect_value_line
-
-  ! ---- PARSER CORE ----
+  end function strip_trailing_nl
 
   !> Parse content (multiple tags/values)
   recursive subroutine parse_content(state, parent, error)
     type(parser_state_t), intent(inout) :: state
     type(hsd_node_t), intent(inout) :: parent
-    type(hsd_error_t), allocatable, intent(out) :: error
+    type(hsd_error_t), allocatable, intent(out), optional :: error
 
+    type(hsd_error_t), allocatable :: local_error
     character(len=:), allocatable :: text_buffer
     integer :: text_start_line
 
@@ -283,26 +257,51 @@ contains
     do while (.not. state%current_token%is_eof())
       select case (state%current_token%kind)
       case (TOKEN_RBRACE)
-        ! End of current block — flush text and exit loop
-        call flush_text_buffer(parent, text_buffer, text_start_line)
+        ! End of current block - return to parent
+        ! Flush any buffered text first (strip trailing newlines)
+        if (len_trim(text_buffer) > 0) then
+          call add_text_to_parent(parent, strip_trailing_nl(text_buffer), text_start_line)
+          text_buffer = ""
+        end if
         exit
 
       case (TOKEN_TEXT)
-        call parse_tag_or_value(state, parent, text_buffer, text_start_line, error)
-        if (allocated(error)) return
+        ! Could be tag name or data
+        call parse_tag_or_value(state, parent, text_buffer, text_start_line, local_error)
+        if (allocated(local_error)) then
+          if (present(error)) call move_alloc(local_error, error)
+          return
+        end if
 
       case (TOKEN_STRING)
-        call append_text_buffer(text_buffer, state%current_token%value, &
-          & text_start_line, state%current_token%line)
+        ! String data
+        if (len(text_buffer) > 0) then
+          if (text_buffer(len(text_buffer):len(text_buffer)) == char(10)) then
+            text_buffer = text_buffer // state%current_token%value
+          else
+            text_buffer = text_buffer // " " // state%current_token%value
+          end if
+        else
+          text_buffer = state%current_token%value
+          text_start_line = state%current_token%line
+        end if
         call state%next_token()
 
       case (TOKEN_INCLUDE_HSD)
-        call handle_hsd_include(state, parent, error)
-        if (allocated(error)) return
+        ! <<+ include
+        call handle_hsd_include(state, parent, local_error)
+        if (allocated(local_error)) then
+          if (present(error)) call move_alloc(local_error, error)
+          return
+        end if
 
       case (TOKEN_INCLUDE_TXT)
-        call handle_text_include(state, text_buffer, error)
-        if (allocated(error)) return
+        ! <<< include
+        call handle_text_include(state, text_buffer, local_error)
+        if (allocated(local_error)) then
+          if (present(error)) call move_alloc(local_error, error)
+          return
+        end if
 
       case (TOKEN_NEWLINE)
         ! Preserve newlines as content separators when buffering inline text;
@@ -318,7 +317,9 @@ contains
     end do
 
     ! Flush remaining text buffer (strip trailing newlines)
-    call flush_text_buffer(parent, text_buffer, text_start_line)
+    if (len_trim(text_buffer) > 0) then
+      call add_text_to_parent(parent, strip_trailing_nl(text_buffer), text_start_line)
+    end if
 
   end subroutine parse_content
 
@@ -328,11 +329,19 @@ contains
     type(hsd_node_t), intent(inout) :: parent
     character(len=:), allocatable, intent(inout) :: text_buffer
     integer, intent(inout) :: text_start_line
-    type(hsd_error_t), allocatable, intent(out) :: error
+    type(hsd_error_t), allocatable, intent(out), optional :: error
 
-    character(len=:), allocatable :: tag_name, attrib, original_text
+    character(len=:), allocatable :: tag_name, attrib
+    character(len=:), allocatable :: original_text
     integer :: tag_line
+    type(hsd_token_t) :: saved_token
+    type(hsd_node_t) :: child_table
+    type(hsd_node_t) :: child_value
+    type(hsd_error_t), allocatable :: local_error
+    character(len=:), allocatable :: value_text
     logical :: is_amendment
+    type(hsd_node_t), pointer :: existing_child
+    type(hsd_node_t), pointer :: existing_table
 
     ! Save current state — preserve original text for data fallback, lowercase for tag use
     original_text = trim(state%current_token%value)
@@ -341,174 +350,307 @@ contains
     call state%next_token()
 
     ! Check for amendment prefix (+Tag means merge into existing Tag)
-    is_amendment = (len(tag_name) > 1 .and. tag_name(1:1) == "+")
-    if (is_amendment) tag_name = tag_name(2:)
+    is_amendment = .false.
+    if (len(tag_name) > 1 .and. tag_name(1:1) == "+") then
+      is_amendment = .true.
+      tag_name = tag_name(2:)
+    end if
+
 
     ! Check for attribute [...]
     attrib = ""
     if (state%current_token%kind == TOKEN_LBRACKET) then
       call state%next_token()
-      call parse_attribute(state, attrib, error)
-      if (allocated(error)) return
+      call parse_attribute(state, attrib, local_error)
+      if (allocated(local_error)) then
+        if (present(error)) call move_alloc(local_error, error)
+        return
+      end if
     end if
 
     ! Determine what follows
     select case (state%current_token%kind)
     case (TOKEN_LBRACE)
-      ! Block: Tag { ... } or +Tag { ... }
-      call flush_text_buffer(parent, text_buffer, text_start_line)
+      ! Block: Tag { ... } or +Tag { ... } (amendment)
+      ! First flush text buffer
+      if (len_trim(text_buffer) > 0) then
+        call add_text_to_parent(parent, trim(text_buffer), text_start_line)
+        text_buffer = ""
+      end if
+
       call state%next_token()  ! consume {
-      call parse_block(state, parent, tag_name, attrib, tag_line, is_amendment, error)
 
-    case (TOKEN_EQUAL)
-      ! Assignment: Tag = value or Tag = ChildTag { ... }
-      call flush_text_buffer(parent, text_buffer, text_start_line)
-      call state%next_token()  ! consume =
-      call parse_assignment(state, parent, tag_name, attrib, tag_line, is_amendment, error)
-
-    case (TOKEN_NEWLINE, TOKEN_EOF, TOKEN_RBRACE, TOKEN_SEMICOLON)
-      ! Just a tag name on its own — treat as text (preserve original case)
-      call append_text_buffer(text_buffer, original_text, text_start_line, tag_line)
-
-    case default
-      ! Treat as part of text (preserve original case)
-      call append_text_buffer(text_buffer, original_text, text_start_line, tag_line)
-    end select
-
-  end subroutine parse_tag_or_value
-
-  !> Parse a block: Tag { ... } or +Tag { ... } (amendment)
-  recursive subroutine parse_block(state, parent, tag_name, attrib, tag_line, is_amendment, error)
-    type(parser_state_t), intent(inout) :: state
-    type(hsd_node_t), intent(inout) :: parent
-    character(len=*), intent(in) :: tag_name, attrib
-    integer, intent(in) :: tag_line
-    logical, intent(in) :: is_amendment
-    type(hsd_error_t), allocatable, intent(out) :: error
-
-    type(hsd_node_t) :: child_table
-    type(hsd_node_t), pointer :: target
-
-    if (is_amendment) then
-      call parse_amendment_target(state, parent, tag_name, tag_line, target, error)
-      if (allocated(error)) return
-      call parse_content(state, target, error)
-    else
-      call new_table(child_table, tag_name, attrib, tag_line)
-      call parse_content(state, child_table, error)
-    end if
-
-    if (allocated(error)) return
-    if (state%current_token%kind == TOKEN_RBRACE) call state%next_token()
-    if (.not. is_amendment) call parent%add_child(child_table)
-
-  end subroutine parse_block
-
-  !> Parse an assignment: Tag = value, Tag = { ... }, or Tag = ChildTag { ... }
-  recursive subroutine parse_assignment(state, parent, tag_name, attrib, tag_line, &
-      & is_amendment, error)
-    type(parser_state_t), intent(inout) :: state
-    type(hsd_node_t), intent(inout) :: parent
-    character(len=*), intent(in) :: tag_name, attrib
-    integer, intent(in) :: tag_line
-    logical, intent(in) :: is_amendment
-    type(hsd_error_t), allocatable, intent(out) :: error
-
-    type(hsd_node_t) :: child_table, child_value
-    type(hsd_token_t) :: saved_token
-    character(len=:), allocatable :: value_text, child_tag_name
-    logical :: child_is_amendment
-    type(hsd_node_t), pointer :: existing_target
-
-    ! Tag = { ... } — direct block
-    if (state%current_token%kind == TOKEN_LBRACE) then
-      call state%next_token()
-      call new_table(child_table, tag_name, attrib, tag_line)
-      call parse_content(state, child_table, error)
-      if (allocated(error)) return
-      if (state%current_token%kind == TOKEN_RBRACE) call state%next_token()
-      call parent%add_child(child_table)
-      return
-    end if
-
-    ! Tag = TEXT ...
-    if (state%current_token%kind == TOKEN_TEXT) then
-      saved_token = state%current_token
-      call state%next_token()
-
-      ! Tag = ChildTag { ... }
-      if (state%current_token%kind == TOKEN_LBRACE) then
-        call state%next_token()  ! consume {
-
-        child_tag_name = to_lower(trim(saved_token%value))
-        child_is_amendment = (len(child_tag_name) > 1 .and. child_tag_name(1:1) == "+")
-        if (child_is_amendment) child_tag_name = child_tag_name(2:)
-
-        if (is_amendment) then
-          call parse_amendment_target(state, parent, tag_name, tag_line, existing_target, error)
-          if (allocated(error)) return
-          call parse_block(state, existing_target, child_tag_name, "", &
-            & saved_token%line, child_is_amendment, error)
-        else
-          call new_table(child_table, tag_name, attrib, tag_line)
-          call parse_block(state, child_table, child_tag_name, "", &
-            & saved_token%line, .false., error)
-          if (.not. allocated(error)) call parent%add_child(child_table)
+      if (is_amendment) then
+        ! Amendment: find existing child and merge into it
+        existing_child => null()
+        call parent%get_child_by_name(tag_name, existing_child)
+        if (.not. associated(existing_child)) then
+          if (present(error)) then
+            call make_error(error, HSD_STAT_SYNTAX_ERROR, &
+              "Amendment target '" // tag_name // "' not found in parent", &
+              state%lexer%filename, tag_line)
+          end if
+          return
         end if
+        if (existing_child%node_type == NODE_TYPE_TABLE) then
+          call parse_content(state, existing_child, local_error)
+        else
+          if (present(error)) then
+            call make_error(error, HSD_STAT_SYNTAX_ERROR, &
+              "Amendment target '" // tag_name &
+              & // "' is not a block", &
+              state%lexer%filename, tag_line)
+          end if
+          return
+        end if
+      else
+        call new_table(child_table, tag_name, attrib, tag_line)
+        call parse_content(state, child_table, local_error)
+      end if
+
+      if (allocated(local_error)) then
+        if (present(error)) call move_alloc(local_error, error)
         return
       end if
 
-      ! Not a block — start of a value
-      value_text = trim(saved_token%value)
+      ! Expect closing brace
+      if (state%current_token%kind == TOKEN_RBRACE) then
+        call state%next_token()  ! consume }
+      end if
 
-    else if (state%current_token%kind == TOKEN_STRING) then
-      ! Tag = "string value"
-      value_text = state%current_token%value
-      call state%next_token()
+      if (.not. is_amendment) then
+        call parent%add_child(child_table)
+      end if
 
-    else
-      ! Empty value
-      value_text = ""
-    end if
+    case (TOKEN_EQUAL)
+      ! Assignment: Tag = value or Tag = ChildTag { ... }
+      ! First flush text buffer
+      if (len_trim(text_buffer) > 0) then
+        call add_text_to_parent(parent, trim(text_buffer), text_start_line)
+        text_buffer = ""
+      end if
 
-    ! Gather rest of line for values
-    call collect_value_line(state, value_text)
+      call state%next_token()  ! consume =
 
-    call new_value(child_value, tag_name, attrib, tag_line)
-    call child_value%set_string(trim(value_text))
-    call parent%add_child(child_value)
 
-  end subroutine parse_assignment
+      ! Check what follows =
+      if (state%current_token%kind == TOKEN_LBRACE) then
+        ! Tag = { ... } - direct block
+        call state%next_token()
+        call new_table(child_table, tag_name, attrib, tag_line)
+        call parse_content(state, child_table, local_error)
+        if (allocated(local_error)) then
+          if (present(error)) call move_alloc(local_error, error)
+          return
+        end if
+        if (state%current_token%kind == TOKEN_RBRACE) then
+          call state%next_token()
+        end if
+        call parent%add_child(child_table)
 
-  !> Find an existing table child for amendment; error if not found or not a table.
-  subroutine parse_amendment_target(state, parent, tag_name, line, target, error)
-    type(parser_state_t), intent(in) :: state
-    type(hsd_node_t), intent(inout) :: parent
-    character(len=*), intent(in) :: tag_name
-    integer, intent(in) :: line
-    type(hsd_node_t), pointer, intent(out) :: target
-    type(hsd_error_t), allocatable, intent(out) :: error
+      else if (state%current_token%kind == TOKEN_TEXT) then
+        ! Could be: Tag = value OR Tag = ChildTag { ... }
+        saved_token = state%current_token
+        call state%next_token()
 
-    nullify(target)
-    call parent%get_child_by_name(tag_name, target)
 
-    if (.not. associated(target)) then
-      call make_error(error, HSD_STAT_SYNTAX_ERROR, &
-        "Amendment target '" // tag_name // "' not found in parent", &
-        state%lexer%filename, line)
-    else if (target%node_type /= NODE_TYPE_TABLE) then
-      call make_error(error, HSD_STAT_SYNTAX_ERROR, &
-        "Amendment target '" // tag_name // "' is not a block", &
-        state%lexer%filename, line)
-    end if
+        if (state%current_token%kind == TOKEN_LBRACE) then
+          ! Tag = ChildTag { ... } or +Tag = +ChildTag { ... }
+          call state%next_token()  ! consume {
 
-  end subroutine parse_amendment_target
+          block
+            character(len=:), allocatable :: child_tag_name
+            logical :: child_is_amendment
+
+            child_tag_name = to_lower(trim(saved_token%value))
+            child_is_amendment = .false.
+            if (len(child_tag_name) > 1 .and. child_tag_name(1:1) == "+") then
+              child_is_amendment = .true.
+              child_tag_name = child_tag_name(2:)
+            end if
+
+            if (is_amendment) then
+              ! +Tag = +ChildTag { ... } — amend existing Tag, then amend ChildTag inside
+              existing_child => null()
+              call parent%get_child_by_name(tag_name, existing_child)
+              if (.not. associated(existing_child)) then
+                if (present(error)) then
+                  call make_error(error, HSD_STAT_SYNTAX_ERROR, &
+                    "Amendment target '" // tag_name // "' not found", &
+                    state%lexer%filename, tag_line)
+                end if
+                return
+              end if
+              if (existing_child%node_type /= NODE_TYPE_TABLE) then
+                if (present(error)) then
+                  call make_error(error, HSD_STAT_SYNTAX_ERROR, &
+                    "Amendment target '" // tag_name &
+                    & // "' is not a block", &
+                    state%lexer%filename, tag_line)
+                end if
+                return
+              end if
+              existing_table => existing_child
+
+              if (child_is_amendment) then
+                ! Find ChildTag inside the existing Tag and merge into it
+                existing_child => null()
+                call existing_table%get_child_by_name(child_tag_name, existing_child)
+                if (.not. associated(existing_child)) then
+                  if (present(error)) then
+                    call make_error(error, HSD_STAT_SYNTAX_ERROR, &
+                      "Amendment target '" // child_tag_name // "' not found in '" &
+                      // tag_name // "'", state%lexer%filename, saved_token%line)
+                  end if
+                  return
+                end if
+                if (existing_child%node_type == NODE_TYPE_TABLE) then
+                  call parse_content(state, existing_child, local_error)
+                else
+                  if (present(error)) then
+                    call make_error(error, HSD_STAT_SYNTAX_ERROR, &
+                      "Amendment target '" &
+                      & // child_tag_name &
+                      & // "' is not a block", &
+                      state%lexer%filename, &
+                      saved_token%line)
+                  end if
+                  return
+                end if
+              else
+                ! Regular child inside amended parent
+                block
+                  type(hsd_node_t) :: nested_table
+                  call new_table(nested_table, child_tag_name, &
+                    & "", saved_token%line)
+                  call parse_content(state, nested_table, local_error)
+                  if (allocated(local_error)) then
+                    if (present(error)) call move_alloc(local_error, error)
+                    return
+                  end if
+                  call existing_table%add_child(nested_table)
+                end block
+              end if
+            else
+              ! Normal: Tag = ChildTag { ... }
+              call new_table(child_table, tag_name, attrib, tag_line)
+
+              block
+                type(hsd_node_t) :: nested_table
+                call new_table(nested_table, child_tag_name, "", saved_token%line)
+                call parse_content(state, nested_table, local_error)
+                if (allocated(local_error)) then
+                  if (present(error)) call move_alloc(local_error, error)
+                  return
+                end if
+                call child_table%add_child(nested_table)
+              end block
+
+              call parent%add_child(child_table)
+            end if
+
+            if (allocated(local_error)) then
+              if (present(error)) call move_alloc(local_error, error)
+              return
+            end if
+            if (state%current_token%kind == TOKEN_RBRACE) then
+              call state%next_token()
+            end if
+          end block
+
+        else
+          ! Tag = value (simple assignment)
+          value_text = trim(saved_token%value)
+
+          ! Collect rest of line
+          do while (state%current_token%kind /= TOKEN_NEWLINE .and. &
+                    state%current_token%kind /= TOKEN_EOF .and. &
+                    state%current_token%kind /= TOKEN_SEMICOLON .and. &
+                    state%current_token%kind /= TOKEN_RBRACE)
+            if (state%current_token%kind == TOKEN_TEXT .or. &
+                state%current_token%kind == TOKEN_STRING) then
+              value_text = value_text // " " // state%current_token%value
+            end if
+            call state%next_token()
+          end do
+
+          ! Handle semicolon terminator
+          if (state%current_token%kind == TOKEN_SEMICOLON) then
+            call state%next_token()
+          end if
+
+          call new_value(child_value, tag_name, attrib, tag_line)
+          call child_value%set_string(trim(value_text))
+          call parent%add_child(child_value)
+        end if
+
+      else if (state%current_token%kind == TOKEN_STRING) then
+        ! Tag = "string value" (possibly followed by more values on same line)
+        value_text = state%current_token%value
+        call state%next_token()
+
+        ! Collect rest of line (handles: Tag = "val1" "val2" "val3")
+        do while (state%current_token%kind /= TOKEN_NEWLINE .and. &
+                  state%current_token%kind /= TOKEN_EOF .and. &
+                  state%current_token%kind /= TOKEN_SEMICOLON .and. &
+                  state%current_token%kind /= TOKEN_RBRACE)
+          if (state%current_token%kind == TOKEN_TEXT .or. &
+              state%current_token%kind == TOKEN_STRING) then
+            value_text = value_text // " " // state%current_token%value
+          end if
+          call state%next_token()
+        end do
+
+        ! Handle semicolon terminator
+        if (state%current_token%kind == TOKEN_SEMICOLON) then
+          call state%next_token()
+        end if
+
+        call new_value(child_value, tag_name, attrib, tag_line)
+        call child_value%set_string(trim(value_text))
+        call parent%add_child(child_value)
+
+      else
+        ! Empty value
+        call new_value(child_value, tag_name, attrib, tag_line)
+        call child_value%set_string("")
+        call parent%add_child(child_value)
+      end if
+
+    case (TOKEN_NEWLINE, TOKEN_EOF, TOKEN_RBRACE, TOKEN_SEMICOLON)
+      ! Just a tag name on its own - treat as text (preserve original case)
+      if (len(text_buffer) > 0) then
+        if (text_buffer(len(text_buffer):len(text_buffer)) == char(10)) then
+          text_buffer = text_buffer // original_text
+        else
+          text_buffer = text_buffer // " " // original_text
+        end if
+      else
+        text_buffer = original_text
+        text_start_line = tag_line
+      end if
+
+    case default
+      ! Treat as part of text (preserve original case)
+      if (len(text_buffer) > 0) then
+        if (text_buffer(len(text_buffer):len(text_buffer)) == char(10)) then
+          text_buffer = text_buffer // original_text
+        else
+          text_buffer = text_buffer // " " // original_text
+        end if
+      else
+        text_buffer = original_text
+        text_start_line = tag_line
+      end if
+    end select
+
+  end subroutine parse_tag_or_value
 
   !> Parse attribute content between [ and ]
   subroutine parse_attribute(state, attrib, error)
     type(parser_state_t), intent(inout) :: state
     character(len=:), allocatable, intent(out) :: attrib
-    type(hsd_error_t), allocatable, intent(out) :: error
+    type(hsd_error_t), allocatable, intent(out), optional :: error
 
     attrib = ""
 
@@ -528,7 +670,7 @@ contains
     ! Consume closing bracket
     if (state%current_token%kind == TOKEN_RBRACKET) then
       call state%next_token()
-    else
+    else if (present(error)) then
       block
         character(len=:), allocatable :: actual_str
         if (allocated(state%current_token%value)) then
@@ -549,16 +691,15 @@ contains
 
   end subroutine parse_attribute
 
-  ! ---- INCLUDES ----
-
   !> Handle <<+ HSD include
   recursive subroutine handle_hsd_include(state, parent, error)
     type(parser_state_t), intent(inout) :: state
     type(hsd_node_t), intent(inout) :: parent
-    type(hsd_error_t), allocatable, intent(out) :: error
+    type(hsd_error_t), allocatable, intent(out), optional :: error
 
     character(len=:), allocatable :: include_path, abs_path
     type(parser_state_t) :: include_state
+    type(hsd_error_t), allocatable :: local_error
 
     ! Get the include filename
     include_path = trim(state%current_token%value)
@@ -569,24 +710,30 @@ contains
 
     ! Check for cycle
     if (state%is_include_cycle(abs_path)) then
-      call make_error(error, HSD_STAT_INCLUDE_CYCLE, &
-        "Cyclic include detected in HSD include", &
-        state%lexer%filename, &
-        state%current_token%line, &
-        column=state%current_token%column, &
-        actual=abs_path, &
-        hint="This file is already being processed in the include chain")
+      if (present(error)) then
+        call make_error(error, HSD_STAT_INCLUDE_CYCLE, &
+          "Cyclic include detected in HSD include", &
+          state%lexer%filename, &
+          state%current_token%line, &
+          column=state%current_token%column, &
+          actual=abs_path, &
+          hint="This file is already being processed in the include chain")
+      end if
       return
     end if
 
     ! Push onto include stack
-    call state%push_include(abs_path, error)
-    if (allocated(error)) return
+    call state%push_include(abs_path, local_error)
+    if (allocated(local_error)) then
+      if (present(error)) call move_alloc(local_error, error)
+      return
+    end if
 
     ! Create new lexer for included file
-    call new_lexer_from_file(include_state%lexer, abs_path, error)
-    if (allocated(error)) then
+    call new_lexer_from_file(include_state%lexer, abs_path, local_error)
+    if (allocated(local_error)) then
       call state%pop_include()
+      if (present(error)) call move_alloc(local_error, error)
       return
     end if
 
@@ -597,10 +744,14 @@ contains
 
     ! Parse included file
     call include_state%next_token()
-    call parse_content(include_state, parent, error)
+    call parse_content(include_state, parent, local_error)
 
     ! Pop from stack
     call state%pop_include()
+
+    if (allocated(local_error)) then
+      if (present(error)) call move_alloc(local_error, error)
+    end if
 
   end subroutine handle_hsd_include
 
@@ -608,7 +759,7 @@ contains
   subroutine handle_text_include(state, text_buffer, error)
     type(parser_state_t), intent(inout) :: state
     character(len=:), allocatable, intent(inout) :: text_buffer
-    type(hsd_error_t), allocatable, intent(out) :: error
+    type(hsd_error_t), allocatable, intent(out), optional :: error
 
     character(len=:), allocatable :: include_path, abs_path
     character(len=:), allocatable :: file_content
@@ -625,14 +776,16 @@ contains
     ! Check file exists
     inquire(file=abs_path, exist=file_exists)
     if (.not. file_exists) then
-      call make_error(error, HSD_STAT_FILE_NOT_FOUND, &
-        "Text include file not found", &
-        state%lexer%filename, &
-        state%current_token%line, &
-        column=state%current_token%column, &
-        expected="readable file", &
-        actual=abs_path, &
-        hint="Check that the file path is correct and the file exists")
+      if (present(error)) then
+        call make_error(error, HSD_STAT_FILE_NOT_FOUND, &
+          "Text include file not found", &
+          state%lexer%filename, &
+          state%current_token%line, &
+          column=state%current_token%column, &
+          expected="readable file", &
+          actual=abs_path, &
+          hint="Check that the file path is correct and the file exists")
+      end if
       return
     end if
 
@@ -643,13 +796,15 @@ contains
     open(newunit=unit_num, file=abs_path, status='old', action='read', &
          access='stream', form='unformatted', iostat=io_stat)
     if (io_stat /= 0) then
-      call make_error(error, HSD_STAT_IO_ERROR, &
-        "Cannot read text include file", &
-        state%lexer%filename, &
-        state%current_token%line, &
-        column=state%current_token%column, &
-        actual=abs_path, &
-        hint="Check file permissions and that the file is readable")
+      if (present(error)) then
+        call make_error(error, HSD_STAT_IO_ERROR, &
+          "Cannot read text include file", &
+          state%lexer%filename, &
+          state%current_token%line, &
+          column=state%current_token%column, &
+          actual=abs_path, &
+          hint="Check file permissions and that the file is readable")
+      end if
       return
     end if
 
@@ -670,8 +825,6 @@ contains
     end if
 
   end subroutine handle_text_include
-
-  ! ---- TEXT UTILITIES ----
 
   !> Strip HSD-style comments (# to end-of-line) from text.
   !>
@@ -757,31 +910,6 @@ contains
     end if
 
   end subroutine strip_hsd_comments_
-
-  !> Strip trailing newlines (and spaces) from a string.
-  pure function strip_trailing_nl(str) result(trimmed)
-    character(len=*), intent(in) :: str
-    character(len=:), allocatable :: trimmed
-
-    integer :: last
-
-    last = len(str)
-    do while (last > 0)
-      if (str(last:last) == char(10) .or. str(last:last) == char(13) &
-          & .or. str(last:last) == ' ') then
-        last = last - 1
-      else
-        exit
-      end if
-    end do
-
-    if (last > 0) then
-      trimmed = str(1:last)
-    else
-      trimmed = ""
-    end if
-
-  end function strip_trailing_nl
 
   !> Add text content to parent as a value node.
   !>
