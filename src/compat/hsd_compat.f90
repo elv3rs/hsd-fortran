@@ -30,6 +30,7 @@ module hsd_compat
   use hsd_utils, only: to_lower
   use hsd_parser, only: hsd_load_file, hsd_load_string
   use hsd_formatter, only: hsd_dump, hsd_dump_to_string
+  use xmlf90_strings, only: string, char, assignment(=), len
   use, intrinsic :: iso_fortran_env, only: error_unit
   implicit none (type, external)
   private
@@ -46,23 +47,8 @@ module hsd_compat
   public :: hsd_has_value_children, hsd_get_name
   public :: hsd_load_file, hsd_load_string
 
-  !> Compatibility string type (replaces xmlf90's type(string))
-  type, public :: string
-    character(len=:), allocatable :: str
-  end type string
-
-  !> Overload char() intrinsic for string type extraction
-  public :: char
-  interface char
-    module procedure string_to_char
-  end interface
-
-  !> Assignment from character to string
-  public :: assignment(=)
-  interface assignment(=)
-    module procedure assign_string_from_char
-    module procedure assign_char_from_string
-  end interface
+  !> Re-export xmlf90's string type and operations
+  public :: string, char, assignment(=)
 
   ! --- DFTB+ compatible interfaces ---
 
@@ -105,11 +91,19 @@ module hsd_compat
   public :: setUnprocessed
   public :: warnUnprocessedNodes
   public :: getNodeHSDName
+  interface getNodeHSDName
+    module procedure getNodeHSDName_char
+    module procedure getNodeHSDName_string
+  end interface
   public :: getFirstTextChild
   public :: detailedError
   public :: detailedWarning
   public :: parseHSD
   public :: dumpHSD
+  interface dumpHSD
+    module procedure dumpHSD_file
+    module procedure dumpHSD_unit
+  end interface
   public :: destroyNode
   public :: getNodeName2
   public :: setNodeName
@@ -140,39 +134,6 @@ module hsd_compat
   integer, parameter :: ELEMENT_NODE = NODE_TYPE_TABLE
 
 contains
-
-  ! ================================================================
-  ! String compat
-  ! ================================================================
-
-  !> Extract character from string type
-  pure function string_to_char(ss) result(res)
-    type(string), intent(in) :: ss
-    character(len=:), allocatable :: res
-    if (allocated(ss%str)) then
-      res = ss%str
-    else
-      res = ""
-    end if
-  end function string_to_char
-
-  !> Assign character to string
-  pure subroutine assign_string_from_char(ss, cc)
-    type(string), intent(out) :: ss
-    character(len=*), intent(in) :: cc
-    ss%str = cc
-  end subroutine assign_string_from_char
-
-  !> Assign string to character
-  pure subroutine assign_char_from_string(cc, ss)
-    character(len=:), allocatable, intent(out) :: cc
-    type(string), intent(in) :: ss
-    if (allocated(ss%str)) then
-      cc = ss%str
-    else
-      cc = ""
-    end if
-  end subroutine assign_char_from_string
 
   ! ================================================================
   ! getChild — DFTB+ compatible child lookup
@@ -220,9 +181,9 @@ contains
 
     if (present(modifier)) then
       if (allocated(child%attrib)) then
-        modifier%str = child%attrib
+        modifier = child%attrib
       else
-        if (allocated(modifier%str)) deallocate(modifier%str)
+        modifier = ""
       end if
     end if
 
@@ -267,9 +228,9 @@ contains
     type(string), intent(inout) :: modifier
 
     if (allocated(child_ptr%attrib)) then
-      modifier%str = child_ptr%attrib
+      modifier = child_ptr%attrib
     else
-      if (allocated(modifier%str)) deallocate(modifier%str)
+      modifier = ""
     end if
   end subroutine extract_modifier_
 
@@ -451,7 +412,7 @@ contains
 
     if (.not. found) then
       if (present(default)) then
-        val%str = default
+        val = default
         call hsd_set(node, name, default, stat)
         call hsd_get_child(node, name, cp, stat)
         cp%processed = .true.
@@ -467,7 +428,7 @@ contains
       call detailedError(cp, &
           & "Invalid string value for: '" // name // "'")
     end if
-    val%str = text
+    val = text
 
     if (present(modifier)) call extract_modifier_(cp, modifier)
     if (present(child)) child => cp
@@ -475,29 +436,37 @@ contains
   end subroutine getChVal_string
 
   ! --- Integer array ---
-  subroutine getChVal_intR1(node, name, val, modifier, child)
+  subroutine getChVal_intR1(node, name, val, default, modifier, child)
     type(hsd_node_t), intent(inout), target :: node
     character(len=*), intent(in) :: name
-    integer, allocatable, intent(out) :: val(:)
+    integer, intent(out) :: val(:)
+    integer, intent(in), optional :: default(:)
     type(string), intent(inout), optional :: modifier
     type(hsd_node_t), pointer, intent(out), optional :: child
 
     type(hsd_node_t), pointer :: cp
     logical :: found
     integer :: stat
+    integer, allocatable :: tmp(:)
 
     call find_child_(node, name, cp, found)
 
     if (.not. found) then
+      if (present(default)) then
+        val(:) = default(:min(size(default), size(val)))
+        if (present(child)) child => null()
+        return
+      end if
       call detailedError(node, &
           & "Missing required field: '" // name // "'")
     end if
 
-    call hsd_get(node, name, val, stat)
+    call hsd_get(node, name, tmp, stat)
     if (stat /= HSD_STAT_OK) then
       call detailedError(cp, &
           & "Invalid integer array for: '" // name // "'")
     end if
+    val(:) = tmp(:min(size(tmp), size(val)))
 
     if (present(modifier)) call extract_modifier_(cp, modifier)
     if (present(child)) child => cp
@@ -505,29 +474,37 @@ contains
   end subroutine getChVal_intR1
 
   ! --- Real array ---
-  subroutine getChVal_realR1(node, name, val, modifier, child)
+  subroutine getChVal_realR1(node, name, val, default, modifier, child)
     type(hsd_node_t), intent(inout), target :: node
     character(len=*), intent(in) :: name
-    real(dp), allocatable, intent(out) :: val(:)
+    real(dp), intent(out) :: val(:)
+    real(dp), intent(in), optional :: default(:)
     type(string), intent(inout), optional :: modifier
     type(hsd_node_t), pointer, intent(out), optional :: child
 
     type(hsd_node_t), pointer :: cp
     logical :: found
     integer :: stat
+    real(dp), allocatable :: tmp(:)
 
     call find_child_(node, name, cp, found)
 
     if (.not. found) then
+      if (present(default)) then
+        val(:) = default(:min(size(default), size(val)))
+        if (present(child)) child => null()
+        return
+      end if
       call detailedError(node, &
           & "Missing required field: '" // name // "'")
     end if
 
-    call hsd_get(node, name, val, stat)
+    call hsd_get(node, name, tmp, stat)
     if (stat /= HSD_STAT_OK) then
       call detailedError(cp, &
           & "Invalid real array for: '" // name // "'")
     end if
+    val(:) = tmp(:min(size(tmp), size(val)))
 
     if (present(modifier)) call extract_modifier_(cp, modifier)
     if (present(child)) child => cp
@@ -538,13 +515,14 @@ contains
   subroutine getChVal_cmplxR1(node, name, val, modifier, child)
     type(hsd_node_t), intent(inout), target :: node
     character(len=*), intent(in) :: name
-    complex(dp), allocatable, intent(out) :: val(:)
+    complex(dp), intent(out) :: val(:)
     type(string), intent(inout), optional :: modifier
     type(hsd_node_t), pointer, intent(out), optional :: child
 
     type(hsd_node_t), pointer :: cp
     logical :: found
     integer :: stat
+    complex(dp), allocatable :: tmp(:)
 
     call find_child_(node, name, cp, found)
 
@@ -553,11 +531,12 @@ contains
           & "Missing required field: '" // name // "'")
     end if
 
-    call hsd_get(node, name, val, stat)
+    call hsd_get(node, name, tmp, stat)
     if (stat /= HSD_STAT_OK) then
       call detailedError(cp, &
           & "Invalid complex array for: '" // name // "'")
     end if
+    val(:) = tmp(:min(size(tmp), size(val)))
 
     if (present(modifier)) call extract_modifier_(cp, modifier)
     if (present(child)) child => cp
@@ -605,35 +584,42 @@ contains
 
   end subroutine getChVal_logicalR1
 
-  ! --- Real matrix ---
-  subroutine getChVal_realR2(node, name, val, nrow, ncol, modifier, &
-      & child)
+  ! --- Real matrix (fixed-shape, matching original hsdutils) ---
+  subroutine getChVal_realR2(node, name, val, default, nItem, modifier, child)
     type(hsd_node_t), intent(inout), target :: node
     character(len=*), intent(in) :: name
-    real(dp), allocatable, intent(out) :: val(:,:)
-    integer, intent(out) :: nrow, ncol
+    real(dp), intent(out) :: val(:,:)
+    real(dp), intent(in), optional :: default(:,:)
+    integer, intent(out), optional :: nItem
     type(string), intent(inout), optional :: modifier
     type(hsd_node_t), pointer, intent(out), optional :: child
 
+    real(dp) :: buffer(size(val))
+    real(dp), allocatable :: defbuf(:)
+    integer :: nReadItem
+    type(string) :: modif
     type(hsd_node_t), pointer :: cp
-    logical :: found
-    integer :: stat
 
-    call find_child_(node, name, cp, found)
-
-    if (.not. found) then
-      call detailedError(node, &
-          & "Missing required field: '" // name // "'")
+    nReadItem = 0
+    val = 0.0_dp
+    if (present(default)) then
+      defbuf = reshape(default, [size(default)])
+      call getChVal_realR1(node, name, buffer, defbuf, modifier=modif, child=cp)
+      nReadItem = size(val)
+    else
+      call getChVal_realR1(node, name, buffer, modifier=modif, child=cp)
+      nReadItem = size(val)
     end if
-
-    call hsd_get_matrix(node, name, val, nrow, ncol, stat)
-    if (stat /= HSD_STAT_OK) then
-      call detailedError(cp, &
-          & "Invalid real matrix for: '" // name // "'")
+    if (present(nItem)) then
+      nItem = nReadItem
     end if
-
-    if (present(modifier)) call extract_modifier_(cp, modifier)
-    if (present(child)) child => cp
+    if (present(modifier)) then
+      modifier = modif
+    end if
+    val(:,:) = reshape(buffer, shape(val))
+    if (present(child)) then
+      child => cp
+    end if
 
   end subroutine getChVal_realR2
 
@@ -851,14 +837,23 @@ contains
   ! ================================================================
 
   !> Create or get an empty child block
-  subroutine setChild(node, name, child, modifier)
+  subroutine setChild(node, name, child, modifier, replace)
     type(hsd_node_t), intent(inout), target :: node
     character(len=*), intent(in) :: name
     type(hsd_node_t), pointer, intent(out) :: child
     character(len=*), intent(in), optional :: modifier
+    logical, intent(in), optional :: replace
 
     type(hsd_node_t) :: new_child
     integer :: stat
+    logical :: do_replace
+
+    do_replace = .false.
+    if (present(replace)) do_replace = replace
+
+    if (do_replace .and. hsd_has_child(node, name)) then
+      call node%remove_child_by_name(name)
+    end if
 
     call hsd_get_child(node, name, child, stat)
 
@@ -946,20 +941,31 @@ contains
   ! Node info
   ! ================================================================
 
-  !> Get the HSD name of a node (replaces DFTB+'s getNodeHSDName)
-  subroutine getNodeHSDName(node, name)
+  !> Get the HSD name of a node (character output)
+  subroutine getNodeHSDName_char(node, name)
     type(hsd_node_t), intent(in) :: node
     character(len=:), allocatable, intent(out) :: name
 
     call hsd_get_name(node, name)
-  end subroutine getNodeHSDName
+  end subroutine getNodeHSDName_char
+
+  !> Get the HSD name of a node (string output)
+  subroutine getNodeHSDName_string(node, name)
+    type(hsd_node_t), intent(in) :: node
+    type(string), intent(inout) :: name
+
+    character(len=:), allocatable :: tmp
+    call hsd_get_name(node, tmp)
+    name = tmp
+  end subroutine getNodeHSDName_string
 
   !> Get concatenated text from value children (replaces getFirstTextChild)
   subroutine getFirstTextChild(node, text)
     type(hsd_node_t), intent(in), target :: node
-    character(len=:), allocatable, intent(out) :: text
+    type(string), intent(inout) :: text
 
     integer :: stat
+    character(len=:), allocatable :: tmp
 
     if (node%node_type == NODE_TYPE_VALUE) then
       if (allocated(node%string_value)) then
@@ -968,8 +974,9 @@ contains
         text = ""
       end if
     else
-      call hsd_get_inline_text(node, text, stat)
-      if (stat /= HSD_STAT_OK) text = ""
+      call hsd_get_inline_text(node, tmp, stat)
+      if (stat /= HSD_STAT_OK) tmp = ""
+      text = tmp
     end if
   end subroutine getFirstTextChild
 
@@ -999,15 +1006,26 @@ contains
 
   end subroutine parseHSD
 
-  !> Dump tree to HSD format (replaces DFTB+'s dumpHSD)
-  subroutine dumpHSD(root, filename)
+  !> Dump tree to HSD file (replaces DFTB+'s dumpHSD_file)
+  subroutine dumpHSD_file(root, filename)
     type(hsd_node_t), intent(in) :: root
     character(len=*), intent(in) :: filename
 
     type(hsd_error_t), allocatable :: error
 
     call hsd_dump(root, filename, error)
-  end subroutine dumpHSD
+  end subroutine dumpHSD_file
+
+  !> Dump tree to HSD on an open file unit (replaces DFTB+'s dumpHSD_opened)
+  subroutine dumpHSD_unit(root, fd)
+    type(hsd_node_t), intent(in) :: root
+    integer, intent(in) :: fd
+
+    character(len=:), allocatable :: output
+
+    call hsd_dump_to_string(root, output)
+    if (allocated(output)) write(fd, '(A)') output
+  end subroutine dumpHSD_unit
 
   ! ================================================================
   ! DOM compat for programmatic tree building
@@ -1067,10 +1085,13 @@ contains
     type(hsd_node_t), pointer, intent(in) :: node
     type(string), intent(inout) :: nodeName
 
+    character(len=:), allocatable :: tmpname
+
     if (.not. associated(node)) then
       nodeName = ""
     else
-      call hsd_get_name(node, nodeName%str)
+      call hsd_get_name(node, tmpname)
+      nodeName = tmpname
     end if
 
   end subroutine getNodeName2
@@ -1275,12 +1296,12 @@ contains
     type(string), intent(inout) :: name
 
     if (node%node_type == NODE_TYPE_VALUE) then
-      name%str = textNodeName
+      name = textNodeName
     else
       if (allocated(node%name)) then
-        name%str = node%name
+        name = node%name
       else
-        name%str = ""
+        name = ""
       end if
     end if
   end subroutine getNodeName
@@ -1299,9 +1320,9 @@ contains
 
     if (node%node_type == NODE_TYPE_VALUE .and. &
         & allocated(node%string_value)) then
-      val%str = node%string_value
+      val = node%string_value
     else
-      val%str = ""
+      val = ""
     end if
   end subroutine getNodeValue
 
@@ -1413,7 +1434,7 @@ contains
             end block
             nullify(variableValue)
           end if
-          if (present(modifier)) modifier%str = ""
+          if (present(modifier)) modifier = ""
           if (present(child)) child => child2
           return
         end if
@@ -1428,9 +1449,9 @@ contains
     ! Extract modifier
     if (present(modifier)) then
       if (allocated(child2%attrib) .and. len(child2%attrib) > 0) then
-        modifier%str = child2%attrib
+        modifier = child2%attrib
       else
-        modifier%str = ""
+        modifier = ""
       end if
     end if
 
