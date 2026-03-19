@@ -270,7 +270,7 @@ Duplicate keys are allowed within the same block.
    Key = 200
 
 - All occurrences are preserved in the parsed tree.
-- When querying a value by name (e.g., using accessors like ``hsd_get``), the **last** occurrence is returned.
+- When querying a value by name (e.g., using ``access%get``), the **last** occurrence is returned.
 - To access all values, one must iterate through the children of the block.
 
 Grammar Summary

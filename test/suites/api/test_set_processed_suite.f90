@@ -1,6 +1,7 @@
 !> Tests for hsd_set_processed: marking nodes as processed
 module test_set_processed_suite
   use hsd
+  use hsd_api, only: hsd_set
   use fortuno_serial, only: is_equal, &
       test => serial_case_item, &
       check => serial_check, &

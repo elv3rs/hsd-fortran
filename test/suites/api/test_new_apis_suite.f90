@@ -4,6 +4,7 @@
 !> - hsd_get_array_with_unit / hsd_get_matrix_with_unit (F1)
 module test_new_apis_suite
   use hsd
+  use hsd_api, only: hsd_set
   use fortuno_serial, only: is_equal, &
       test => serial_case_item, &
       check => serial_check, &

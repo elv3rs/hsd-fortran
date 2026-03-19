@@ -17,18 +17,20 @@ A comprehensive feature showcase that demonstrates:
 - Counting children with `hsd_child_count()`
 - Getting all keys with `hsd_get_keys()`
 
-### 3. Data Access
-- Type-safe getters with `hsd_get()` for:
-  - Integers, reals (single/double precision)
+### 3. Data Access via `hsd_access_t`
+- Initialize access object: `call access%init(root)`
+- Type-safe getters with `access%get()` for:
+  - Integers, reals (double precision)
   - Logicals, complex numbers
   - Strings
   - Arrays of all types
-  - 2D matrices
-- Default value handling with `hsd_get()` + status checks
-- Attribute extraction (e.g., unit labels)
+- Matrix reading with `access%get_matrix()`
+- Default value handling with optional `default=` argument
+- Error accumulation — check all errors at the end with `access%has_errors()`
+- Attribute extraction (e.g., unit labels) via `hsd_get_attrib()`
 
 ### 4. Data Modification
-- Setting values with `hsd_set()`
+- Setting values with `access%set()`
 - Creating nested paths automatically
 
 ### 5. Tree Operations

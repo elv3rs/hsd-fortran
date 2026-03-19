@@ -1,6 +1,7 @@
 !> Unit tests for new API features: type introspection, default values, visitor pattern
 module test_api_suite
   use hsd
+  use hsd_api, only: hsd_get, hsd_set, hsd_get_or_set, hsd_get_matrix
   use build_env, only : source_dir
   use fortuno_serial, only : is_equal, test => serial_case_item, check => serial_check, &
       & suite => serial_suite_item, test_list

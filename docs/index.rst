@@ -27,27 +27,31 @@ Quick Start
    program example
      use hsd
      implicit none
-     
-     type(hsd_node_t) :: root
+
+     type(hsd_node_t), target :: root
+     type(hsd_access_t) :: access
      type(hsd_error_t), allocatable :: error
-     integer :: max_steps, stat
+     integer :: max_steps
      real(dp) :: temperature
-     
+
      ! Load HSD file
      call hsd_load_file("input.hsd", root, error)
      if (allocated(error)) then
        call error%print()
        stop 1
      end if
-     
-     ! Access values with path navigation
-     call hsd_get(root, "Driver/MaxSteps", max_steps, stat)
-     call hsd_get(root, "Hamiltonian/DFTB/Temperature", temperature, stat)
-     
+
+     ! Access values via the access object
+     call access%init(root)
+     call access%get("Driver/MaxSteps", max_steps)
+     call access%get("Hamiltonian/DFTB/Temperature", temperature)
+
      ! Modify and save
-     call hsd_set(root, "Driver/MaxSteps", 200)
+     call access%set("Driver/MaxSteps", 200)
      call hsd_dump(root, "output.hsd")
-     
+
+     if (access%has_errors()) call access%print_errors()
+
    end program example
 
 Example HSD input:

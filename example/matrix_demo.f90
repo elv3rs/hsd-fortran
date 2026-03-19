@@ -1,21 +1,22 @@
 ! HSD Library - Array and Matrix Operations Example
 !
 ! This example demonstrates how to efficiently handle arrays and matrices
-! using HSD-Fortran.
+! using the hsd_access_t interface.
 !
 program matrix_demo
-  use hsd, only: hsd_node_t, hsd_error_t, dp, HSD_STAT_OK, &
-    & hsd_load_file, hsd_get, hsd_get_matrix
+  use hsd, only: hsd_node_t, hsd_error_t, hsd_access_t, dp, &
+      & hsd_load_file
   implicit none (type, external)
 
-  type(hsd_node_t) :: root
+  type(hsd_node_t), target :: root
+  type(hsd_access_t) :: access
   type(hsd_error_t), allocatable :: error
 
   integer, allocatable :: ints(:)
   real(dp), allocatable :: vec(:)
   real(dp), allocatable :: matrix(:,:)
   real(dp) :: direct_matrix(2,2)
-  integer :: stat, nrows, ncols
+  integer :: nrows, ncols
 
   print '(A)', "--- HSD Matrix Operations Demo ---"
   print *
@@ -23,46 +24,39 @@ program matrix_demo
   ! Load Data
   call hsd_load_file("matrix_input.hsd", root, error)
   if (allocated(error)) then
-     call error%print()
-     stop 1
+    call error%print()
+    stop 1
   end if
+  call access%init(root)
 
   ! 1. Allocatable Arrays
   print '(A)', "1. Reading allocatable arrays"
 
-  ! Read unknown length array
-  call hsd_get(root, "Integers", ints)
+  call access%get("Integers", ints)
   if (allocated(ints)) then
-     print '(A,I0,A)', "   Integers (size=", size(ints), "):"
-     print *, ints
+    print '(A,I0,A)', "   Integers (size=", size(ints), "):"
+    print *, ints
   end if
 
-  call hsd_get(root, "Reals", vec)
-    if (allocated(vec)) then
-     print '(A,I0,A)', "   Reals (size=", size(vec), "):"
-     print *, vec
+  call access%get("Reals", vec)
+  if (allocated(vec)) then
+    print '(A,I0,A)', "   Reals (size=", size(vec), "):"
+    print *, vec
   end if
   print *
 
   ! 2. Reading as Matrix
   print '(A)', "2. Reading matrices"
 
-  ! hsd_get_matrix allows specifying shape
-  ! It reads as flat array then reshapes, or validates dimensions?
-  ! HSD stores data as flat arrays. hsd_get_matrix is a helper.
-
-  ! Dynamic shape - usually we read as array and reshape if we know dims,
-  ! or hsd_get_matrix handles it if we provide allocatable rank-2 array?
-  ! Let's check hsd_get_matrix signature/capability.
-  ! The API exposes hsd_get_matrix for fixed size arrays usually or specific logic.
-
-  call hsd_get_matrix(root, "TransformationMatrix", matrix, nrows, ncols, stat)
-  if (stat == HSD_STAT_OK) then
-     print '(A,I0,A,I0,A)', "   TransformationMatrix (", nrows, "x", ncols, "):"
-     print '(2F10.2)', matrix(1,1:ncols)
-     print '(2F10.2)', matrix(2,1:ncols)
+  call access%get_matrix("TransformationMatrix", matrix, nrows, ncols)
+  if (.not. access%has_errors()) then
+    print '(A,I0,A,I0,A)', &
+        & "   TransformationMatrix (", nrows, "x", ncols, "):"
+    print '(2F10.2)', matrix(1,1:ncols)
+    print '(2F10.2)', matrix(2,1:ncols)
   else
-     print '(A)', "   Failed to read matrix"
+    print '(A)', "   Failed to read matrix"
+    call access%clear_errors()
   end if
   print *
 
@@ -70,16 +64,21 @@ program matrix_demo
   print '(A)', "3. Reading into fixed-size arrays"
   direct_matrix = 0.0_dp
 
-  ! We reuse the matrix read above since hsd_get_matrix requires allocatable
   if (allocated(matrix)) then
-     if (size(matrix, 1) == 2 .and. size(matrix, 2) == 2) then
-        direct_matrix = matrix
-        print '(A)', "   Direct Matrix Read (Should match above):"
-        print '(2F10.2)', direct_matrix(1,:)
-        print '(2F10.2)', direct_matrix(2,:)
-     else
-        print '(A)', "   Matrix dimensions mismatch expected 2x2"
-     end if
+    if (size(matrix, 1) == 2 .and. size(matrix, 2) == 2) then
+      direct_matrix = matrix
+      print '(A)', "   Direct Matrix Read (Should match above):"
+      print '(2F10.2)', direct_matrix(1,:)
+      print '(2F10.2)', direct_matrix(2,:)
+    else
+      print '(A)', "   Matrix dimensions mismatch expected 2x2"
+    end if
+  end if
+
+  ! Check for any accumulated errors
+  if (access%has_errors()) then
+    print '(A)', "Errors encountered:"
+    call access%print_errors()
   end if
 
   call root%destroy()

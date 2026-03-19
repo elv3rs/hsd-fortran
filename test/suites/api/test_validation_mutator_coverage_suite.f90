@@ -1,6 +1,7 @@
 !> Validation and mutator coverage tests
 module test_validation_mutator_coverage_suite
   use hsd
+  use hsd_api, only: hsd_get, hsd_set
   use build_env, only: build_dir
   use fortuno_serial, only: test => serial_case_item, check => serial_check, &
       & suite => serial_suite_item, test_list

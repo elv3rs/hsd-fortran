@@ -2,33 +2,36 @@
 !
 ! This example demonstrates:
 ! - Loading HSD from file
+! - The hsd_access_t object for reading/writing values
+! - Error accumulation (batch error checking)
 ! - Path-based navigation
 ! - Type introspection
-! - Default values via hsd_get + stat handling
+! - Default values
 ! - Attribute extraction (units)
 ! - Array and matrix handling
 ! - Tree operations (merge, clone)
 ! - Validation helpers
 ! - Writing modified data
 program simple_read
-  use hsd, only : &
-  & hsd_node_t, hsd_error_t, dp, HSD_STAT_OK, HSD_STAT_NOT_FOUND, &
-  & hsd_load_file, hsd_load_string, hsd_dump, &
-  & hsd_get, hsd_get_matrix, hsd_get_attrib, hsd_get_keys, &
-  & hsd_set, &
-  & hsd_has_child, hsd_has_attrib, hsd_is_table, hsd_is_value, &
-  & hsd_child_count, &
-  & hsd_require, hsd_validate_range, hsd_validate_one_of, &
-  & hsd_merge, hsd_clone
+  use hsd, only: &
+      & hsd_node_t, hsd_error_t, hsd_access_t, dp, &
+      & HSD_STAT_OK, HSD_STAT_NOT_FOUND, &
+      & hsd_load_file, hsd_load_string, hsd_dump, &
+      & hsd_get_attrib, hsd_get_keys, &
+      & hsd_has_child, hsd_has_attrib, hsd_is_table, hsd_is_value, &
+      & hsd_child_count, &
+      & hsd_require, hsd_validate_range, hsd_validate_one_of, &
+      & hsd_merge, hsd_clone
   implicit none (type, external)
 
-  type(hsd_node_t) :: root, modified_root, merged_root
+  type(hsd_node_t), target :: root
+  type(hsd_node_t), target :: modified_root, merged_root
+  type(hsd_access_t) :: access, mod_access
   type(hsd_error_t), allocatable :: error
   integer :: stat, max_steps, random_seed, nrows, ncols
   real(dp) :: temperature, tolerance, max_force
   real(dp), allocatable :: kpoints(:,:), coords(:,:)
-  integer, allocatable :: atoms(:)
-  logical :: scc_enabled, detailed_xml
+  logical :: scc_enabled
   character(len=:), allocatable :: attrib, output_prefix, method
   character(len=:), allocatable :: keys(:), convergence_opts(:)
 
@@ -38,7 +41,7 @@ program simple_read
   print *
 
   ! ===========================================================================
-  ! 1. Load HSD from file
+  ! 1. Load HSD from file and initialize access object
   ! ===========================================================================
   print '(A)', "1. Loading from file 'sample_input.hsd'..."
   call hsd_load_file("sample_input.hsd", root, error)
@@ -48,14 +51,16 @@ program simple_read
     call error%print()
     stop 1
   end if
+  call access%init(root)
   print '(A)', "   ✓ Parsed successfully!"
   print *
 
   ! ===========================================================================
-  ! 2. Type introspection and navigation
+  ! 2. Type introspection and navigation (free functions)
   ! ===========================================================================
   print '(A)', "2. Exploring structure..."
-  print '(A,I0,A)', "   Root has ", hsd_child_count(root, ""), " top-level sections"
+  print '(A,I0,A)', "   Root has ", &
+      & hsd_child_count(root, ""), " top-level sections"
 
   call hsd_get_keys(root, "", keys)
   print '(A)', "   Sections: " // keys(1)
@@ -74,51 +79,54 @@ program simple_read
   print *
 
   ! ===========================================================================
-  ! 3. Extracting values with hsd_get
+  ! 3. Reading values with access%get (no per-call error checking!)
   ! ===========================================================================
   print '(A)', "3. Reading configuration values..."
 
-  call hsd_get(root, "Driver/MaxSteps", max_steps, stat)
+  call access%get("Driver/MaxSteps", max_steps)
   print '(A,I0)', "   Driver/MaxSteps = ", max_steps
 
-  call hsd_get(root, "Hamiltonian/DFTB/SCC", scc_enabled, stat)
+  call access%get("Hamiltonian/DFTB/SCC", scc_enabled)
   print '(A,L1)', "   Hamiltonian/DFTB/SCC = ", scc_enabled
 
-  call hsd_get(root, "Hamiltonian/DFTB/SCCTolerance", tolerance, stat)
+  call access%get("Hamiltonian/DFTB/SCCTolerance", tolerance)
   print '(A,ES10.3)', "   Hamiltonian/DFTB/SCCTolerance = ", tolerance
   print *
 
   ! ===========================================================================
-  ! 4. Using hsd_get with defaults
+  ! 4. Using access%get with defaults (writes defaults back to tree)
   ! ===========================================================================
-  print '(A)', "4. Reading values with defaults (hsd_get + stat)..."
+  print '(A)', "4. Reading values with defaults..."
 
-  call hsd_get(root, "Options/RandomSeed", random_seed, stat)
-  if (stat == HSD_STAT_NOT_FOUND) random_seed = 12345
+  call access%get("Options/RandomSeed", random_seed, default=12345)
   print '(A,I0)', "   Options/RandomSeed = ", random_seed
 
-  call hsd_get(root, "Options/MissingOption", random_seed, stat)
-  if (stat == HSD_STAT_NOT_FOUND) random_seed = 99999
-  print '(A,I0,A)', "   Options/MissingOption = ", random_seed, " (default)"
+  call access%get("Options/MissingOption", random_seed, default=99999)
+  print '(A,I0,A)', "   Options/MissingOption = ", random_seed, &
+      & " (default)"
 
-  call hsd_get(root, "Driver/OutputPrefix", output_prefix, stat)
-  if (stat == HSD_STAT_NOT_FOUND) output_prefix = "output"
+  call access%get("Driver/OutputPrefix", output_prefix, &
+      & default="output")
   print '(A,A,A)', '   Driver/OutputPrefix = "', output_prefix, '"'
   print *
 
   ! ===========================================================================
-  ! 5. Attribute extraction (units)
+  ! 5. Attribute extraction (units) — free functions
   ! ===========================================================================
   print '(A)', "5. Extracting attributes (units)..."
 
-  call hsd_get_attrib(root, "Hamiltonian/DFTB/Filling/Fermi/Temperature", attrib, stat)
-  call hsd_get(root, "Hamiltonian/DFTB/Filling/Fermi/Temperature", temperature, stat)
-  print '(A,F6.1,A,A,A)', "   Temperature = ", temperature, " [", attrib, "]"
+  call hsd_get_attrib(root, &
+      & "Hamiltonian/DFTB/Filling/Fermi/Temperature", attrib, stat)
+  call access%get( &
+      & "Hamiltonian/DFTB/Filling/Fermi/Temperature", temperature)
+  print '(A,F6.1,A,A,A)', "   Temperature = ", temperature, &
+      & " [", attrib, "]"
 
   if (hsd_has_attrib(root, "Driver/MaxForceComponent")) then
     call hsd_get_attrib(root, "Driver/MaxForceComponent", attrib, stat)
-    call hsd_get(root, "Driver/MaxForceComponent", max_force, stat)
-    print '(A,ES9.2,A,A,A)', "   MaxForceComponent = ", max_force, " [", attrib, "]"
+    call access%get("Driver/MaxForceComponent", max_force)
+    print '(A,ES9.2,A,A,A)', "   MaxForceComponent = ", max_force, &
+        & " [", attrib, "]"
   end if
   print *
 
@@ -127,12 +135,13 @@ program simple_read
   ! ===========================================================================
   print '(A)', "6. Working with arrays..."
 
-  ! String array
-  call hsd_get(root, "Options/ConvergenceOptions", convergence_opts, stat)
-  if (stat == HSD_STAT_OK) then
-    print '(A,I0,A)', "   ConvergenceOptions has ", size(convergence_opts), " elements:"
+  call access%get("Options/ConvergenceOptions", convergence_opts)
+  if (.not. access%has_errors() .and. allocated(convergence_opts)) then
+    print '(A,I0,A)', "   ConvergenceOptions has ", &
+        & size(convergence_opts), " elements:"
     do stat = 1, size(convergence_opts)
-      print '(A,I0,A,A,A)', "     [", stat, "] = '", convergence_opts(stat), "'"
+      print '(A,I0,A,A,A)', "     [", stat, "] = '", &
+          & convergence_opts(stat), "'"
     end do
   end if
   print *
@@ -142,39 +151,49 @@ program simple_read
   ! ===========================================================================
   print '(A)', "7. Reading matrix data..."
 
-  call hsd_get_matrix(root, "Hamiltonian/DFTB/KPointsAndWeights", kpoints, nrows, ncols, stat)
-  if (stat == HSD_STAT_OK) then
-    print '(A,I0,A,I0,A)', "   KPointsAndWeights: ", nrows, " x ", ncols, " matrix"
+  call access%get_matrix("Hamiltonian/DFTB/KPointsAndWeights", &
+      & kpoints, nrows, ncols)
+  if (.not. access%has_errors()) then
+    print '(A,I0,A,I0,A)', "   KPointsAndWeights: ", &
+        & nrows, " x ", ncols, " matrix"
     print '(A)', "   First row: "
     print '(A,4F8.3)', "   ", kpoints(1,:)
   end if
 
-  call hsd_get_matrix(root, &
-    "Hamiltonian/DFTB/ElectricField/PointCharges/CoordsAndCharges", &
-    coords, nrows, ncols, stat)
-  if (stat == HSD_STAT_OK) then
-    print '(A,I0,A,I0,A)', "   CoordsAndCharges: ", nrows, " x ", ncols, " matrix"
+  call access%get_matrix( &
+      & "Hamiltonian/DFTB/ElectricField/PointCharges/CoordsAndCharges", &
+      & coords, nrows, ncols)
+  if (.not. access%has_errors()) then
+    print '(A,I0,A,I0,A)', "   CoordsAndCharges: ", &
+        & nrows, " x ", ncols, " matrix"
     print '(A)', "   Showing point charges:"
     do stat = 1, nrows
-      print '(A,3F7.2,F7.2)', "     ", coords(stat, 1:3), coords(stat, 4)
+      print '(A,3F7.2,F7.2)', "     ", &
+          & coords(stat, 1:3), coords(stat, 4)
     end do
   end if
   print *
+
+  ! Check for any accumulated errors
+  if (access%has_errors()) then
+    print '(A)', "WARNING: Some reads had errors:"
+    call access%print_errors()
+    call access%clear_errors()
+  end if
 
   ! ===========================================================================
   ! 8. Validation helpers
   ! ===========================================================================
   print '(A)', "8. Validating configuration..."
 
-  ! Check required fields
-  call hsd_require(root, "Hamiltonian/DFTB/SCC", error, context="Validation")
+  call hsd_require(root, "Hamiltonian/DFTB/SCC", error, &
+      & context="Validation")
   if (.not. allocated(error)) then
     print '(A)', "   ✓ Required field 'Hamiltonian/DFTB/SCC' exists"
   end if
 
-  ! Validate range
   call hsd_validate_range(root, "Hamiltonian/DFTB/SCCTolerance", &
-    1.0e-10_dp, 1.0e-2_dp, error, context="Tolerance check")
+      & 1.0e-10_dp, 1.0e-2_dp, error, context="Tolerance check")
   if (.not. allocated(error)) then
     print '(A)', "   ✓ SCCTolerance is within valid range"
   else
@@ -183,31 +202,33 @@ program simple_read
     deallocate(error)
   end if
 
-  ! Validate enum
-  call hsd_get(root, "Hamiltonian/DFTB/MaxAngularMomentum/C", method, stat)
-  if (stat == HSD_STAT_NOT_FOUND) method = "unknown"
-  call hsd_validate_one_of(root, "Hamiltonian/DFTB/MaxAngularMomentum/C", &
-    [character(len=3) :: "s", "p", "d", "f"], error)
+  call access%get("Hamiltonian/DFTB/MaxAngularMomentum/C", method, &
+      & default="unknown")
+  call hsd_validate_one_of(root, &
+      & "Hamiltonian/DFTB/MaxAngularMomentum/C", &
+      & [character(len=3) :: "s", "p", "d", "f"], error)
   if (.not. allocated(error)) then
-    print '(A,A,A)', "   ✓ MaxAngularMomentum/C = '", method, "' is valid"
+    print '(A,A,A)', "   ✓ MaxAngularMomentum/C = '", method, &
+        & "' is valid"
   end if
   print *
 
   ! ===========================================================================
-  ! 9. Tree operations - Modify and write
+  ! 9. Modify via access object and write
   ! ===========================================================================
   print '(A)', "9. Modifying configuration..."
 
-  ! Clone the tree
   call hsd_clone(root, modified_root)
+  call mod_access%init(modified_root)
 
-  ! Set new values
-  call hsd_set(modified_root, "Driver/MaxSteps", 500)
-  call hsd_set(modified_root, "NewSection/EnableFeature", .true.)
-  call hsd_set(modified_root, "NewSection/Coefficients", [1.0_dp, 2.5_dp, 3.7_dp])
+  call mod_access%set("Driver/MaxSteps", 500)
+  call mod_access%set("NewSection/EnableFeature", .true.)
+  call mod_access%set("NewSection/Coefficients", &
+      & [1.0_dp, 2.5_dp, 3.7_dp])
 
   print '(A)', "   ✓ Cloned and modified tree"
-  print '(A)', "   Added NewSection with EnableFeature and Coefficients array"
+  print '(A)', &
+      & "   Added NewSection with EnableFeature and Coefficients array"
   print *
 
   ! ===========================================================================
@@ -215,13 +236,13 @@ program simple_read
   ! ===========================================================================
   print '(A)', "10. Merging configurations..."
 
-  ! Create an overlay config
   block
     type(hsd_node_t) :: overlay
+    type(hsd_access_t) :: merge_access
     character(len=:), allocatable :: overlay_text
 
     overlay_text = "Driver { MaxSteps = 1000 }" // char(10) // &
-                   "Analysis { ComputeBandStructure = Yes }"
+        & "Analysis { ComputeBandStructure = Yes }"
 
     call hsd_load_string(overlay_text, overlay, error)
     if (.not. allocated(error)) then
@@ -229,11 +250,14 @@ program simple_read
       call hsd_merge(merged_root, overlay)
       print '(A)', "   ✓ Merged overlay configuration"
 
-      call hsd_get(merged_root, "Driver/MaxSteps", max_steps)
+      call merge_access%init(merged_root)
+      call merge_access%get("Driver/MaxSteps", max_steps)
       print '(A,I0)', "   Merged Driver/MaxSteps = ", max_steps
 
-      if (hsd_has_child(merged_root, "Analysis/ComputeBandStructure")) then
-        print '(A)', "   ✓ New Analysis/ComputeBandStructure field added"
+      if (hsd_has_child(merged_root, &
+          & "Analysis/ComputeBandStructure")) then
+        print '(A)', &
+            & "   ✓ New Analysis/ComputeBandStructure field added"
       end if
 
       call overlay%destroy()
@@ -245,7 +269,8 @@ program simple_read
   ! ===========================================================================
   ! 11. Write modified configuration
   ! ===========================================================================
-  print '(A)', "11. Writing modified configuration to 'modified_output.hsd'..."
+  print '(A)', &
+      & "11. Writing modified configuration to 'modified_output.hsd'..."
 
   call hsd_dump(modified_root, "modified_output.hsd", error)
   if (.not. allocated(error)) then

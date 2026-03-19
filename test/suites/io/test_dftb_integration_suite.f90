@@ -11,6 +11,7 @@
 !>   - Round-trip parse/dump/re-parse fidelity
 module test_dftb_integration_suite
   use hsd
+  use hsd_api, only: hsd_get, hsd_set
   use fortuno_serial, only : is_equal, test => serial_case_item, &
       & check => serial_check, suite => serial_suite_item, test_list
   use build_env, only : source_dir, build_dir

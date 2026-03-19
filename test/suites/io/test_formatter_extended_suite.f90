@@ -1,6 +1,7 @@
 !> Additional formatter and output tests
 module test_formatter_extended_suite
   use hsd
+  use hsd_api, only: hsd_get
   use hsd_constants, only : CHAR_NEWLINE
   use hsd_utils, only : string_buffer_t
   use build_env, only : build_dir, source_dir

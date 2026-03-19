@@ -2,6 +2,7 @@
 !> to maximize coverage of formatter, parser, and types modules
 module test_file_ops_suite
   use hsd
+  use hsd_api, only: hsd_get, hsd_get_matrix
   use hsd_constants, only : CHAR_NEWLINE
   use hsd_error, only : error_message
   use build_env, only : build_dir, source_dir

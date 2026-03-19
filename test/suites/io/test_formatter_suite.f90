@@ -1,6 +1,7 @@
 !> Formatter unit tests using Fortuno framework
 module test_formatter_suite
   use hsd
+  use hsd_api, only: hsd_get
   use build_env, only : build_dir
   use fortuno_serial, only : is_equal, test => serial_case_item, check => serial_check, &
       & suite => serial_suite_item, test_list

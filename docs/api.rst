@@ -62,6 +62,16 @@ Iterator for traversing table children.
 
    type(hsd_iterator_t) :: iter
 
+``hsd_access_t``
+^^^^^^^^^^^^^^^^
+
+High-level access object for reading and writing values in the tree.
+Accumulates errors internally so they can be checked after a batch of operations.
+
+.. code-block:: fortran
+
+   type(hsd_access_t) :: access
+
 
 
 
@@ -170,28 +180,55 @@ Serialize a tree to a string.
 Accessor Procedures
 -------------------
 
-hsd_get
-~~~~~~~
+hsd_access_t (Access Object)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The primary API for reading and writing values is the ``hsd_access_t`` object.
+It wraps a root node and accumulates errors internally.
+
+.. code-block:: fortran
+
+   type :: hsd_access_t
+   contains
+     procedure :: init          ! Initialize with a root node
+     procedure :: get           ! Get a value at a path (generic)
+     procedure :: get_matrix    ! Get a 2D array from multi-line data
+     procedure :: set           ! Set a value at a path (generic)
+     procedure :: has_errors    ! Check if any errors accumulated
+     procedure :: print_errors  ! Print all accumulated errors
+   end type
+
+**Initialization:**
+
+.. code-block:: fortran
+
+   subroutine init(self, root, on_missing, mark_processed)
+     type(hsd_node_t), intent(in), target :: root
+     integer, intent(in), optional :: on_missing       ! HSD_ON_MISSING_SET (default) or HSD_ON_MISSING_RETURN
+     logical, intent(in), optional :: mark_processed   ! default .true.
+   end subroutine
+
+- ``on_missing=HSD_ON_MISSING_SET`` (default): when a key is missing and a default is provided,
+  the default value is written back into the tree.
+- ``on_missing=HSD_ON_MISSING_RETURN``: the default is returned to the caller without
+  modifying the tree.
+- ``mark_processed``: when ``.true.`` (default), accessed nodes are marked as processed.
+
+**access%get:**
 
 Get a value at the specified path. Supports multiple output types via generic interface.
 
 .. code-block:: fortran
 
    ! Scalar types
-   subroutine hsd_get(root, path, value, stat)
-     type(hsd_node_t), intent(in) :: root
-     character(len=*), intent(in) :: path
-     <type>, intent(out) :: value  ! integer, real(dp), logical, character
-     integer, intent(out), optional :: stat
-   end subroutine
+   call access%get(path, value)
+   call access%get(path, value, default=fallback)
 
    ! Array types
-   subroutine hsd_get(root, path, array, stat)
-     type(hsd_node_t), intent(in) :: root
-     character(len=*), intent(in) :: path
-     <type>, allocatable, intent(out) :: array(:)  ! integer, real(dp), logical, character
-     integer, intent(out), optional :: stat
-   end subroutine
+   call access%get(path, array)
+   call access%get(path, array, default=fallback_array)
+
+Supported types: ``integer``, ``real(dp)``, ``logical``, ``character``, and allocatable arrays thereof.
 
 **Examples:**
 
@@ -202,24 +239,43 @@ Get a value at the specified path. Supports multiple output types via generic in
    character(len=:), allocatable :: name
    integer, allocatable :: values(:)
 
-   call hsd_get(root, "Settings/Count", count, stat)
-   call hsd_get(root, "Physics/Temperature", temperature, stat)
-   call hsd_get(root, "Geometry/Name", name, stat)
-   call hsd_get(root, "Data/Values", values, stat)
+   call access%get("Settings/Count", count)
+   call access%get("Physics/Temperature", temperature, default=300.0_dp)
+   call access%get("Geometry/Name", name)
+   call access%get("Data/Values", values)
 
-hsd_get_matrix
-~~~~~~~~~~~~~~
+**access%get_matrix:**
 
 Get a 2D array from multi-line data.
 
 .. code-block:: fortran
 
-   subroutine hsd_get_matrix(root, path, matrix, stat)
-     type(hsd_node_t), intent(in) :: root
-     character(len=*), intent(in) :: path
-     real(dp), allocatable, intent(out) :: matrix(:,:)
-     integer, intent(out), optional :: stat
-   end subroutine
+   call access%get_matrix(path, matrix, nrows, ncols)
+
+**access%set:**
+
+Set a value at the specified path (creates intermediate tables as needed).
+
+.. code-block:: fortran
+
+   call access%set(path, value)
+
+Supported types: ``integer``, ``real(dp)``, ``logical``, ``character``, and arrays thereof.
+
+**Error handling:**
+
+.. code-block:: fortran
+
+   if (access%has_errors()) then
+     call access%print_errors()
+   end if
+
+Legacy Free Functions (hsd_api)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The free-function accessors ``hsd_get``, ``hsd_set``, ``hsd_get_or_set``, and
+``hsd_get_matrix`` are still available via ``use hsd_api`` but are no longer
+exported from ``use hsd``. New code should use ``hsd_access_t`` instead.
 
 hsd_get_inline_text
 ~~~~~~~~~~~~~~~~~~~
@@ -472,18 +528,8 @@ provided).
 Mutation Procedures
 -------------------
 
-hsd_set
-~~~~~~~
-
-Set a value at the specified path (creates intermediate tables as needed).
-
-.. code-block:: fortran
-
-   subroutine hsd_set(root, path, value)
-     type(hsd_node_t), intent(inout) :: root
-     character(len=*), intent(in) :: path
-     <type>, intent(in) :: value  ! integer, real(dp), logical, character, arrays
-   end subroutine
+Values are typically modified via ``access%set`` (see `hsd_access_t`_ above).
+The following tree-level mutation procedures remain public:
 
 hsd_remove_child
 ~~~~~~~~~~~~~~~~

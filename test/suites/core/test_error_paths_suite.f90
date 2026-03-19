@@ -2,6 +2,7 @@
 !> Focuses on: NOT_FOUND errors, TYPE_ERROR errors, empty allocations
 module test_error_paths_suite
   use hsd
+  use hsd_api, only: hsd_get, hsd_get_matrix
   use fortuno_serial, only: is_equal, test => serial_case_item, check => serial_check, &
       & suite => serial_suite_item, test_list
   implicit none (type, external)

@@ -185,8 +185,9 @@ This mechanism allows the host application (e.g. DFTB+) to detect **misspelled o
 unrecognized keywords** in the input:
 
 1. During parsing, all nodes start with ``processed = .false.``.
-2. When the application reads a value via ``hsd_get``, ``hsd_get_or_set``, or
-   ``hsd_get_child``, the accessed node is marked ``processed = .true.``.
+2. When the application reads a value via ``access%get``, ``access%set``, or
+   ``hsd_get_child``, the accessed node is marked ``processed = .true.``
+   (when ``mark_processed=.true.``, which is the default).
 3. After the application has finished processing input, it calls
    ``hsd_warn_unprocessed(root)`` to emit warnings for any children that were
    never accessed — these are likely typos or unsupported keywords.

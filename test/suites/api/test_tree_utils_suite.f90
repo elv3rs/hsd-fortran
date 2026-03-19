@@ -4,6 +4,7 @@
 !> - hsd_get_name
 module test_tree_utils_suite
   use hsd
+  use hsd_api, only: hsd_set
   use fortuno_serial, only: is_equal, &
       test => serial_case_item, &
       check => serial_check, &

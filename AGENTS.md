@@ -1,7 +1,5 @@
 # AGENTS.md - HSD-Fortran Development Guide
 
-## Main directive
-
 The project has reached **v1.0.0 release** status.  All specification phases
 (parser, accessors, mutators, unit-aware accessors, documentation) are complete.
 Refactoring for simplicity is also complete (unified API, string-only storage,
@@ -20,7 +18,7 @@ HSD-Fortran is a Human-friendly Structured Data parser for Fortran, designed as 
 ## Quick Reference
 
 > **Intel ifx support:** The project is tested with both `gfortran` and Intel `ifx`.
-> Use `FC=ifx cmake ...` to build with ifx. All 504 tests pass with both compilers.
+> Use `FC=ifx cmake ...` to build with ifx. All 521 tests pass with both compilers.
 
 ```bash
 # Build (gfortran, default)
@@ -79,10 +77,9 @@ hsd-fortran/
 │   ├── hsd_table_ops.f90      # Submodule: table & iterator operations
 │   ├── hsd_value_ops.f90      # Submodule: value ops & parse helpers
 │   ├── api/                    # High-level API modules
-│   │   ├── hsd_api.f90         # Unified API (accessors, mutators, query)
+│   │   ├── hsd_api.f90         # Internal API (accessors, mutators, query)
+│   │   ├── hsd_access.f90      # Primary user-facing API (hsd_access_t)
 │   │   └── hsd_validation.f90  # hsd_require, hsd_validate_range
-│   ├── compat/                 # DFTB+ compatibility layer
-│   │   └── hsd_compat.f90      # Legacy API wrappers
 │   ├── core/                   # Core infrastructure
 │   │   ├── hsd_constants.f90   # dp precision constant (iso_fortran_env)
 │   │   ├── hsd_error.f90       # Error types, status codes
@@ -100,7 +97,6 @@ hsd-fortran/
 │   │   ├── api/                # API tests
 │   │   ├── core/               # Core module tests
 │   │   ├── io/                 # Lexer, parser, formatter tests
-│   │   ├── compat/             # Compatibility layer tests
 │   │   └── coverage/           # Additional coverage tests
 │   └── inputs/                 # Test data files
 ├── example/                    # Usage examples
@@ -124,10 +120,9 @@ Tests are organized into categories under `test/suites/`:
 
 | Directory | Contents |
 |-----------|----------|
-| `api/` | High-level API tests (accessors, validation) |
+| `api/` | High-level API tests (access object, accessors, validation) |
 | `core/` | Array parsing, error paths, edge cases |
 | `io/` | Lexer, parser, formatter tests |
-| `compat/` | DFTB+ compatibility layer tests |
 | `coverage/` | Additional tests for code coverage |
 
 ### Writing Tests
@@ -197,7 +192,8 @@ This ensures tests work regardless of where CTest runs from.
 
 | Module | Purpose |
 |--------|---------|
-| `hsd_api` | Unified API (accessors, mutators, query) |
+| `hsd_access` | Primary user-facing API — `hsd_access_t` OOP type with error accumulation, configurable default handling (`on_missing`), and processed-flag control |
+| `hsd_api` | Internal API (free-function accessors, mutators, query); used by `hsd_access` and directly via `use hsd_api` when needed |
 | `hsd_validation` | Value validation helpers |
 
 ### Compatibility Layer (`src/compat/`)
@@ -235,11 +231,17 @@ These functions were upstreamed from DFTB+ and are part of the public API:
 
 ## Design Notes
 
+- **Primary API**: `hsd_access_t` is the main user-facing API. It wraps an HSD tree and provides `get`/`set`/`get_matrix` methods with error accumulation and configurable behavior.
+  - `on_missing=HSD_ON_MISSING_SET`: Writes default values to tree (for generating processed output like dftb_pin.hsd)
+  - `on_missing=HSD_ON_MISSING_RETURN`: Returns default values without modifying tree
+  - `mark_processed`: Controls whether accessed nodes get their `processed` flag set
+  - Errors accumulate in an internal stack; check with `has_errors()`, print with `print_errors()`
+- **Internal API**: Free functions (`hsd_get`, `hsd_set`, etc.) are available via `use hsd_api` directly but not exported from the public `use hsd` module
 - **Booleans**: Reads `Yes/No`, `On/Off`, `1/0`, optionally `True/False`; writes `Yes/No`
 - **Includes**: `<<< "file"` (text), `<<+ "file.hsd"` (parsed); cycle detection enabled
 - **Formatting**: Dumps use consistent 2-space indent and `{}` block syntax
 - **Child Lookup**: Linear search over children array (simple and sufficient for config files)
-- **Thread Safety**: **Thread-safe for read-only access**. Value nodes no longer use internal caching, so getters do not mutate the tree. Modification requires external synchronization.
+- **Thread Safety**: **Thread-safe for read-only access** when `mark_processed=.false.`. Value nodes no longer use internal caching, so getters do not mutate the tree. Modification requires external synchronization.
 - **Duplicate Keys**: Are preserved in the tree; `hsd_get` returns the **last** occurrence (override behavior); iteration sees all
 - **Status Parameters**: Optional `stat` parameters use `intent(out)` and must be set on ALL code paths (see `docs/error_handling.md`)
 

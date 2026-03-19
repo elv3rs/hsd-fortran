@@ -16,7 +16,7 @@ The most common operation is loading an HSD file into a tree structure:
    use hsd
    implicit none
 
-   type(hsd_node_t) :: root
+   type(hsd_node_t), target :: root
    type(hsd_error_t), allocatable :: error
 
    ! Load from file
@@ -39,49 +39,54 @@ You can also parse HSD from a string:
 Accessing Values
 ~~~~~~~~~~~~~~~~
 
-Use ``hsd_get`` to retrieve values from the tree using path notation:
+Use the ``hsd_access_t`` object to retrieve values from the tree using path notation.
+Errors are accumulated internally and can be checked after all accesses:
 
 .. code-block:: fortran
 
-   integer :: max_steps, stat
+   type(hsd_node_t), target :: root
+   type(hsd_access_t) :: access
+   integer :: max_steps
    real(dp) :: temperature
    logical :: scc_enabled
    character(len=:), allocatable :: method
 
-   ! Access nested values with "/" separator
-   call hsd_get(root, "Driver/MaxSteps", max_steps, stat)
-   call hsd_get(root, "Hamiltonian/DFTB/Temperature", temperature, stat)
-   call hsd_get(root, "Hamiltonian/DFTB/SCC", scc_enabled, stat)
-   call hsd_get(root, "Hamiltonian/Method", method, stat)
+   call hsd_load_file("config.hsd", root, error)
+   call access%init(root)
 
-   ! Check status
-   if (stat /= HSD_STAT_OK) then
-     print *, "Value not found or type error"
+   ! Access nested values with "/" separator
+   call access%get("Driver/MaxSteps", max_steps)
+   call access%get("Hamiltonian/DFTB/Temperature", temperature)
+   call access%get("Hamiltonian/DFTB/SCC", scc_enabled)
+   call access%get("Hamiltonian/Method", method)
+
+   ! Check for accumulated errors
+   if (access%has_errors()) then
+     call access%print_errors()
    end if
 
 Default Values
 ~~~~~~~~~~~~~~
 
-Use ``hsd_get`` with status checks when you want a default value if the key is missing:
+Pass a ``default`` argument to ``access%get`` to provide a fallback when the key is
+missing. By default (``on_missing=HSD_ON_MISSING_SET``), the default value is also
+written back into the tree:
 
 .. code-block:: fortran
 
    integer :: timeout, seed
    real(dp) :: tolerance
 
-   call hsd_get(root, "Driver/Timeout", timeout, stat=stat)
-   if (stat == HSD_STAT_NOT_FOUND) timeout = 3600
+   call access%get("Driver/Timeout", timeout, default=3600)
+   call access%get("Options/RandomSeed", seed, default=12345)
+   call access%get("Tolerance", tolerance, default=1.0e-6_dp)
 
-   call hsd_get(root, "Options/RandomSeed", seed, stat=stat)
-   if (stat == HSD_STAT_NOT_FOUND) seed = 12345
+To return defaults without modifying the tree, initialize with
+``on_missing=HSD_ON_MISSING_RETURN``:
 
-   call hsd_get(root, "Tolerance", tolerance, stat=stat)
-   if (stat == HSD_STAT_NOT_FOUND) tolerance = 1.0e-6_dp
+.. code-block:: fortran
 
-   ! stat will be HSD_STAT_NOT_FOUND if default was used
-   if (stat == HSD_STAT_NOT_FOUND) then
-     print *, "Using default value"
-   end if
+   call access%init(root, on_missing=HSD_ON_MISSING_RETURN)
 
 Working with Arrays
 -------------------
@@ -103,9 +108,9 @@ Reading arrays in Fortran:
    real(dp), allocatable :: real_arr(:)
    character(len=:), allocatable :: str_arr(:)
 
-   call hsd_get(root, "Values", int_arr, stat)
-   call hsd_get(root, "Coords", real_arr, stat)
-   call hsd_get(root, "Elements", str_arr, stat)
+   call access%get("Values", int_arr)
+   call access%get("Coords", real_arr)
+   call access%get("Elements", str_arr)
 
 Working with Matrices
 ~~~~~~~~~~~~~~~~~~~~~
@@ -120,14 +125,14 @@ Multi-line data in HSD represents matrices:
      0 0 4
    }
 
-Use ``hsd_get_matrix`` to read 2D arrays:
+Use ``access%get_matrix`` to read 2D arrays:
 
 .. code-block:: fortran
 
    real(dp), allocatable :: kpoints(:,:)
-   integer :: stat
+   integer :: nrows, ncols
 
-   call hsd_get_matrix(root, "KPoints", kpoints, stat)
+   call access%get_matrix("KPoints", kpoints, nrows, ncols)
    ! kpoints is now a 3x3 array
 
 Type Introspection
@@ -197,18 +202,18 @@ Access attributes in Fortran:
 Modifying Trees
 ---------------
 
-Use ``hsd_set`` to modify values:
+Use ``access%set`` to modify values:
 
 .. code-block:: fortran
 
    ! Set scalar values
-   call hsd_set(root, "Driver/MaxSteps", 200)
-   call hsd_set(root, "Hamiltonian/DFTB/SCC", .true.)
-   call hsd_set(root, "Name", "my_calculation")
+   call access%set("Driver/MaxSteps", 200)
+   call access%set("Hamiltonian/DFTB/SCC", .true.)
+   call access%set("Name", "my_calculation")
 
    ! Set arrays
    integer :: values(5) = [1, 2, 3, 4, 5]
-   call hsd_set(root, "NewValues", values)
+   call access%set("NewValues", values)
 
 Remove children:
 
@@ -285,7 +290,7 @@ To process all children of a table, including duplicate keys, use the ``hsd_iter
      end if
    end do
 
-This is particularly useful when handling duplicate keys, as ``hsd_get`` only returns the last occurrence.
+This is particularly useful when handling duplicate keys, as ``access%get`` only returns the last occurrence.
 
 Validation Helpers
 ~~~~~~~~~~~~~~~~~~
@@ -339,19 +344,23 @@ Example: Complete Configuration Parser
      type(my_config), intent(out) :: config
      type(hsd_error_t), allocatable, intent(out) :: error
 
-     type(hsd_node_t) :: root
-     integer :: stat
+     type(hsd_node_t), target :: root
+     type(hsd_access_t) :: access
 
      ! Load file
      call hsd_load_file(filename, root, error)
      if (allocated(error)) return
 
-     ! Extract values
-     call hsd_get(root, "MaxIterations", config%max_iter, stat)
-     call hsd_get(root, "Tolerance", config%tolerance, stat=stat)
-     if (stat == HSD_STAT_NOT_FOUND) config%tolerance = 1.0e-6_dp
-     call hsd_get(root, "Method", config%method, stat=stat)
-     if (stat == HSD_STAT_NOT_FOUND) config%method = "default"
+     ! Extract values (defaults are written back to tree)
+     call access%init(root)
+     call access%get("MaxIterations", config%max_iter)
+     call access%get("Tolerance", config%tolerance, default=1.0e-6_dp)
+     call access%get("Method", config%method, default="default")
+
+     ! Check for accumulated errors
+     if (access%has_errors()) then
+       call access%print_errors()
+     end if
 
      ! Validate ranges (takes table + path)
      call hsd_validate_range(root, "MaxIterations", 1.0_dp, 100000.0_dp, error)

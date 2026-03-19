@@ -123,7 +123,7 @@ Creates a single **value node**:
 
    maxsteps (VALUE, string_value="200")
 
-The value is always stored as a string. When you call ``hsd_get(root, "Driver/.../MaxSteps", n, stat)``,
+The value is always stored as a string. When you call ``access%get("Driver/.../MaxSteps", n)``,
 the library parses ``"200"`` into an integer on the fly.
 
 
@@ -147,8 +147,7 @@ This is syntactic sugar. The parser creates **two nested tables**:
        └── scc (VALUE, string_value="Yes")
 
 The outer table (``hamiltonian``) has exactly one child: the inner table
-(``dftb``), which holds the block's content. This lets ``hsd_get(root,
-"Hamiltonian/DFTB/SCC", val, stat)`` navigate both levels naturally.
+(``dftb``), which holds the block's content. This lets ``access%get("Hamiltonian/DFTB/SCC", val)`` navigate both levels naturally.
 
 When serialized back to HSD, single-child tables are automatically
 compressed to the ``Tag = Type { ... }`` short form.
@@ -228,8 +227,9 @@ The content is collected into a single anonymous **value node** named ``"#text"`
 
 The ``"#text"`` name follows the legacy xmlf90 convention from DFTB+. Use
 ``hsd_get_inline_text(table, text, stat)`` to retrieve it, or access it directly
-via ``hsd_get(root, "KPointsAndWeights", matrix, stat)`` with the matrix or
-array accessors which resolve ``#text`` children transparently.
+via ``access%get("KPointsAndWeights", array)`` or
+``access%get_matrix("KPointsAndWeights", matrix, nrows, ncols)``
+which resolve ``#text`` children transparently.
 
 
 .. _arrays:
@@ -252,7 +252,7 @@ full text:
    coords  (VALUE, string_value="1.0, 2.5, 3.0")
    elements (VALUE, string_value="C H O N")
 
-The typed array is parsed on demand when you call ``hsd_get`` with an array
+The typed array is parsed on demand when you call ``access%get`` with an array
 argument.
 
 
@@ -267,7 +267,7 @@ Case-insensitive tag names
    temperature = 500   # Overwrites the previous one
 
 Both tags are stored as ``"temperature"``. Since the second occurrence comes
-later, ``hsd_get`` returns ``"500"`` (last-wins semantics). Both nodes are
+later, ``access%get`` returns ``"500"`` (last-wins semantics). Both nodes are
 preserved in the tree and can be seen when iterating children.
 
 
@@ -289,7 +289,7 @@ Both values are kept in the tree as separate children:
    ├── option (VALUE, string_value="alpha")
    └── option (VALUE, string_value="beta")
 
-``hsd_get`` returns the **last** occurrence (``"beta"``). To see all
+``access%get`` returns the **last** occurrence (``"beta"``). To see all
 occurrences, iterate the parent's children with ``hsd_iterator_t``.
 
 
@@ -464,27 +464,30 @@ With the tree above loaded into ``root``:
    use hsd
    implicit none
 
-   type(hsd_node_t) :: root
+   type(hsd_node_t), target :: root
+   type(hsd_access_t) :: access
    type(hsd_error_t), allocatable :: error
-   integer :: stat
    real(dp) :: temperature
    logical :: scc
    real(dp), allocatable :: kpoints(:,:)
+   integer :: nrows, ncols
 
    call hsd_load_file("input.hsd", root, error)
+   call access%init(root)
 
    ! Scalar value — string "300.0" is parsed to real(dp)
-   call hsd_get(root, "Hamiltonian/DFTB/Filling/Fermi/Temperature", &
-     & temperature, stat)
+   call access%get("Hamiltonian/DFTB/Filling/Fermi/Temperature", &
+     & temperature)
 
    ! Logical — "Yes" is parsed to .true.
-   call hsd_get(root, "Hamiltonian/DFTB/SCC", scc, stat)
+   call access%get("Hamiltonian/DFTB/SCC", scc)
 
    ! Matrix — the #text node is parsed into a 2D array
-   call hsd_get_matrix(root, "Hamiltonian/DFTB/KPointsAndWeights", &
-     & kpoints, stat)
+   call access%get_matrix("Hamiltonian/DFTB/KPointsAndWeights", &
+     & kpoints, nrows, ncols)
    ! kpoints is now shape (3, 3)
 
+   if (access%has_errors()) call access%print_errors()
    call root%destroy()
 
 Path navigation with ``/`` separators walks table children by name.
@@ -504,13 +507,13 @@ Summary Table
      - Access Pattern
    * - ``Tag = value``
      - Value node
-     - ``hsd_get(root, "Tag", v, stat)``
+     - ``access%get("Tag", v)``
    * - ``Tag { children }``
      - Table node
      - ``hsd_get_child(root, "Tag", child, stat)``
    * - ``Tag = Type { children }``
      - Nested tables (Tag → Type)
-     - ``hsd_get(root, "Tag/Type/...", ...)``
+     - ``access%get("Tag/Type/...", ...)``
    * - ``Tag [unit] = value``
      - Value node with ``attrib``
      - ``hsd_get_attrib(root, "Tag", unit, stat)``

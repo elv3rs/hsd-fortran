@@ -5,6 +5,7 @@
 !> - Hash table rehash via many HSD children (>100 entries)
 module test_edge_cases_io_suite
   use hsd
+  use hsd_api, only: hsd_get, hsd_set
   use fortuno_serial, only: is_equal, &
       test => serial_case_item, &
       check => serial_check, &

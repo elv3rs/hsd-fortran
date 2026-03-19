@@ -1,6 +1,7 @@
 !> Comprehensive coverage tests targeting all remaining uncovered code paths
 module test_full_coverage_suite
   use hsd
+  use hsd_api, only: hsd_get, hsd_set, hsd_get_matrix
   use hsd_error, only: make_syntax_error, make_type_error, make_error, &
       & error_message
   use hsd_lexer, only: TOKEN_EOF, hsd_token_t

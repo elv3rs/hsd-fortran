@@ -198,8 +198,10 @@ Type Mismatch
 
     ! HSD: name = hello_world
     integer :: val
-    call hsd_get(root, "name", val, stat)
-    ! stat = HSD_STAT_TYPE_ERROR
+    type(hsd_access_t) :: access
+    call access%init(root)
+    call access%get("name", val)
+    ! access%has_errors() will be .true. (type error)
 
 Best Practices
 --------------
